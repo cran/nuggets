@@ -1,6 +1,6 @@
-6cbe69b6332a8cf9987e603c782d0d37 *DESCRIPTION
+ae7e2bcaa537e07691be71622af6e128 *DESCRIPTION
 d0de31e9906ae5e0475b2b8c63227af3 *NAMESPACE
-63f2f95dbe594b7e91497cd1698f255a *NEWS.md
+81ba672083dac0ed969a60c6a4889faa *NEWS.md
 75c6e580adbb239283fe31a50357bec0 *R/RcppExports.R
 36183d93dd139b6aa8b7a460d1f08024 *R/catch-routine-registration.R
 1e761339ce87253e64b6f322eb51e65b *R/dichotomize.R
@@ -12,8 +12,8 @@ bf454b62d5274784dc74d8ecaf10dc39 *R/is_subset.R
 12e3ef28462adcdaf7539b012355c2d3 *R/nuggets-package.R
 c1f059ea22fca30e6fdaf8eacd3e29d7 *R/testers.R
 7f4315c21605e93402b09d1389514e84 *R/which_antichain.R
-e99c0e1479aff96fa738f3e070ecb18e *README.md
-7080893e02c49cd296d4424b9be55069 *build/partial.rdb
+6b03df719ca2c4eafde0463c35546e40 *README.md
+8faf250d78a120ba4c7ea2186efddd24 *build/partial.rdb
 a92660e9d1c0ad3c39d3cb8a9ab5dfa1 *man/dichotomize.Rd
 98f012cd98cad02499f85b11ce2cc924 *man/dig.Rd
 dbb443134d746b80bc6c8e5c3bb3f0e5 *man/dig_correlations.Rd
@@ -59,8 +59,8 @@ e173e42ecd3ea7744835d7fd873ad545 *src/dig/SupportArgumentator.h
 8dd3f4a05f5e248797c34e141f405857 *src/dig/VectorNumChain.h
 7a98061a89d23cd9f6c84a004f8fb893 *src/dig/WeightsArgumentator.h
 72ec50722ecfdd1cd6863f5ff10c31b7 *src/test-antichain-Condition.cpp
-7cf4e26206d0455278c67c037b8f889f *src/test-antichain-Node.cpp
-9036d4b4ccaec3fe23c2ffbbbaea9178 *src/test-antichain-Tree.cpp
+c17fdb9d5e9f08e78e8ef7f13906f914 *src/test-antichain-Node.cpp
+0ffa54adeb90754cb1800f9413392621 *src/test-antichain-Tree.cpp
 adf8fe07b84feee424c880dee3cd1109 *src/test-dig-Bitset.cpp
 882bcf357a2e7ef02e02ce2cc1003613 *src/test-dig-BitsetNumChain.cpp
 a1de5a5b31c97cb684d7e0357a0a9832 *src/test-dig-DualChain.cpp

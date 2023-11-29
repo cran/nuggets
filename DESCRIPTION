@@ -1,6 +1,6 @@
 Package: nuggets
 Title: Extensible Data Pattern Searching Framework
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: 
     person(given = "Michal",
            family = "Burda",
@@ -30,7 +30,7 @@ SystemRequirements: C++17
 Suggests: testthat (>= 3.0.0), xml2
 Config/testthat/edition: 3
 NeedsCompilation: yes
-Packaged: 2023-11-28 05:48:07 UTC; michal
+Packaged: 2023-11-29 09:48:32 UTC; michal
 Author: Michal Burda [aut, cre] (<https://orcid.org/0000-0002-4182-4407>)
 Repository: CRAN
-Date/Publication: 2023-11-28 17:50:02 UTC
+Date/Publication: 2023-11-29 11:20:08 UTC
