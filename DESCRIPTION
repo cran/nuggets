@@ -1,7 +1,7 @@
 Package: nuggets
 Title: Extensible Data Pattern Searching Framework
-Version: 1.0.2
-Date: 2024-01-08
+Version: 1.1.0
+Date: 2024-10-07
 Authors@R: 
     person(given = "Michal",
            family = "Burda",
@@ -23,7 +23,7 @@ Description: Extensible framework for
     condition to search for custom patterns.
 License: GPL (>= 3)
 Encoding: UTF-8
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 Language: en-US
 Imports: cli, methods, Rcpp, rlang, stats, tibble, tidyr, tidyselect
 LinkingTo: Rcpp, testthat
@@ -31,7 +31,7 @@ SystemRequirements: C++17
 Suggests: testthat (>= 3.0.0), xml2
 Config/testthat/edition: 3
 NeedsCompilation: yes
-Packaged: 2024-01-08 09:56:12 UTC; michal
+Packaged: 2024-10-08 03:59:21 UTC; michal
 Author: Michal Burda [aut, cre] (<https://orcid.org/0000-0002-4182-4407>)
 Repository: CRAN
-Date/Publication: 2024-01-09 15:10:02 UTC
+Date/Publication: 2024-10-08 08:30:02 UTC

@@ -10,14 +10,34 @@
 #'      function may have some of the following arguments. Based on the present
 #'      arguments, the algorithm would provide information about the generated
 #'      condition:
-#'      - condition - a numeric vector of column indices that represent the predicates
-#'        of the condition. Names of the vector correspond to column names;
-#'      - foci_supports - a list of support of foci columns (see `focus` argument
-#'        to specify, which columns are foci);
-#'      - support - a numeric scalar value of the current condition's support;
-#'      - indices - a logical vector indicating the rows satisfying the condition;
-#'      - weights - (similar to indices) weights of rows to which they satisfy
-#'        the current condition.
+#'      - `condition` - a named integer vector of column indices that represent
+#'        the predicates of the condition. Names of the vector correspond to
+#'        column names;
+#'      - `support` - a numeric scalar value of the current condition's support;
+#'      - `indices` - a logical vector indicating the rows satisfying the condition;
+#'      - `weights` - (similar to indices) weights of rows to which they satisfy
+#'        the current condition;
+#'      - `pp` - a value of a contingency table, `condition & focus`.
+#'        `pp` is a named numeric vector where each value is a support of conjunction
+#'        of the condition with a foci column (see the `focus` argument to specify,
+#'        which columns). Names of the vector are foci column names.
+#'      - `pn` - a value of a contingency table, `condition & neg focus`.
+#'        `pn` is a named numeric vector where each value is a support of conjunction
+#'        of the condition with a negated foci column (see the `focus` argument to
+#'        specify, which columns are foci) - names of the vector are foci column names.
+#'      - `np` - a value of a contingency table, `neg condition & focus`.
+#'        `np` is a named numeric vector where each value is a support of conjunction
+#'        of the negated condition with a foci column (see the `focus` argument to
+#'        specify, which columns are foci) - names of the vector are foci column names.
+#'      - `nn` - a value of a contingency table, `neg condition & neg focus`.
+#'        `nn` is a named numeric vector where each value is a support of conjunction
+#'        of the negated condition with a negated foci column (see the `focus`
+#'        argument to specify, which columns are foci) - names of the vector are foci
+#'        column names.
+#'      - `foci_supports` - (deprecated, use `pp` instead)
+#'        a named numeric vector of supports of foci columns
+#'        (see `focus` argument to specify, which columns are foci) - names of the
+#'        vector are foci column names.
 #' @param condition a tidyselect expression (see
 #'      [tidyselect syntax](https://tidyselect.r-lib.org/articles/syntax.html))
 #'      specifying the columns to use as condition predicates
@@ -40,9 +60,20 @@
 #'      relative frequency of rows such that all condition predicates are TRUE on it.
 #'      For numerical (double) input, the support is computed as the mean (over all
 #'      rows) of multiplications of predicate values.
+#' @param min_focus_support the minimum support of a focus, for the focus to be passed
+#'      to the callback function. The support of the focus is the relative frequency
+#'      of rows such that all condition predicates AND the focus are TRUE on it.
+#'      For numerical (double) input, the support is computed as the mean (over all
+#'      rows) of multiplications of predicate values.
+#' @param filter_empty_foci a logical scalar indicating whether to skip conditions,
+#'      for which no focus remains available after filtering by `min_focus_support`.
+#'      If `TRUE`, the condition is passed to the callback function only if at least
+#'      one focus remains after filtering. If `FALSE`, the condition is passed to the
+#'      callback function regardless of the number of remaining foci.
 #' @param t_norm a t-norm used to compute conjunction of weights. It must be one of
 #'      `"goedel"` (minimum t-norm), `"goguen"` (product t-norm), or `"lukas"`
 #'      (Lukasiewicz t-norm).
+#' @param threads the number of threads to use for parallel computation.
 #' @param ... Further arguments, currently unused.
 #' @returns A list of results provided by the callback function `f`.
 #' @author Michal Burda
@@ -73,7 +104,10 @@ dig.default <- function(x, f, ...) {
                  min_length,
                  max_length,
                  min_support,
+                 min_focus_support,
+                 filter_empty_foci,
                  t_norm,
+                 threads,
                  ...) {
     .must_be_list_of_logicals(logicals)
     .must_be_list_of_doubles(doubles)
@@ -130,7 +164,10 @@ dig.default <- function(x, f, ...) {
     .must_be_function(f, call = caller_env(2))
 
     unrecognized_args <- setdiff(formalArgs(f),
-                                 c("condition", "foci_supports", "indices", "sum", "support", "weights"))
+                                 c("condition", "foci_supports",
+                                   "pp", "np", "pn", "nn",
+                                   "indices", "sum", "support", "weights"))
+
     if (length(unrecognized_args) > 0) {
         details <- paste0("The argument {.var ", unrecognized_args, "} is not allowed.")
         cli_abort(c("The function {.var f} must have allowed formal arguments only.",
@@ -182,15 +219,21 @@ dig.default <- function(x, f, ...) {
     .must_be_in_range(min_support, c(0, 1), call = caller_env(2))
     min_support <- as.double(min_support)
 
+    .must_be_double_scalar(min_focus_support, call = caller_env(2))
+    .must_be_in_range(min_focus_support, c(0, 1), call = caller_env(2))
+    min_focus_support <- as.double(min_focus_support)
+
+    .must_be_flag(filter_empty_foci, call = caller_env(2))
+
     .must_be_enum(t_norm, c("goguen", "goedel", "lukas"), call = caller_env(2))
+
+    .must_be_integerish_scalar(threads, call = caller_env(2))
+    .must_be_greater_eq(threads, 1, call = caller_env(2))
+    threads <- as.integer(threads)
 
     arguments <- formalArgs(f)
     if (is.null(arguments)) {
         arguments <- ""
-    }
-
-    fun <- function(l) {
-        do.call(f, c(l, list(...)))
     }
 
     config <- list(arguments = arguments,
@@ -200,10 +243,15 @@ dig.default <- function(x, f, ...) {
                    disjoint_foci = disjoint_foci,
                    minLength = min_length,
                    maxLength = max_length,
-                   minSupport = as.double(min_support),
-                   tNorm = t_norm);
+                   minSupport = min_support,
+                   minFocusSupport = min_focus_support,
+                   filterEmptyFoci = filter_empty_foci,
+                   tNorm = t_norm,
+                   threads = threads);
 
-    dig_(logicals, doubles, logicals_foci, doubles_foci, config, fun)
+    res <- dig_(logicals, doubles, logicals_foci, doubles_foci, config)
+
+    lapply(res, do.call, what = f)
 }
 
 
@@ -217,7 +265,10 @@ dig.matrix <- function(x,
                        min_length = 0,
                        max_length = Inf,
                        min_support = 0.0,
+                       min_focus_support = min_support,
+                       filter_empty_foci = FALSE,
                        t_norm = "goguen",
+                       threads = 1,
                        ...) {
     .must_be_matrix(x)
 
@@ -252,7 +303,10 @@ dig.matrix <- function(x,
              min_length = min_length,
              max_length = max_length,
              min_support = min_support,
-             t_norm = t_norm)
+             min_focus_support = min_focus_support,
+             filter_empty_foci = filter_empty_foci,
+             t_norm = t_norm,
+             threads = threads)
 
     } else if (is.double(x)) {
         .dig(logicals = list(),
@@ -267,7 +321,10 @@ dig.matrix <- function(x,
              min_length = min_length,
              max_length = max_length,
              min_support = min_support,
-             t_norm = t_norm)
+             min_focus_support = min_focus_support,
+             filter_empty_foci = filter_empty_foci,
+             t_norm = t_norm,
+             threads = threads)
 
     } else {
         cli_abort(c("{.var x} must be either logical or numeric (double) matrix.",
@@ -320,7 +377,10 @@ dig.data.frame <- function(x,
                            min_length = 0,
                            max_length = Inf,
                            min_support = 0.0,
+                           min_focus_support = min_support,
+                           filter_empty_foci = FALSE,
                            t_norm = "goguen",
+                           threads = 1,
                            ...) {
     .must_be_data_frame(x)
 
@@ -350,5 +410,8 @@ dig.data.frame <- function(x,
          min_length = min_length,
          max_length = max_length,
          min_support = min_support,
-         t_norm = t_norm)
+         min_focus_support = min_focus_support,
+         filter_empty_foci = filter_empty_foci,
+         t_norm = t_norm,
+         threads = threads)
 }

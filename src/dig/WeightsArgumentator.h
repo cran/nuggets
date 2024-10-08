@@ -15,23 +15,24 @@ public:
         : dataSize(dataSize)
     { }
 
-    void prepare(List& arguments, const TASK& task) const override
+    void prepare(ArgumentValues& arguments, const TASK& task) const override
     {
         Argumentator<TASK>::prepare(arguments, task);
 
-        NumericVector weights;
+        ArgumentValue arg("weights", ArgumentType::ARG_NUMERIC);
 
-        if (task.getChain().empty()) {
+        if (task.getPositiveChain().empty()) {
             for (size_t i = 0; i < dataSize; i++) {
-                weights.push_back(1.0);
+                arg.push_back(1.0);
             }
         }
         else {
-            for (size_t i = 0; i < task.getChain().size(); i++) {
-                weights.push_back(task.getChain().getValue(i));
+            for (size_t i = 0; i < task.getPositiveChain().size(); i++) {
+                arg.push_back(task.getPositiveChain().getValue(i));
             }
         }
-        arguments.push_back(weights, "weights");
+
+        arguments.push_back(arg);
     }
 
 private:

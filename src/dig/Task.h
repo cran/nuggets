@@ -2,8 +2,11 @@
 
 #include <vector>
 #include <set>
+#include <unordered_map>
+
 #include "../common.h"
 #include "Data.h"
+#include "Iterator.h"
 
 
 /**
@@ -18,196 +21,173 @@ public:
     Task()
     { }
 
-    /**
-     * Create task representing an empty condition (condition of length 0) that may be extended
-     * with 0..n-1 predicates stored in the soFar vector
-     * @param n The number of predicates to store into soFar
-     */
-    Task(size_t n)
-        : current(0)
-    {
-        soFar.reserve(n);
-        for (size_t i = 0; i < n; i++) {
-            soFar.push_back(i);
-        }
-    }
-
-    /**
-     * Create task representing an empty condition (condition of length 0) that may be extended
-     * @param soFar predicates for further search in sub tasks
-     */
-    Task(vector<int> soFar)
-        : current(0), soFar(soFar)
+    Task(Iterator conditionIterator, Iterator focusIterator)
+        : conditionIterator(conditionIterator), focusIterator(focusIterator)
     { }
 
-    /**
-     * Create a task
-     * @param prefix the prefix of the condition (constant predicates)
-     * @param available a vector of available predicates to be examined in this task
-     */
-    Task(set<int> prefix, vector<int> available)
-        : current(0), prefix(prefix), available(available)
-    { }
+    const Iterator& getConditionIterator() const
+    { return conditionIterator; }
 
-    /**
-     * Create a task
-     * @param prefix the prefix of the condition (constant predicates)
-     * @param a vector of available predicates to be examined in this task
-     * @param soFar a vector of predicates for sub tasks
-     */
-    Task(set<int> prefix, vector<int> available, vector<int> soFar)
-        : current(0), prefix(prefix), available(available), soFar(soFar)
-    { }
+     Iterator& getMutableConditionIterator()
+    { return conditionIterator; }
 
-    /**
-     * Get the actually processing predicate
-     * @return The predicate
-     */
-    int getCurrentPredicate() const
-    {
-        if (!hasPredicate())
-            throw new runtime_error("Attempt to get unavailable predicate");
+    const Iterator& getFocusIterator() const
+    { return focusIterator; }
 
-        return available[current];
-    }
-
-    set<int> getCurrentCondition() const
-    {
-        set<int> result = getPrefix();
-
-        if (hasPredicate()) {
-            result.insert(getCurrentPredicate());
-        }
-
-        return result;
-    }
-
-    size_t getLength() const
-    { return prefix.size() + hasPredicate(); }
-
-    /**
-     * Start the enumeration of available predicates from the beginning. The internal pointer to the current predicate
-     * is set to 0 and the vector of soFar predicates is cleared.
-     */
-    void reset()
-    {
-        current = 0;
-        soFar.clear();
-    }
-
-    /**
-     * Go to the next available predicate.
-     */
-    void next()
-    {  current++; }
-
-    /**
-     * TRUE if task has more predicates, i.e., if getCurrentPredicate() can be called.
-     */
-    bool hasPredicate() const
-    { return current < available.size(); }
-
-    bool hasSoFar() const
-    { return !soFar.empty(); }
-
-    bool empty() const
-    { return prefix.empty() && available.empty() && soFar.empty(); }
-
-    const set<int> getPrefix() const
-    { return prefix; }
-
-    const vector<int> getAvailable() const
-    { return available; }
-
-    const vector<int> getSoFar() const
-    { return soFar; }
-
-    void putCurrentToSoFar()
-    { soFar.push_back(getCurrentPredicate()); }
+    Iterator& getMutableFocusIterator()
+    { return focusIterator; }
 
     Task createChild() const
     {
-        Task result;
+        Iterator newConditionIterator;
 
-        if (hasPredicate()) {
-            set<int> newPrefix = getPrefix();
-            newPrefix.insert(getCurrentPredicate());
-            result = Task(newPrefix, getSoFar());
+        if (conditionIterator.hasPredicate()) {
+            set<int> newPrefix = conditionIterator.getPrefix();
+            newPrefix.insert(conditionIterator.getCurrentPredicate());
+            newConditionIterator = Iterator(newPrefix, conditionIterator.getSoFar());
         }
         else {
-            result = Task(getPrefix(), getSoFar());
+            newConditionIterator = Iterator(conditionIterator.getPrefix(), conditionIterator.getSoFar());
         }
 
-        if (!chain.empty()) {
-            result.prefixChain = chain;
+        Iterator newFocusIterator = Iterator({}, focusIterator.getSoFar()); // prefix is always empty
+        Task result = Task(newConditionIterator, newFocusIterator);
+
+        if (!positiveChain.empty()) {
+            result.prefixChain = positiveChain;
         }
 
         return result;
     }
 
-    const DualChainType& getChain() const
-    { return chain; }
+    const DualChainType& getPositiveChain() const
+    { return positiveChain; }
+
+    const DualChainType& getNegativeChain() const
+    { return negativeChain; }
 
     const DualChainType& getPrefixChain() const
     { return prefixChain; }
 
-    void updateChain(const DataType& data)
+    const DualChainType& getPpFocusChain(int focus) const
+    { return ppFocusChains.at(focus); }
+
+    const DualChainType& getNpFocusChain(int focus) const
+    { return npFocusChains.at(focus); }
+
+    const DualChainType& getPnFocusChain(int focus) const
+    { return pnFocusChains.at(focus); }
+
+    const DualChainType& getNnFocusChain(int focus) const
+    { return nnFocusChains.at(focus); }
+
+    void updatePositiveChain(const DataType& data)
     {
-        if (hasPredicate()) {
-            chain = data.getChain(getCurrentPredicate());
+        if (conditionIterator.hasPredicate()) {
+            int predicate = conditionIterator.getCurrentPredicate();
+            positiveChain = data.getChain(predicate);
             if (!prefixChain.empty()) {
-                if (chain.isBitwise() != prefixChain.isBitwise() && chain.isNumeric() != prefixChain.isNumeric()) {
+                if (positiveChain.isBitwise() != prefixChain.isBitwise() && positiveChain.isNumeric() != prefixChain.isNumeric()) {
                     if (prefixChain.isBitwise()) {
                         prefixChain.toNumeric();
                     } else {
-                        chain.toNumeric();
+                        positiveChain.toNumeric();
                     }
                 }
-                chain.conjunctWith(prefixChain);
+                positiveChain.conjunctWith(prefixChain);
             }
         }
     }
 
-    bool operator == (const Task& other) const
+    void updateNegativeChain(const DataType& data)
     {
-        return current == other.current
-            && prefix == other.prefix
-            && available == other.available
-            && soFar == other.soFar;
+        // assert positiveChain is already updated
+
+        negativeChain = positiveChain;
+        negativeChain.negate();
     }
+
+    void computePpFocusChain(const DataType& data)
+    {
+        if (focusIterator.hasPredicate()) {
+            int focus = focusIterator.getCurrentPredicate();
+            ppFocusChains[focus] = data.getFocus(focus);
+            if (conditionIterator.getLength() > 0) {
+                ppFocusChains[focus].conjunctWith(positiveChain);
+            }
+        }
+    }
+
+    void computePnFocusChain(const DataType& data)
+    {
+        if (focusIterator.hasPredicate()) {
+            int focus = focusIterator.getCurrentPredicate();
+            pnFocusChains[focus] = data.getNegativeFocus(focus);
+            if (conditionIterator.getLength() > 0) {
+                pnFocusChains[focus].conjunctWith(positiveChain);
+            }
+        }
+    }
+
+    void computeNpFocusChain(const DataType& data)
+    {
+        if (focusIterator.hasPredicate()) {
+            int focus = focusIterator.getCurrentPredicate();
+            if (conditionIterator.getLength() > 0) {
+                npFocusChains[focus] = data.getFocus(focus);
+                npFocusChains[focus].conjunctWith(negativeChain);
+            } else {
+                // result is empty chain because we work with condition of length 0 (tautology)
+                // and hence the negation of tautology is contradiction.
+                // Empty chain indicates contradiction here.
+                npFocusChains[focus] = positiveChain;
+            }
+        }
+    }
+
+    void computeNnFocusChain(const DataType& data)
+    {
+        if (focusIterator.hasPredicate()) {
+            int focus = focusIterator.getCurrentPredicate();
+            if (conditionIterator.getLength() > 0) {
+                nnFocusChains[focus] = data.getNegativeFocus(focus);
+                nnFocusChains[focus].conjunctWith(negativeChain);
+            } else {
+                // result is empty chain because we work with condition of length 0 (tautology)
+                // and hence the negation of tautology is contradiction.
+                // Empty chain indicates contradiction here.
+                nnFocusChains[focus] = positiveChain;
+            }
+        }
+    }
+
+    void resetFoci()
+    {
+        focusIterator.reset();
+        ppFocusChains.clear();
+        npFocusChains.clear();
+        pnFocusChains.clear();
+        nnFocusChains.clear();
+    }
+
+    bool operator == (const Task& other) const
+    { return conditionIterator == other.conditionIterator; }
 
     bool operator != (const Task& other) const
     { return !(*this == other); }
 
     string toString() const
-    {
-        string res = "prefix";
-        for (int i : getPrefix()) {
-            res += " " + to_string(i);
-        }
-        res += " current";
-
-        if (hasPredicate())
-            res += " " + to_string(getCurrentPredicate());
-
-        return res;
-    }
+    { return conditionIterator.toString(); }
 
 private:
-    /// Index of the currently processed predicate (index to the available vector)
-    size_t current;
-
-    /// A set of constant predicates that are part of the whole condition represente by this task
-    set<int> prefix;
-
-    /// A vector of available predicates (predicates to be tested by this task)
-    vector<int> available;
-
-    /// A vector of predicates, which will be "available" in sub tasks
-    vector<int> soFar;
-
-    DualChainType chain;
+    Iterator conditionIterator;
+    Iterator focusIterator;
 
     DualChainType prefixChain;
-
+    DualChainType positiveChain;
+    DualChainType negativeChain;
+    unordered_map<int, DualChainType> ppFocusChains;
+    unordered_map<int, DualChainType> npFocusChains;
+    unordered_map<int, DualChainType> pnFocusChains;
+    unordered_map<int, DualChainType> nnFocusChains;
 };

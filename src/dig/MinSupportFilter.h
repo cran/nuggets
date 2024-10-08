@@ -10,9 +10,9 @@ public:
         : minSupport(minSupport)
     { }
 
-    bool isPrunable(const TASK& task) const override
+    bool isConditionPrunable(const TASK& task) const override
     {
-        return task.getChain().getSupport() < minSupport;
+        return task.getPositiveChain().getSupport() < minSupport;
         }
 
 private:

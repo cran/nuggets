@@ -49,6 +49,7 @@
 #' @param t_norm a t-norm used to compute conjunction of weights. It must be one of
 #'      `"goedel"` (minimum t-norm), `"goguen"` (product t-norm), or `"lukas"`
 #'      (Lukasiewicz t-norm).
+#' @param threads the number of threads to use for parallel computation.
 #' @param ... Further arguments, currently unused.
 #' @returns A tibble with found rules and computed quality measures.
 #' @author Michal Burda
@@ -64,6 +65,7 @@ dig_implications <- function(x,
                              min_support = 0,
                              min_confidence = 0,
                              t_norm = "goguen",
+                             threads = 1,
                              ...) {
     .must_be_double_scalar(min_coverage)
     .must_be_in_range(min_coverage, c(0, 1))
@@ -91,32 +93,33 @@ dig_implications <- function(x,
                            condition = !!consequent,
                            min_length = 1,
                            max_length = 1,
-                           min_support = 0.0)
+                           min_support = 0.0,
+                           threads = threads)
     conseq_supports <- unlist(conseq_supports)
 
-    f2 <- function(condition, sum, support, foci_supports) {
-        conf <- foci_supports / support
+    f2 <- function(condition, sum, support, pp) {
+        conf <- pp / support
 
-        selSupp <-!is.na(foci_supports) & foci_supports >= min_support
-        selConf <- !is.na(conf) & conf >= min_confidence
-        sel <- selSupp & selConf
+        sel <-!is.na(pp) & !is.na(conf) & conf >= min_confidence
 
-        selnames <- names(foci_supports)[sel]
+        selnames <- names(pp)[sel]
         conf <- conf[sel]
-        supp <- foci_supports[sel]
+        supp <- pp[sel]
         lift <- supp / (support * conseq_supports[selnames])
         ante <- format_condition(names(condition))
-        cons <- lapply(names(conf), format_condition)
+        cons <- unlist(lapply(names(conf), format_condition))
 
-        lapply(seq_along(conf), function(i) {
-          list(antecedent = ante,
-               consequent = cons[[i]],
-               support = supp[[i]],
-               confidence = conf[[i]],
-               coverage = support,
-               lift = lift[[i]],
-               count = sum)
-        })
+        if (length(conf) <= 0) {
+            return(NULL)
+        }
+
+        data.frame(antecedent = ante,
+                   consequent = cons,
+                   support = supp,
+                   confidence = conf,
+                   coverage = support,
+                   lift = lift,
+                   count = sum)
     }
 
     res <- dig(x = x,
@@ -127,11 +130,12 @@ dig_implications <- function(x,
                min_length = min_length,
                max_length = max_length,
                min_support = min_coverage,
+               min_focus_support = min_support,
+               filter_empty_foci = TRUE,
                t_norm = t_norm,
+               threads = threads,
                ...)
 
-    res <- unlist(res, recursive = FALSE)
-    res <- lapply(res, as.data.frame)
     res <- do.call(rbind, res)
 
     as_tibble(res)

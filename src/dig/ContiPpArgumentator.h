@@ -3,17 +3,17 @@
 #include "Argumentator.h"
 
 /**
- * Prepare the 'fociSupports' argument for the R function callback.
- * The 'fociSupports' argument is a double value with supports of
+ * Prepare the 'pp' argument for the R function callback.
+ * The 'pp' argument is a double value with supports of
  * foci combined with the condition.
  */
 template <typename TASK>
-class FociSupportsArgumentator : public Argumentator<TASK> {
+class ContiPpArgumentator : public Argumentator<TASK> {
 public:
     using DataType = typename TASK::DataType;
     using DualChainType = typename TASK::DualChainType;
 
-    FociSupportsArgumentator(const vector<string>& fociNames)
+    ContiPpArgumentator(const vector<string>& fociNames)
         : fociNames(fociNames)
     { }
 
@@ -21,7 +21,7 @@ public:
     {
         Argumentator<TASK>::prepare(arguments, task);
 
-        ArgumentValue arg("foci_supports", ArgumentType::ARG_NUMERIC);
+        ArgumentValue arg("pp", ArgumentType::ARG_NUMERIC);
 
         for (int i : task.getFocusIterator().getSoFar()) {
             arg.push_back(task.getPpFocusChain(i).getSupport(), fociNames[i]);

@@ -20,7 +20,10 @@ dig(x, f, ...)
   min_length = 0,
   max_length = Inf,
   min_support = 0,
+  min_focus_support = min_support,
+  filter_empty_foci = FALSE,
   t_norm = "goguen",
+  threads = 1,
   ...
 )
 
@@ -33,7 +36,10 @@ dig(x, f, ...)
   min_length = 0,
   max_length = Inf,
   min_support = 0,
+  min_focus_support = min_support,
+  filter_empty_foci = FALSE,
   t_norm = "goguen",
+  threads = 1,
   ...
 )
 }
@@ -46,14 +52,34 @@ logical.}
 function may have some of the following arguments. Based on the present
 arguments, the algorithm would provide information about the generated
 condition:
-- condition - a numeric vector of column indices that represent the predicates
-of the condition. Names of the vector correspond to column names;
-- foci_supports - a list of support of foci columns (see \code{focus} argument
-to specify, which columns are foci);
-- support - a numeric scalar value of the current condition's support;
-- indices - a logical vector indicating the rows satisfying the condition;
-- weights - (similar to indices) weights of rows to which they satisfy
-the current condition.}
+- \code{condition} - a named integer vector of column indices that represent
+the predicates of the condition. Names of the vector correspond to
+column names;
+- \code{support} - a numeric scalar value of the current condition's support;
+- \code{indices} - a logical vector indicating the rows satisfying the condition;
+- \code{weights} - (similar to indices) weights of rows to which they satisfy
+the current condition;
+- \code{pp} - a value of a contingency table, \code{condition & focus}.
+\code{pp} is a named numeric vector where each value is a support of conjunction
+of the condition with a foci column (see the \code{focus} argument to specify,
+which columns). Names of the vector are foci column names.
+- \code{pn} - a value of a contingency table, \verb{condition & neg focus}.
+\code{pn} is a named numeric vector where each value is a support of conjunction
+of the condition with a negated foci column (see the \code{focus} argument to
+specify, which columns are foci) - names of the vector are foci column names.
+- \code{np} - a value of a contingency table, \verb{neg condition & focus}.
+\code{np} is a named numeric vector where each value is a support of conjunction
+of the negated condition with a foci column (see the \code{focus} argument to
+specify, which columns are foci) - names of the vector are foci column names.
+- \code{nn} - a value of a contingency table, \verb{neg condition & neg focus}.
+\code{nn} is a named numeric vector where each value is a support of conjunction
+of the negated condition with a negated foci column (see the \code{focus}
+argument to specify, which columns are foci) - names of the vector are foci
+column names.
+- \code{foci_supports} - (deprecated, use \code{pp} instead)
+a named numeric vector of supports of foci columns
+(see \code{focus} argument to specify, which columns are foci) - names of the
+vector are foci column names.}
 
 \item{...}{Further arguments, currently unused.}
 
@@ -85,9 +111,23 @@ relative frequency of rows such that all condition predicates are TRUE on it.
 For numerical (double) input, the support is computed as the mean (over all
 rows) of multiplications of predicate values.}
 
+\item{min_focus_support}{the minimum support of a focus, for the focus to be passed
+to the callback function. The support of the focus is the relative frequency
+of rows such that all condition predicates AND the focus are TRUE on it.
+For numerical (double) input, the support is computed as the mean (over all
+rows) of multiplications of predicate values.}
+
+\item{filter_empty_foci}{a logical scalar indicating whether to skip conditions,
+for which no focus remains available after filtering by \code{min_focus_support}.
+If \code{TRUE}, the condition is passed to the callback function only if at least
+one focus remains after filtering. If \code{FALSE}, the condition is passed to the
+callback function regardless of the number of remaining foci.}
+
 \item{t_norm}{a t-norm used to compute conjunction of weights. It must be one of
 \code{"goedel"} (minimum t-norm), \code{"goguen"} (product t-norm), or \code{"lukas"}
 (Lukasiewicz t-norm).}
+
+\item{threads}{the number of threads to use for parallel computation.}
 }
 \value{
 A list of results provided by the callback function \code{f}.

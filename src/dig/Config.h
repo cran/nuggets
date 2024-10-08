@@ -10,10 +10,20 @@ public:
     {
         parseArguments(configuration["arguments"]);
 
-        predicates = configuration["predicates"];
-        foci = configuration["foci"];
-        disjointPredicates = configuration["disjoint_predicates"];
-        disjointFoci = configuration["disjoint_foci"];
+        IntegerVector predicates = configuration["predicates"];
+        copy(predicates, predicateIndices, predicateNames);
+
+        IntegerVector foci = configuration["foci"];
+        copy(foci, fociIndices, fociNames);
+
+        IntegerVector disjPred = configuration["disjoint_predicates"];
+        copy(disjPred, disjointPredicates);
+
+        IntegerVector disjFoci = configuration["disjoint_foci"];
+        copy(disjFoci, disjointFoci);
+
+        IntegerVector threadsVec = configuration["threads"];
+        threads = threadsVec[0];
 
         IntegerVector minLengthVec = configuration["minLength"];
         minLength = minLengthVec[0];
@@ -23,6 +33,12 @@ public:
 
         NumericVector minSupportVec = configuration["minSupport"];
         minSupport = minSupportVec[0];
+
+        NumericVector minFocusSupportVec = configuration["minFocusSupport"];
+        minFocusSupport = minFocusSupportVec[0];
+
+        LogicalVector filterEmptyFociVec = configuration["filterEmptyFoci"];
+        filterEmptyFoci = filterEmptyFociVec[0];
 
         CharacterVector tnormVec = configuration["tNorm"];
         if (tnormVec[0] == "goedel")
@@ -40,6 +56,18 @@ public:
 
     bool hasFociSupportsArgument() const
     { return fociSupportsArgument; }
+
+    bool hasContiPpArgument() const
+    { return contiPpArgument; }
+
+    bool hasContiNpArgument() const
+    { return contiNpArgument; }
+
+    bool hasContiPnArgument() const
+    { return contiPnArgument; }
+
+    bool hasContiNnArgument() const
+    { return contiNnArgument; }
 
     bool hasIndicesArgument() const
     { return indicesArgument; }
@@ -59,17 +87,26 @@ public:
     bool hasDisjointFoci() const
     { return disjointFoci.size() > 0; }
 
-    const IntegerVector& getPredicates() const
-    { return predicates; }
+    const vector<int>& getPredicateIndices() const
+    { return predicateIndices; }
 
-    const IntegerVector& getFoci() const
-    { return foci; }
+    const vector<string>& getPredicateNames() const
+    { return predicateNames; }
 
-    const IntegerVector& getDisjointPredicates() const
+    const vector<int>& getFociIndices() const
+    { return fociIndices; }
+
+    const vector<string>& getFociNames() const
+    { return fociNames; }
+
+    const vector<int>& getDisjointPredicates() const
     { return disjointPredicates; }
 
-    const IntegerVector& getDisjointFoci() const
+    const vector<int>& getDisjointFoci() const
     { return disjointFoci; }
+
+    int getThreads() const
+    { return threads; }
 
     int getMinLength() const
     { return minLength; }
@@ -80,24 +117,57 @@ public:
     double getMinSupport() const
     { return minSupport; }
 
+    double getMinFocusSupport() const
+    { return minFocusSupport; }
+
+    bool hasFilterEmptyFoci() const
+    { return filterEmptyFoci; }
+
     TNorm getTNorm() const
     { return tNorm; }
+
+    void permuteConditions(const vector<size_t> permutation)
+    {
+        vector<int> newPredicateIndices;
+        permute(predicateIndices, newPredicateIndices, permutation);
+        predicateIndices = newPredicateIndices;
+
+        vector<string> newPredicateNames;
+        permute(predicateNames, newPredicateNames, permutation);
+        predicateNames = newPredicateNames;
+
+        vector<int> newDisjointPredicates;
+        permute(disjointPredicates, newDisjointPredicates, permutation);
+        disjointPredicates = newDisjointPredicates;
+    }
 
 private:
     bool conditionArgument = false;
     bool fociSupportsArgument = false;
+    bool contiPpArgument = false;
+    bool contiNpArgument = false;
+    bool contiPnArgument = false;
+    bool contiNnArgument = false;
     bool indicesArgument = false;
     bool sumArgument = false;
     bool supportArgument = false;
     bool weightsArgument = false;
 
-    IntegerVector predicates;
-    IntegerVector foci;
-    IntegerVector disjointPredicates;
-    IntegerVector disjointFoci;
+    vector<int> predicateIndices;
+    vector<string> predicateNames;
+
+    vector<int> fociIndices;
+    vector<string> fociNames;
+
+    vector<int> disjointPredicates;
+    vector<int> disjointFoci;
+
+    int threads;
     int minLength;
     int maxLength;
     double minSupport;
+    double minFocusSupport;
+    bool filterEmptyFoci;
     TNorm tNorm;
 
     void parseArguments(const CharacterVector& vec)
@@ -107,6 +177,14 @@ private:
                 conditionArgument = true;
             if (vec[i] == "foci_supports")
                 fociSupportsArgument = true;
+            if (vec[i] == "pp")
+                contiPpArgument = true;
+            if (vec[i] == "np")
+                contiNpArgument = true;
+            if (vec[i] == "pn")
+                contiPnArgument = true;
+            if (vec[i] == "nn")
+                contiNnArgument = true;
             if (vec[i] == "indices")
                 indicesArgument = true;
             if (vec[i] == "sum")
@@ -115,6 +193,35 @@ private:
                 supportArgument = true;
             if (vec[i] == "weights")
                 weightsArgument = true;
+        }
+    }
+
+    void copy(const IntegerVector& source, vector<int>& values)
+    {
+        for (R_xlen_t i = 0; i < source.size(); ++i) {
+            values.push_back(source[i]);
+        }
+    }
+
+    void copy(const IntegerVector& source, vector<int>& values, vector<string>& names)
+    {
+        if (!source.hasAttribute("names")) {
+            copy(source, values);
+        } else {
+            CharacterVector sourceNames = source.names();
+            for (R_xlen_t i = 0; i < source.size(); ++i) {
+                names.push_back(as<string>(sourceNames[i]));
+                values.push_back(source[i]);
+            }
+        }
+    }
+
+    template <typename T>
+    void permute(const vector<T>& source, vector<T>& target, const vector<size_t>& permutation)
+    {
+        target.resize(source.size());
+        for (size_t i = 0; i < source.size(); ++i) {
+            target[i] = source[permutation[i]];
         }
     }
 };

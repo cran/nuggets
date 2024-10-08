@@ -1,10 +1,6 @@
 #pragma once
 
 #include "../common.h"
-#include "SimdVectorNumChain.h"
-#include "VectorNumChain.h"
-#include "BitsetNumChain.h"
-#include "BitsetBitChain.h"
 
 
 template <typename BITCHAIN, typename NUMCHAIN>
@@ -36,8 +32,18 @@ public:
             numData.clear();
             numData.reserve(size());
             for (size_t i = 0; i < size(); i++) {
-                numData.push_back(1.0 * bitData.at(i));
+                numData.pushBack(1.0 * bitData.at(i));
             }
+        }
+    }
+
+    void negate()
+    {
+        if (isBitwise()) {
+            bitData.negate();
+        }
+        if (isNumeric()) {
+            numData.negate();
         }
     }
 
