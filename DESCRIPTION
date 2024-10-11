@@ -1,7 +1,7 @@
 Package: nuggets
 Title: Extensible Data Pattern Searching Framework
-Version: 1.1.0
-Date: 2024-10-07
+Version: 1.2.0
+Date: 2024-10-11
 Authors@R: 
     person(given = "Michal",
            family = "Burda",
@@ -28,10 +28,10 @@ Language: en-US
 Imports: cli, methods, Rcpp, rlang, stats, tibble, tidyr, tidyselect
 LinkingTo: Rcpp, testthat
 SystemRequirements: C++17
-Suggests: testthat (>= 3.0.0), xml2
+Suggests: arules, testthat (>= 3.0.0), xml2
 Config/testthat/edition: 3
 NeedsCompilation: yes
-Packaged: 2024-10-08 03:59:21 UTC; michal
+Packaged: 2024-10-11 13:30:11 UTC; michal
 Author: Michal Burda [aut, cre] (<https://orcid.org/0000-0002-4182-4407>)
 Repository: CRAN
-Date/Publication: 2024-10-08 08:30:02 UTC
+Date/Publication: 2024-10-11 21:40:05 UTC

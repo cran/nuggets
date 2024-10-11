@@ -4,9 +4,7 @@
 #' of `x` in subdata corresponding to conditions generated from `condition`
 #' columns.
 #'
-#' @param x a matrix or data frame with data to search in. The matrix must be
-#'      numeric (double) or logical. If `x` is a data frame then each column
-#'      must be either numeric (double) or logical.
+#' @param x a matrix or data frame with data to search in.
 #' @param condition a tidyselect expression (see
 #'      [tidyselect syntax](https://tidyselect.r-lib.org/articles/syntax.html))
 #'      specifying the columns to use as condition predicates
@@ -61,74 +59,26 @@ dig_correlations <- function(x,
     xvars <- enquo(xvars)
     yvars <- enquo(yvars)
 
-    if (is.matrix(x)) {
-        cols <- lapply(seq_len(ncol(x)), function(i) x[, i])
-        names(cols) <- colnames(x)
-        if (is.null(names(cols))) {
-            names(cols) <- seq_len(length(cols))
-        }
-    } else if (is.data.frame(x)) {
-        cols <- as.list(x)
-        if (is.null(names(cols))) {
-            names(cols) <- seq_len(length(cols))
-        }
-    } else {
-        cli_abort(c("{.var x} must be a matrix or a data frame.",
-                    "x" = "You've supplied a {.cls {class(x)}}."))
+    f <- function(dd) {
+        fit <- cor.test(dd[[1]],
+                        dd[[2]],
+                        alternative = alternative,
+                        method = method,
+                        exact = exact)
+        return(list(estimate = fit$estimate,
+                    p_value = fit$p.value,
+                    rows = nrow(dd)))
     }
 
-    xvars <- eval_select(xvars, cols)
-    yvars <- eval_select(yvars, cols)
-
-    if (length(xvars) <= 0) {
-        cli_abort(c("{.var xvars} must specify the list of numeric columns.",
-                    "x" = "{.var xvars} resulted in an empty list."))
-    }
-    if (length(yvars) <= 0) {
-        cli_abort(c("{.var yvars} must specify the list of numeric columns.",
-                    "x" = "{.var yvars} resulted in an empty list."))
-    }
-
-    grid <- expand_grid(xvar = xvars, yvar = yvars)
-    grid <- grid[grid$xvar != grid$yvar, ]
-    dup <- apply(grid, 1, function(row) paste(sort(row), collapse = " "))
-    grid <- grid[!duplicated(dup), ]
-
-    f <- function(condition, sum, indices) {
-        cond <- format_condition(names(condition))
-        d <- x[indices, , drop = FALSE]
-
-        result <- apply(grid, 1, function(row) {
-            dd <- na.omit(d[, row])
-            fit <- cor.test(dd[[1]],
-                            dd[[2]],
-                            alternative = alternative,
-                            method = method,
-                            exact = exact)
-            return(list(estimate = fit$estimate,
-                        p_value = fit$p.value))
-        })
-
-        result <- lapply(result, as_tibble)
-        result <- do.call(rbind, result)
-
-        cbind(condition = rep(cond, nrow(grid)),
-              grid,
-              result)
-    }
-
-    res <- dig(x = x,
-               f = f,
-               condition = !!condition,
-               min_length = min_length,
-               max_length = max_length,
-               min_support = min_support,
-               threads = threads,
-               ...)
-
-    res <- do.call(rbind, res)
-    res$xvar <- names(cols)[res$xvar]
-    res$yvar <- names(cols)[res$yvar]
-
-    as_tibble(res)
+    dig_grid(x = x,
+             f = f,
+             condition = !!condition,
+             xvars = !!xvars,
+             yvars = !!yvars,
+             na_rm = TRUE,
+             min_length = min_length,
+             max_length = max_length,
+             min_support = min_support,
+             threads = threads,
+             ...)
 }

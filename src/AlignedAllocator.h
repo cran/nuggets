@@ -1,124 +1,167 @@
+/*********************************************************************
+ * Software License Agreement (BSD License)
+ *
+ *  Copyright (c) 2010, Willow Garage, Inc.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above
+ *     copyright notice, this list of conditions and the following
+ *     disclaimer in the documentation and/or other materials provided
+ *     with the distribution.
+ *   * Neither the name of the Willow Garage nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ *********************************************************************/
+
+// downloaded from:
+// https://github.com/ros/ros_realtime/blob/noetic-devel/allocators/include/allocators/aligned.h
+
 #pragma once
 
-#include <iostream>
+#include <cstdlib>
+
+// alignedMalloc/alignedFree implementations found at
+// http://www.gamasutra.com/view/feature/3942/data_alignment_part_1.php?page=2
 
 /**
- * Allocator for aligned data.
- *
- * Modified from the Mallocator from Stephan T. Lavavej.
- * <http://blogs.msdn.com/b/vcblog/archive/2008/08/28/the-mallocator.aspx>
+ * \brief Allocate memory aligned at on a value.  Memory allocated through alignedMalloc() \b must be
+ * freed through alignedFree()
+ * \param size The amount of memory to allocate
+ * \param alignment The value to align on
  */
-template <typename T, std::size_t Alignment>
-class AlignedAllocator {
-    public:
-        typedef T * pointer;
-        typedef const T * const_pointer;
-        typedef T& reference;
-        typedef const T& const_reference;
-        typedef T value_type;
-        typedef std::size_t size_type;
-        typedef ptrdiff_t difference_type;
+inline void* alignedMalloc(size_t size, size_t alignment)
+{
+    const int pointerSize = sizeof(void*);
+    const int requestedSize = size + alignment - 1 + pointerSize;
+    void* raw = std::malloc(requestedSize);
 
-        T * address(T& r) const
-        { return &r; }
+    if (!raw)
+    {
+        return 0;
+    }
 
-        const T * address(const T& s) const
-        { return &s; }
+    void* start = (uint8_t*)raw + pointerSize;
+    void* aligned = (void*)(((uintptr_t)((uint8_t*)start+alignment-1)) & ~(alignment-1));
+    *(void**)((uint8_t*)aligned-pointerSize) = raw;
+    return aligned;
+}
 
-        std::size_t max_size() const
+/**
+ * \brief Free memory allocated through alignedMalloc()
+ * \param aligned The memory to free
+ */
+inline void alignedFree(void* aligned)
+{
+    if (!aligned)
+    {
+        return;
+    }
+
+    void* raw = *(void**)((uint8_t*)aligned - sizeof(void*));
+    std::free(raw);
+}
+
+template<class T, size_t align> class AlignedAllocator;
+
+// specialize for void:
+template<size_t align>
+class AlignedAllocator<void, align>
+{
+public:
+    typedef void* pointer;
+    typedef const void* const_pointer;
+    // reference to void members are impossible.
+    typedef void value_type;
+
+    template<class U>
+    struct rebind
+    {
+        typedef AlignedAllocator<U, align> other;
+    };
+};
+
+/**
+ * \brief An stl-compatible aligned allocator
+ * \param T The type of the container element
+ * \param align The alignment to allocate on
+ */
+template<class T, size_t align>
+class AlignedAllocator
+{
+public:
+    typedef size_t size_type;
+    typedef ptrdiff_t difference_type;
+    typedef T* pointer;
+    typedef const T* const_pointer;
+    typedef T& reference;
+    typedef const T& const_reference;
+    typedef T value_type;
+
+    template<class U>
+    struct rebind
+    { typedef AlignedAllocator<U, align> other; };
+
+    template <typename U>
+    inline bool operator==(const AlignedAllocator<U, align>& other) const noexcept {
+        return true;
+    }
+
+    template <typename U>
+    inline bool operator!=(const AlignedAllocator<U, align>& other) const noexcept {
+        return false;
+    }
+
+    AlignedAllocator() throw ()
+    { }
+
+    ~AlignedAllocator() throw ()
+    { }
+
+    pointer address(reference r) const
+    { return &r; }
+
+    const_pointer address(const_reference r) const
+    { return &r; }
+
+    size_type max_size() const throw ()
+    { return ~size_type(0); }
+
+    pointer allocate(size_type n, typename AlignedAllocator<void, align>::const_pointer hint = 0)
+    {
+        void* mem = alignedMalloc(n * sizeof(T), align);
+        if (!mem)
         {
-            // The following has been carefully written to be independent of
-            // the definition of size_t and to avoid signed/unsigned warnings.
-            return (static_cast<std::size_t>(0) - static_cast<std::size_t>(1)) / sizeof(T);
+            throw std::bad_alloc();
         }
 
+        return static_cast<pointer>(mem);
+    }
 
-        // The following must be the same for all allocators.
-        template <typename U>
-        struct rebind
-        {
-            typedef AlignedAllocator<U, Alignment> other;
-        };
+    void deallocate(pointer p, size_type n)
+    { alignedFree(p); }
 
-        bool operator!=(const AlignedAllocator& other) const
-        { return !(*this == other); }
+    void construct(pointer p, const_reference val)
+    { new (p) T(val); }
 
-        void construct(T * const p, const T& t) const
-        {
-            void * const pv = static_cast<void *>(p);
-
-            new (pv) T(t);
-        }
-
-        void destroy(T * const p) const
-        { p->~T(); }
-
-        // Returns true if and only if storage allocated from *this
-        // can be deallocated from other, and vice versa.
-        // Always returns true for stateless allocators.
-        bool operator==(const AlignedAllocator& other) const
-        { return true; }
-
-
-        // Default constructor, copy constructor, rebinding constructor, and destructor.
-        // Empty for stateless allocators.
-        AlignedAllocator() { }
-
-        AlignedAllocator(const AlignedAllocator&) { }
-
-        template <typename U> AlignedAllocator(const AlignedAllocator<U, Alignment>&) { }
-
-        ~AlignedAllocator() { }
-
-
-        // The following will be different for each allocator.
-        T * allocate(const std::size_t n) const
-        {
-            // The return value of allocate(0) is unspecified.
-            // Mallocator returns NULL in order to avoid depending
-            // on malloc(0)'s implementation-defined behavior
-            // (the implementation can define malloc(0) to return NULL,
-            // in which case the bad_alloc check below would fire).
-            // All allocators can return NULL in this case.
-            if (n == 0) {
-                return NULL;
-            }
-
-            // All allocators should contain an integer overflow check.
-            // The Standardization Committee recommends that std::length_error
-            // be thrown in the case of integer overflow.
-            if (n > max_size()) {
-                throw std::length_error("AlignedAllocator<T>::allocate() - Integer overflow.");
-            }
-
-            // Mallocator wraps malloc().
-            void * const pv = new (std::align_val_t(Alignment)) T[n];
-
-            // Allocators should throw std::bad_alloc in the case of memory allocation failure.
-            if (pv == NULL) {
-                throw std::bad_alloc();
-            }
-
-            return static_cast<T *>(pv);
-        }
-
-        void deallocate(T * const p, const std::size_t n) const
-        { delete [] p; }
-
-
-        // The following will be the same for all allocators that ignore hints.
-        template <typename U>
-        T * allocate(const std::size_t n, const U * /* const hint */) const
-        { return allocate(n); }
-
-
-        // Allocators are not required to be assignable, so
-        // all allocators should have a private unimplemented
-        // assignment operator. Note that this will trigger the
-        // off-by-default (enabled under /Wall) warning C4626
-        // "assignment operator could not be generated because a
-        // base class assignment operator is inaccessible" within
-        // the STL headers, but that warning is useless.
-    private:
-        AlignedAllocator& operator=(const AlignedAllocator&);
+    void destroy(pointer p)
+    { p->~T(); }
 };

@@ -1,3 +1,13 @@
+# nuggets 1.2.0
+- released: 2024-10-11
+- added var_grid(), dig_grid()
+- added the measures argument to dig_implications()
+- fixed contingency table arguments computation (pp, pn, np, nn) - previously,
+  they were computed as relative frequencies, now they are computed as counts
+- fixed new-delete-type-mismatch ASAN error caused by wrong implementation of
+  AlignedAllocator
+- fixed memory leaks
+
 # nuggets 1.1.0
 - released: 2024-10-07
 - added .other argument to dichotomize()
