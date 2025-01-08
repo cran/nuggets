@@ -5,13 +5,35 @@ test_that("var_grid everything on data.frame", {
                     y = c(TRUE, FALSE),
                     z = c(TRUE, FALSE))
 
-    res <- var_grid(d, xvars = everything(), yvars = everything())
+    res <- var_grid(d,
+                    xvars = everything(),
+                    yvars = everything())
 
     expect_true(is_tibble(res))
     expect_equal(nrow(res), 10)
     expect_equal(colnames(res), c("xvar", "yvar"))
     expect_equal(res$xvar, c("v", "v", "v", "v", "w", "w", "w", "x", "x", "y"))
     expect_equal(res$yvar, c("w", "x", "y", "z", "x", "y", "z", "y", "z", "z"))
+})
+
+test_that("var_grid everything on data.frame (with custom colnames)", {
+    d <- data.frame(v = FALSE,
+                    w = FALSE,
+                    x = TRUE,
+                    y = c(TRUE, FALSE),
+                    z = c(TRUE, FALSE))
+
+    res <- var_grid(d,
+                    xvars = everything(),
+                    yvars = everything(),
+                    xvar_name = "blaX",
+                    yvar_name = "blaY")
+
+    expect_true(is_tibble(res))
+    expect_equal(nrow(res), 10)
+    expect_equal(colnames(res), c("blaX", "blaY"))
+    expect_equal(res$blaX, c("v", "v", "v", "v", "w", "w", "w", "x", "x", "y"))
+    expect_equal(res$blaY, c("w", "x", "y", "z", "x", "y", "z", "y", "z", "z"))
 })
 
 test_that("var_grid selected on data.frame", {
@@ -57,4 +79,46 @@ test_that("var_grid everything on matrix", {
     expect_equal(colnames(res), c("xvar", "yvar"))
     expect_equal(res$xvar, c("v", "v", "v", "v", "w", "w", "w", "x", "x", "y"))
     expect_equal(res$yvar, c("w", "x", "y", "z", "x", "y", "z", "y", "z", "z"))
+})
+
+test_that("var_grid only xvar", {
+    d <- data.frame(v = FALSE,
+                    w = FALSE,
+                    x = TRUE,
+                    y = c(TRUE, FALSE),
+                    z = c(TRUE, FALSE))
+
+    res <- var_grid(d,
+                    xvars = everything(),
+                    yvars = NULL)
+
+    expect_true(is_tibble(res))
+    expect_equal(nrow(res), 5)
+    expect_equal(colnames(res), "var")
+    expect_equal(res$var, c("v", "w", "x", "y", "z"))
+})
+
+
+test_that("var_grid errors", {
+    d <- data.frame(v = FALSE,
+                    w = FALSE,
+                    x = TRUE,
+                    y = c(TRUE, FALSE),
+                    z = c(TRUE, FALSE))
+    d2 <- data.frame(n = 1:5 / 5, l = TRUE, i = 1:5, s = letters[1:5])
+
+    expect_error(var_grid(d, xvars = where(is.numeric), yvars = x),
+                 "`xvars` must select non-empty list of columns")
+    expect_error(var_grid(d, yvars = where(is.numeric), xvars = x),
+                 "`yvars` must select non-empty list of columns")
+    expect_error(var_grid(d, xvars = x, yvars = x),
+                 "`xvars` and `yvars` can't select the same single column")
+    expect_error(var_grid(d2, xvars = n, yvars = l, allow = "numeric"),
+                 "All columns selected by `yvars` must be numeric.")
+    expect_error(var_grid(d2, xvars = s, yvars = n, allow = "numeric"),
+                 "All columns selected by `xvars` must be numeric.")
+    expect_error(var_grid(list(a = 1, b = 2),
+                          xvars = everything(),
+                          yvars = everything()),
+                 "`x` must be a matrix or a data frame")
 })

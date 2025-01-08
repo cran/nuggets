@@ -2,22 +2,34 @@
 % Please edit documentation in R/dig.R
 \name{dig}
 \alias{dig}
-\title{Search for rules}
+\title{Search for patterns of custom type}
 \usage{
 dig(
   x,
   f,
   condition = everything(),
   focus = NULL,
-  disjoint = NULL,
+  disjoint = var_names(colnames(x)),
   min_length = 0,
   max_length = Inf,
   min_support = 0,
   min_focus_support = min_support,
+  min_conditional_focus_support = 0,
+  max_support = 1,
   filter_empty_foci = FALSE,
   t_norm = "goguen",
-  threads = 1,
-  ...
+  max_results = Inf,
+  verbose = FALSE,
+  threads = 1L,
+  error_context = list(arg_x = "x", arg_f = "f", arg_condition = "condition", arg_focus =
+    "focus", arg_disjoint = "disjoint", arg_min_length = "min_length", arg_max_length =
+    "max_length", arg_min_support = "min_support", arg_min_focus_support =
+    "min_focus_support", arg_min_conditional_focus_support =
+    "min_conditional_focus_support", arg_max_support = "max_support",
+    arg_filter_empty_foci = "filter_empty_foci", arg_t_norm = "t_norm", arg_max_results =
+    "max_results", arg_verbose = "verbose", arg_threads = "threads", 
+     call =
+    current_env())
 )
 }
 \arguments{
@@ -29,34 +41,36 @@ logical.}
 function may have some of the following arguments. Based on the present
 arguments, the algorithm would provide information about the generated
 condition:
-- \code{condition} - a named integer vector of column indices that represent
+\itemize{
+\item \code{condition} - a named integer vector of column indices that represent
 the predicates of the condition. Names of the vector correspond to
 column names;
-- \code{support} - a numeric scalar value of the current condition's support;
-- \code{indices} - a logical vector indicating the rows satisfying the condition;
-- \code{weights} - (similar to indices) weights of rows to which they satisfy
+\item \code{support} - a numeric scalar value of the current condition's support;
+\item \code{indices} - a logical vector indicating the rows satisfying the condition;
+\item \code{weights} - (similar to indices) weights of rows to which they satisfy
 the current condition;
-- \code{pp} - a value of a contingency table, \code{condition & focus}.
+\item \code{pp} - a value of a contingency table, \code{condition & focus}.
 \code{pp} is a named numeric vector where each value is a support of conjunction
 of the condition with a foci column (see the \code{focus} argument to specify,
 which columns). Names of the vector are foci column names.
-- \code{pn} - a value of a contingency table, \verb{condition & neg focus}.
+\item \code{pn} - a value of a contingency table, \verb{condition & neg focus}.
 \code{pn} is a named numeric vector where each value is a support of conjunction
 of the condition with a negated foci column (see the \code{focus} argument to
 specify, which columns are foci) - names of the vector are foci column names.
-- \code{np} - a value of a contingency table, \verb{neg condition & focus}.
+\item \code{np} - a value of a contingency table, \verb{neg condition & focus}.
 \code{np} is a named numeric vector where each value is a support of conjunction
 of the negated condition with a foci column (see the \code{focus} argument to
 specify, which columns are foci) - names of the vector are foci column names.
-- \code{nn} - a value of a contingency table, \verb{neg condition & neg focus}.
+\item \code{nn} - a value of a contingency table, \verb{neg condition & neg focus}.
 \code{nn} is a named numeric vector where each value is a support of conjunction
 of the negated condition with a negated foci column (see the \code{focus}
 argument to specify, which columns are foci) - names of the vector are foci
 column names.
-- \code{foci_supports} - (deprecated, use \code{pp} instead)
+\item \code{foci_supports} - (deprecated, use \code{pp} instead)
 a named numeric vector of supports of foci columns
 (see \code{focus} argument to specify, which columns are foci) - names of the
-vector are foci column names.}
+vector are foci column names.
+}}
 
 \item{condition}{a tidyselect expression (see
 \href{https://tidyselect.r-lib.org/articles/syntax.html}{tidyselect syntax})
@@ -69,7 +83,9 @@ specifying the columns to use as focus predicates}
 \item{disjoint}{an atomic vector of size equal to the number of columns of \code{x}
 that specifies the groups of predicates: if some elements of the \code{disjoint}
 vector are equal, then the corresponding columns of \code{x} will NOT be
-present together in a single condition.}
+present together in a single condition. If \code{x} is prepared with
+\code{\link[=partition]{partition()}}, using the \code{\link[=var_names]{var_names()}} function on \code{x}'s column names
+is a convenient way to create the \code{disjoint} vector.}
 
 \item{min_length}{the minimum size (the minimum number of predicates) of the
 condition to be generated (must be greater or equal to 0). If 0, the empty
@@ -92,6 +108,13 @@ of rows such that all condition predicates AND the focus are TRUE on it.
 For numerical (double) input, the support is computed as the mean (over all
 rows) of multiplications of predicate values.}
 
+\item{min_conditional_focus_support}{the minimum relative support of a focus
+within a condition. The conditional support of the focus is the relative
+frequency of rows with focus being TRUE within rows where the condition is
+TRUE.}
+
+\item{max_support}{the maximum support of a condition to trigger the callback}
+
 \item{filter_empty_foci}{a logical scalar indicating whether to skip conditions,
 for which no focus remains available after filtering by \code{min_focus_support}.
 If \code{TRUE}, the condition is passed to the callback function only if at least
@@ -102,16 +125,149 @@ callback function regardless of the number of remaining foci.}
 \code{"goedel"} (minimum t-norm), \code{"goguen"} (product t-norm), or \code{"lukas"}
 (Lukasiewicz t-norm).}
 
+\item{max_results}{the maximum number of generated conditions to execute the
+callback function on. If the number of found conditions exceeds
+\code{max_results}, the function stops generating new conditions and returns
+the results. To avoid long computations during the search, it is recommended
+to set \code{max_results} to a reasonable positive value. Setting \code{max_results}
+to \code{Inf} will generate all possible conditions.}
+
+\item{verbose}{a logical scalar indicating whether to print progress messages.}
+
 \item{threads}{the number of threads to use for parallel computation.}
 
-\item{...}{Further arguments, currently unused.}
+\item{error_context}{a list of details to be used in error messages.
+This argument is useful when \code{dig()} is called from another
+function to provide error messages, which refer to arguments of the
+calling function. The list must contain the following elements:
+\itemize{
+\item \code{arg_x} - the name of the argument \code{x} as a character string
+\item \code{arg_f} - the name of the argument \code{f} as a character string
+\item \code{arg_condition} - the name of the argument \code{condition} as a character
+string
+\item \code{arg_focus} - the name of the argument \code{focus} as a character string
+\item \code{arg_disjoint} - the name of the argument \code{disjoint} as a character
+string
+\item \code{arg_min_length} - the name of the argument \code{min_length} as a character
+string
+\item \code{arg_max_length} - the name of the argument \code{max_length} as a character
+string
+\item \code{arg_min_support} - the name of the argument \code{min_support} as a character
+string
+\item \code{arg_min_focus_support} - the name of the argument \code{min_focus_support}
+as a character string
+\item \code{arg_max_support} - the name of the argument \code{max_support} as a character
+\item \code{arg_filter_empty_foci} - the name of the argument \code{filter_empty_foci}
+as a character string
+\item \code{arg_t_norm} - the name of the argument \code{t_norm} as a character string
+\item \code{arg_threads} - the name of the argument \code{threads} as a character string
+\item \code{call} - an environment in which to evaluate the error messages.
+}}
 }
 \value{
 A list of results provided by the callback function \code{f}.
 }
 \description{
-This is a general function that enumerates all conditions created from
-data in \code{x} and calls the callback function \code{f} on each.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+
+A general function for searching for patterns of custom type. The function
+allows for the selection of columns of \code{x} to be used as condition
+predicates. The function enumerates all possible conditions in the form of
+elementary conjunctions of selected predicates, and for each condition,
+a user-defined callback function \code{f} is executed. The callback function is
+intended to perform some analysis and return an object representing a pattern
+or patterns related to the condition. \code{\link[=dig]{dig()}} returns a list of these
+returned objects.
+
+The callback function \code{f} may have some arguments that are listed in the
+\code{f} argument description. The algorithm provides information about the
+generated condition based on the present arguments.
+
+Additionally to \code{condition}, the function allows for the selection of
+the so-called \emph{focus} predicates. The focus predicates, a.k.a. \emph{foci}, are
+predicates that are evaluated within each condition and some additional
+information is provided to the callback function about them.
+
+\code{dig()} allows to specify some restrictions on the generated conditions,
+such as:
+\itemize{
+\item the minimum and maximum length of the condition (\code{min_length} and
+\code{max_length} arguments).
+\item the minimum support of the condition (\code{min_support} argument). Support
+of the condition is the relative frequency of the condition in the dataset
+\code{x}.
+\item the minimum support of the focus (\code{min_focus_support} argument). Support
+of the focus is the relative frequency of rows such that all condition
+predicates AND the focus are TRUE on it. Foci with support lower than
+\code{min_focus_support} are filtered out.
+}
+}
+\examples{
+library(tibble)
+
+# Prepare iris data for use with dig()
+d <- partition(iris, .breaks = 2)
+
+# Call f() for each condition with support >= 0.5. The result is a list
+# of strings representing the conditions.
+dig(x = d,
+    f = function(condition) {
+        format_condition(names(condition))
+    },
+    min_support = 0.5)
+
+# Create a more complex pattern object - a list with some statistics
+res <- dig(x = d,
+           f = function(condition, support) {
+               list(condition = format_condition(names(condition)),
+                    support = support)
+           },
+           min_support = 0.5)
+print(res)
+
+# Format the result as a data frame
+do.call(rbind, lapply(res, as_tibble))
+
+# Within each condition, evaluate also supports of columns starting with
+# "Species"
+res <- dig(x = d,
+           f = function(condition, support, pp) {
+               c(list(condition = format_condition(names(condition))),
+                 list(condition_support = support),
+                 as.list(pp / nrow(d)))
+           },
+           condition = !starts_with("Species"),
+           focus = starts_with("Species"),
+           min_support = 0.5,
+           min_focus_support = 0)
+
+# Format the result as a tibble
+do.call(rbind, lapply(res, as_tibble))
+
+# For each condition, create multiple patterns based on the focus columns
+res <- dig(x = d,
+           f = function(condition, support, pp) {
+               lapply(seq_along(pp), function(i) {
+                   list(condition = format_condition(names(condition)),
+                        condition_support = support,
+                        focus = names(pp)[i],
+                        focus_support = pp[[i]] / nrow(d))
+               })
+           },
+           condition = !starts_with("Species"),
+           focus = starts_with("Species"),
+           min_support = 0.5,
+           min_focus_support = 0)
+
+# As res is now a list of lists, we need to flatten it before converting to
+# a tibble
+res <- unlist(res, recursive = FALSE)
+
+# Format the result as a tibble
+do.call(rbind, lapply(res, as_tibble))
+}
+\seealso{
+\code{\link[=partition]{partition()}}, \code{\link[=var_names]{var_names()}}, \code{\link[=dig_grid]{dig_grid()}}
 }
 \author{
 Michal Burda

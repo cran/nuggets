@@ -17,6 +17,8 @@
 #include "dig/MaxLengthFilter.h"
 #include "dig/MinSupportFilter.h"
 #include "dig/MinFocusSupportFilter.h"
+#include "dig/MinConditionalFocusSupportFilter.h"
+#include "dig/MaxSupportFilter.h"
 #include "dig/DisjointFilter.h"
 #include "dig/EmptyFociFilter.h"
 
@@ -33,8 +35,7 @@ public:
 
     List execute(List logData, List numData, List logFoci, List numFoci)
     {
-        List result;
-        DataType data;
+        DataType data(config.getNrow());
 
         {
             LogStartEnd l("data init");
@@ -42,6 +43,11 @@ public:
             data.addNumericChains(numData);
             data.addLogicalFoci(logFoci);
             data.addNumericFoci(numFoci);
+            if (config.isVerbose()) {
+                Rcout << "dig: loaded " << data.nrow() << " rows / "
+                      << data.size() << " condition chains and "
+                      << data.fociSize() << " foci chains" << endl;
+            }
         }
 
         {
@@ -98,16 +104,23 @@ public:
         if (config.getMaxLength() >= 0) {
             digger.addFilter(new MaxLengthFilter<TaskType>(config.getMaxLength()));
         }
-        if (config.getMinSupport() > 0) {
+        if (config.getMinSupport() > 0.0) {
             digger.setPositiveConditionChainsNeeded();
             digger.addFilter(new MinSupportFilter<TaskType>(config.getMinSupport()));
         }
-
-        if (config.getMinFocusSupport() > 0) {
+        if (config.getMinFocusSupport() > 0.0) {
             digger.setPpFocusChainsNeeded();
             digger.addFilter(new MinFocusSupportFilter<TaskType>(config.getMinFocusSupport()));
         }
-
+        if (config.getMinConditionalFocusSupport() > 0.0) {
+            digger.setPpFocusChainsNeeded();
+            digger.addFilter(new MinConditionalFocusSupportFilter<TaskType>(config.getMinConditionalFocusSupport(),
+                                                                            data.nrow()));
+        }
+        if (config.getMaxSupport() < 1.0) {
+            digger.setPositiveConditionChainsNeeded();
+            digger.addFilter(new MaxSupportFilter<TaskType>(config.getMaxSupport()));
+        }
         if (config.hasFilterEmptyFoci()) {
             digger.addFilter(new EmptyFociFilter<TaskType>());
         }
@@ -122,6 +135,9 @@ public:
         }
 
         {
+            if (config.isVerbose()) {
+                Rcout << "dig: searching for frequent conditions" << endl;
+            }
             LogStartEnd l("digger.run");
             digger.run();
         }
@@ -129,28 +145,36 @@ public:
         {
             LogStartEnd l("collecting arguments");
             vector<ArgumentValues> diggerResult = digger.getResult();
+            Rcpp::List result(diggerResult.size());
+
+            if (config.isVerbose()) {
+                Rcout << "dig: collecting " << diggerResult.size() << " arguments" << endl;
+            }
             for (size_t i = 0; i < diggerResult.size(); ++i) {
-                List item;
+                List item(diggerResult[i].size());
+                CharacterVector itemNames(diggerResult[i].size());
                 for (size_t j = 0; j < diggerResult[i].size(); ++j) {
                     ArgumentValue a = diggerResult[i][j];
+                    itemNames[j] = a.getArgumentName();
 
                     if (a.getType() == ArgumentType::ARG_LOGICAL) {
-                        item.push_back(a.asLogicalVector(), a.getArgumentName());
+                        item[j] = a.asLogicalVector();
                     }
                     else if (a.getType() == ArgumentType::ARG_INTEGER) {
-                        item.push_back(a.asIntegerVector(), a.getArgumentName());
+                        item[j] = a.asIntegerVector();
                     }
                     else if (a.getType() == ArgumentType::ARG_NUMERIC) {
-                        item.push_back(a.asNumericVector(), a.getArgumentName());
+                        item[j] = a.asNumericVector();
                     } else {
                         throw runtime_error("Unhandled ArgumentType");
                     }
                 }
-                result.push_back(item);
+                item.names() = itemNames;
+                result[i] = item;
             }
-        }
 
-        return result;
+            return result;
+        }
     }
 
 private:

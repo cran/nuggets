@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>nuggets: Get Started</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">nuggets: Get Started</h1>
+
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>Package <code>nuggets</code> searches for patterns that can be
+described with formulae in the form of elementary conjunctions, which
+are called <strong>conditions</strong> in this text. The conditions are
+constructed from predicates, which represent data columns. The user may
+select the interpretation of conditions by selecting the underlying
+logic:</p>
+<ul>
+<li><strong>crisp (i.e. Boolean, binary) logic</strong>, where each
+predicate may be either true (1) or false (0), and the truth value of
+the condition is computed using the laws of classical Boolean algebra;
+or</li>
+<li><strong>fuzzy logic</strong>, where each predicate may have assigned
+a <em>truth degree</em> from the interval <span class="math inline">\([0, 1]\)</span> and the truth degree of the
+conjunction is computed with a selected <em>triangular norm
+(t-norm)</em>. Package <code>nuggets</code> allows to work with three
+most common t-norms: <em>Goedel</em> (minimum), <em>Goguen</em>
+(product), and <em>Lukasiewicz</em>. Let <span class="math inline">\(a,
+b \in [0, 1]\)</span> be the truth degrees of two predicates. Goedel
+t-norm is defined as <span class="math inline">\(\min(a, b)\)</span>,
+Goguen t-norm as <span class="math inline">\(a \cdot b\)</span>, and
+Lukasiewicz t-norm as <span class="math inline">\(\max(0, a + b -
+1)\)</span>.</li>
+</ul>
+<p>Before analyzed by <code>nuggets</code>, the data columns that would
+serve as predicates in conditions have to be either dichotomized or
+transformed to fuzzy sets. The package provides functions for both
+transformations. See the section <strong>Data Preparation</strong> for
+more details.</p>
+<p><code>nuggets</code> provides functions to search for patterns of
+pre-defined types, such as <code>dig_associations()</code> for
+association rules, <code>dig_paired_baseline_contrasts()</code> for
+contrast patterns on paired numeric variables, and
+<code>dig_correlations()</code> for conditional correlations. See the
+section <strong>Pre-defined Patterns</strong> for more details.</p>
+<p>The user may also define a custom function to evaluate the conditions
+and search for patterns of a different type. <code>dig()</code> function
+is a general function that allows to search for patterns of any type.
+<code>dig_grid()</code> function is a wrapper around <code>dig()</code>
+that allows to search for patterns defined by conditions and a pair of
+columns, whose combination is evaluated by the user-defined function.
+See the section <strong>Custom Patterns</strong> for more details.</p>
+</div>
+<div id="data-preparation" class="section level1">
+<h1>Data Preparation</h1>
+<div id="preparations-of-crisp-boolean-predicates" class="section level2">
+<h2>Preparations of Crisp (Boolean) Predicates</h2>
+<p>For patterns based on crisp conditions, the data columns that would
+serve as predicates in conditions have to be transformed to logical
+(<code>TRUE</code>/<code>FALSE</code>) data:</p>
+<ul>
+<li>numeric columns have to be transformed to factors with a selected
+number of levels;</li>
+<li>factors have to be transformed to dummy logical columns.</li>
+</ul>
+<p>Both operations can be done with the help of the
+<code>partition()</code> function. The <code>partition()</code> function
+requires the dataset as its first argument and a <em>tidyselect</em>
+selection expression to select the columns to be transformed. Factors
+and logical columns are transformed to dummy logical columns.</p>
+<p>For numeric columns, the <code>partition()</code> function requires
+the <code>.method</code> argument to specify the method of partitioning.
+The <code>&quot;crisp&quot;</code> method divides the range of values of the
+selected columns into intervals specified by the <code>.breaks</code>
+argument and codes the values into dummy logical columns. The
+<code>.breaks</code> argument is a numeric vector that specifies the
+border values of the intervals.</p>
+<p>For example, consider the <code>CO2</code> dataset from the
+<code>datasets</code> package:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">head</span>(CO2)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="co">#&gt;   Plant   Type  Treatment conc uptake</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="co">#&gt; 1   Qn1 Quebec nonchilled   95   16.0</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co">#&gt; 2   Qn1 Quebec nonchilled  175   30.4</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co">#&gt; 3   Qn1 Quebec nonchilled  250   34.8</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="co">#&gt; 4   Qn1 Quebec nonchilled  350   37.2</span></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co">#&gt; 5   Qn1 Quebec nonchilled  500   35.3</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="co">#&gt; 6   Qn1 Quebec nonchilled  675   39.2</span></span></code></pre></div>
+<p>The <code>Plant</code>, <code>Type</code>, and <code>Treatment</code>
+columns are factors and they will be transformed to dummy logical
+columns without any special arguments added to the
+<code>partition()</code> function:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">partition</span>(CO2, Plant<span class="sc">:</span>Treatment)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="co">#&gt; # A tibble: 84 × 18</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="co">#&gt;     conc uptake `Plant=Qn1` `Plant=Qn2` `Plant=Qn3` `Plant=Qc1` `Plant=Qc3`</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt;    &lt;dbl&gt;  &lt;dbl&gt; &lt;lgl&gt;       &lt;lgl&gt;       &lt;lgl&gt;       &lt;lgl&gt;       &lt;lgl&gt;      </span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt;  1    95   16   TRUE        FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt;  2   175   30.4 TRUE        FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt;  3   250   34.8 TRUE        FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt;  4   350   37.2 TRUE        FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt;  5   500   35.3 TRUE        FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt;  6   675   39.2 TRUE        FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt;  7  1000   39.7 TRUE        FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt;  8    95   13.6 FALSE       TRUE        FALSE       FALSE       FALSE      </span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt;  9   175   27.3 FALSE       TRUE        FALSE       FALSE       FALSE      </span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt; 10   250   37.1 FALSE       TRUE        FALSE       FALSE       FALSE      </span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#&gt; # ℹ 74 more rows</span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt; # ℹ 11 more variables: `Plant=Qc2` &lt;lgl&gt;, `Plant=Mn3` &lt;lgl&gt;, `Plant=Mn2` &lt;lgl&gt;,</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt; #   `Plant=Mn1` &lt;lgl&gt;, `Plant=Mc2` &lt;lgl&gt;, `Plant=Mc3` &lt;lgl&gt;, `Plant=Mc1` &lt;lgl&gt;,</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co">#&gt; #   `Type=Quebec` &lt;lgl&gt;, `Type=Mississippi` &lt;lgl&gt;,</span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="co">#&gt; #   `Treatment=nonchilled` &lt;lgl&gt;, `Treatment=chilled` &lt;lgl&gt;</span></span></code></pre></div>
+<p>The <code>conc</code> and <code>uptake</code> columns are numeric.
+For instance, we can split the <code>conc</code> column into four
+intervals: (-Inf, 175], (175, 350], (350, 675], and (675, Inf). The
+breaks are thus <code>c(-Inf, 175, 350, 675, Inf)</code>.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">partition</span>(CO2, conc, <span class="at">.method =</span> <span class="st">&quot;crisp&quot;</span>, <span class="at">.breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="dv">175</span>, <span class="dv">350</span>, <span class="dv">675</span>, <span class="cn">Inf</span>))</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; # A tibble: 84 × 8</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt;    Plant Type   Treatment  uptake `conc=(-Inf;175]` `conc=(175;350]`</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt;    &lt;ord&gt; &lt;fct&gt;  &lt;fct&gt;       &lt;dbl&gt; &lt;lgl&gt;             &lt;lgl&gt;           </span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt;  1 Qn1   Quebec nonchilled   16   TRUE              FALSE           </span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt;  2 Qn1   Quebec nonchilled   30.4 TRUE              FALSE           </span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt;  3 Qn1   Quebec nonchilled   34.8 FALSE             TRUE            </span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt;  4 Qn1   Quebec nonchilled   37.2 FALSE             TRUE            </span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;  5 Qn1   Quebec nonchilled   35.3 FALSE             FALSE           </span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt;  6 Qn1   Quebec nonchilled   39.2 FALSE             FALSE           </span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt;  7 Qn1   Quebec nonchilled   39.7 FALSE             FALSE           </span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt;  8 Qn2   Quebec nonchilled   13.6 TRUE              FALSE           </span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt;  9 Qn2   Quebec nonchilled   27.3 TRUE              FALSE           </span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; 10 Qn2   Quebec nonchilled   37.1 FALSE             TRUE            </span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; # ℹ 74 more rows</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; # ℹ 2 more variables: `conc=(350;675]` &lt;lgl&gt;, `conc=(675;Inf]` &lt;lgl&gt;</span></span></code></pre></div>
+<p>Similarly, we can split the <code>uptake</code> column into three
+intervals: (-Inf, 10], (10, 20], and (20, Inf) by specifying the breaks
+<code>c(-Inf, 10, 20, Inf)</code>.</p>
+<p>The transformation of the whole <code>CO2</code> dataset to crisp
+predicates can be done as follows:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>crispCO2 <span class="ot">&lt;-</span> CO2 <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>    <span class="fu">partition</span>(Plant<span class="sc">:</span>Treatment) <span class="sc">|&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    <span class="fu">partition</span>(conc, <span class="at">.method =</span> <span class="st">&quot;crisp&quot;</span>, <span class="at">.breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="dv">175</span>, <span class="dv">350</span>, <span class="dv">675</span>, <span class="cn">Inf</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>    <span class="fu">partition</span>(uptake, <span class="at">.method =</span> <span class="st">&quot;crisp&quot;</span>, <span class="at">.breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="dv">10</span>, <span class="dv">20</span>, <span class="cn">Inf</span>))</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="fu">head</span>(crispCO2)</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 23</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt;   `Plant=Qn1` `Plant=Qn2` `Plant=Qn3` `Plant=Qc1` `Plant=Qc3` `Plant=Qc2`</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt;   &lt;lgl&gt;       &lt;lgl&gt;       &lt;lgl&gt;       &lt;lgl&gt;       &lt;lgl&gt;       &lt;lgl&gt;      </span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; 1 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; 2 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; 3 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; 4 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; 5 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; 6 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; # ℹ 17 more variables: `Plant=Mn3` &lt;lgl&gt;, `Plant=Mn2` &lt;lgl&gt;, `Plant=Mn1` &lt;lgl&gt;,</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; #   `Plant=Mc2` &lt;lgl&gt;, `Plant=Mc3` &lt;lgl&gt;, `Plant=Mc1` &lt;lgl&gt;,</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt; #   `Type=Quebec` &lt;lgl&gt;, `Type=Mississippi` &lt;lgl&gt;,</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt; #   `Treatment=nonchilled` &lt;lgl&gt;, `Treatment=chilled` &lt;lgl&gt;,</span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt; #   `conc=(-Inf;175]` &lt;lgl&gt;, `conc=(175;350]` &lt;lgl&gt;, `conc=(350;675]` &lt;lgl&gt;,</span></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="co">#&gt; #   `conc=(675;Inf]` &lt;lgl&gt;, `uptake=(-Inf;10]` &lt;lgl&gt;, `uptake=(10;20]` &lt;lgl&gt;,</span></span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a><span class="co">#&gt; #   `uptake=(20;Inf]` &lt;lgl&gt;</span></span></code></pre></div>
+<p>Each call to the <code>partition()</code> function returns a tibble
+data frame with the selected columns transformed to dummy logical
+columns while the other columns remain unchanged.</p>
+<p>Each original factor column became replaced by a set of logical
+columns, all of which start with the original column name and are
+followed by the factor level name. For example, the <code>Type</code>
+column, which is a factor with two levels <code>Quebec</code> and
+<code>Mississippi</code>, was replaced by two logical columns:
+<code>Type=Quebec</code> and <code>Type=Mississippi</code>. Numeric
+columns were replaced by logical columns with names that indicate the
+interval to which the original value belongs. For example, the
+<code>conc</code> column was replaced by four logical columns:
+<code>conc=(-Inf,175]</code>, <code>conc=(175,350]</code>,
+<code>conc=(350,675]</code>, and <code>conc=(675,Inf)</code>. Other
+columns were transformed similarly:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">colnames</span>(crispCO2)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt;  [1] &quot;Plant=Qn1&quot;            &quot;Plant=Qn2&quot;            &quot;Plant=Qn3&quot;           </span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt;  [4] &quot;Plant=Qc1&quot;            &quot;Plant=Qc3&quot;            &quot;Plant=Qc2&quot;           </span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt;  [7] &quot;Plant=Mn3&quot;            &quot;Plant=Mn2&quot;            &quot;Plant=Mn1&quot;           </span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; [10] &quot;Plant=Mc2&quot;            &quot;Plant=Mc3&quot;            &quot;Plant=Mc1&quot;           </span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; [13] &quot;Type=Quebec&quot;          &quot;Type=Mississippi&quot;     &quot;Treatment=nonchilled&quot;</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; [16] &quot;Treatment=chilled&quot;    &quot;conc=(-Inf;175]&quot;      &quot;conc=(175;350]&quot;      </span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; [19] &quot;conc=(350;675]&quot;       &quot;conc=(675;Inf]&quot;       &quot;uptake=(-Inf;10]&quot;    </span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; [22] &quot;uptake=(10;20]&quot;       &quot;uptake=(20;Inf]&quot;</span></span></code></pre></div>
+<p>Now all the columns are logical and can be used as predicates in
+crisp conditions.</p>
+</div>
+<div id="preparations-of-fuzzy-predicates" class="section level2">
+<h2>Preparations of Fuzzy Predicates</h2>
+<p>For patterns based on fuzzy conditions, the data columns that would
+serve as predicates in conditions have to be transformed to fuzzy
+predicates. The fuzzy predicate is represented by a vector of truth
+degrees from the interval <span class="math inline">\([0, 1]\)</span>.
+The truth degree of a predicate is the degree to which the predicate is
+true with 0 meaning that the predicate is false and 1 meaning that the
+predicate is true. A value between 0 and 1 indicates a partial
+truthfulness.</p>
+<p>In order to search for fuzzy patterns, the numeric input data columns
+have to be transformed to fuzzy predicates, i.e., to vectors of truth
+degrees from the interval <span class="math inline">\([0, 1]\)</span>.
+(Fuzzy methods allow to be used with logical columns too.)</p>
+<p>The transformation to fuzzy predicates can be done again with the
+help of the <code>partition()</code> function. Again, factors will be
+transformed to dummy logical columns. On the other hand, numeric columns
+will be transformed to fuzzy predicates. For that, the
+<code>partition()</code> function provides two fuzzy partitioning
+methods: <code>&quot;triangle&quot;</code> and <code>&quot;raisedcos&quot;</code>. The
+<code>&quot;triangle&quot;</code> method creates fuzzy sets with triangular
+membership functions, while the <code>&quot;raisedcos&quot;</code> method creates
+fuzzy sets with raised cosine membership functions.</p>
+<p>More advanced fuzzy partitioning of numeric columns may be achieved
+with the help of the <a href="https://cran.r-project.org/package=lfl">lfl</a> package, which
+provides tools for definition of fuzzy sets of many types including
+fuzzy sets that model linguistic terms such as “very small”, “extremely
+big” and so on. See the <a href="https://github.com/beerda/lfl/blob/master/vignettes/main.pdf"><code>lfl</code>
+documentation</a> for more information.</p>
+<p>In the following example, both the <code>conc</code> and
+<code>uptake</code> columns are transformed to fuzzy sets with
+triangular membership functions. For that, the <code>partition()</code>
+function requires the <code>.breaks</code> argument to specify the shape
+of fuzzy sets. For <code>.method = &quot;triangle&quot;</code>, each consecutive
+triplet of values in the <code>.breaks</code> vector specifies a single
+triangular fuzzy set: the first and the last value of the triplet are
+the borders of the triangle, and the middle value is the peak of the
+triangle.</p>
+<p>For instance, the <code>conc</code> column’s <code>.breaks</code> may
+be specified as <code>c(-Inf, 175, 350, 675, Inf)</code>, which creates
+three triangular fuzzy sets: <code>conc=(-Inf,175,350)</code>,
+<code>conc=(175,350,675)</code>, and <code>conc=(350,675,Inf)</code>.
+Similarly, the <code>uptake</code> column’s <code>.breaks</code> may be
+specified as <code>c(-Inf, 18, 28, 37, Inf)</code>.</p>
+<p>The transformation of the whole <code>CO2</code> dataset to fuzzy
+predicates can be done as follows:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>fuzzyCO2 <span class="ot">&lt;-</span> CO2 <span class="sc">|&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>    <span class="fu">partition</span>(Plant<span class="sc">:</span>Treatment) <span class="sc">|&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>    <span class="fu">partition</span>(conc, <span class="at">.method =</span> <span class="st">&quot;triangle&quot;</span>, <span class="at">.breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="dv">175</span>, <span class="dv">350</span>, <span class="dv">675</span>, <span class="cn">Inf</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>    <span class="fu">partition</span>(uptake, <span class="at">.method =</span> <span class="st">&quot;triangle&quot;</span>, <span class="at">.breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="dv">18</span>, <span class="dv">28</span>, <span class="dv">37</span>, <span class="cn">Inf</span>))</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="fu">head</span>(fuzzyCO2)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 22</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt;   `Plant=Qn1` `Plant=Qn2` `Plant=Qn3` `Plant=Qc1` `Plant=Qc3` `Plant=Qc2`</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt;   &lt;lgl&gt;       &lt;lgl&gt;       &lt;lgl&gt;       &lt;lgl&gt;       &lt;lgl&gt;       &lt;lgl&gt;      </span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; 1 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt; 2 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; 3 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt; 4 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt; 5 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt; 6 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt; # ℹ 16 more variables: `Plant=Mn3` &lt;lgl&gt;, `Plant=Mn2` &lt;lgl&gt;, `Plant=Mn1` &lt;lgl&gt;,</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="co">#&gt; #   `Plant=Mc2` &lt;lgl&gt;, `Plant=Mc3` &lt;lgl&gt;, `Plant=Mc1` &lt;lgl&gt;,</span></span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt; #   `Type=Quebec` &lt;lgl&gt;, `Type=Mississippi` &lt;lgl&gt;,</span></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt; #   `Treatment=nonchilled` &lt;lgl&gt;, `Treatment=chilled` &lt;lgl&gt;,</span></span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt; #   `conc=(-Inf;175;350)` &lt;dbl&gt;, `conc=(175;350;675)` &lt;dbl&gt;,</span></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt; #   `conc=(350;675;Inf)` &lt;dbl&gt;, `uptake=(-Inf;18;28)` &lt;dbl&gt;,</span></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt; #   `uptake=(18;28;37)` &lt;dbl&gt;, `uptake=(28;37;Inf)` &lt;dbl&gt;</span></span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="fu">colnames</span>(fuzzyCO2)</span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a><span class="co">#&gt;  [1] &quot;Plant=Qn1&quot;            &quot;Plant=Qn2&quot;            &quot;Plant=Qn3&quot;           </span></span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a><span class="co">#&gt;  [4] &quot;Plant=Qc1&quot;            &quot;Plant=Qc3&quot;            &quot;Plant=Qc2&quot;           </span></span>
+<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a><span class="co">#&gt;  [7] &quot;Plant=Mn3&quot;            &quot;Plant=Mn2&quot;            &quot;Plant=Mn1&quot;           </span></span>
+<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a><span class="co">#&gt; [10] &quot;Plant=Mc2&quot;            &quot;Plant=Mc3&quot;            &quot;Plant=Mc1&quot;           </span></span>
+<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a><span class="co">#&gt; [13] &quot;Type=Quebec&quot;          &quot;Type=Mississippi&quot;     &quot;Treatment=nonchilled&quot;</span></span>
+<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a><span class="co">#&gt; [16] &quot;Treatment=chilled&quot;    &quot;conc=(-Inf;175;350)&quot;  &quot;conc=(175;350;675)&quot;  </span></span>
+<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a><span class="co">#&gt; [19] &quot;conc=(350;675;Inf)&quot;   &quot;uptake=(-Inf;18;28)&quot;  &quot;uptake=(18;28;37)&quot;   </span></span>
+<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a><span class="co">#&gt; [22] &quot;uptake=(28;37;Inf)&quot;</span></span></code></pre></div>
+</div>
+</div>
+<div id="pre-defined-patterns" class="section level1">
+<h1>Pre-defined Patterns</h1>
+<p><code>nuggets</code> provides a set of functions for searching for
+some best-known pattern types. These functions allow to process Boolean
+data, fuzzy data, or both. The result of these functions is always a
+tibble with patterns stored as rows. For more advance usage, which
+allows to search for custom patterns or to compute user-defined measures
+and statistics, see the section <strong>Custom Patterns</strong>.</p>
+<div id="search-for-association-rules" class="section level3">
+<h3>Search for Association Rules</h3>
+<p>Association rules are rules of the form <span class="math inline">\(A
+\Rightarrow B\)</span>, where <span class="math inline">\(A\)</span> is
+either Boolean or fuzzy condition in the form of conjunction, and <span class="math inline">\(B\)</span> is a Boolean or fuzzy predicate.</p>
+<p>Before continuing with the search for rules, it is advisable to
+create the so-called <em>vector of disjoints</em>. The vector of
+disjoints is a character vector with the same length as the number of
+columns in the analyzed dataset. It specifies predicates, which are
+mutually exclusive and should not be combined together in a single
+pattern’s condition: columns with equal values in the disjoint vector
+will not appear in a single condition. Providing the vector of disjoints
+to the algorithm will speed-up the search as it makes no sense, e.g., to
+combine <code>Plant=Qn1</code> and <code>Plant=Qn2</code> in a condition
+<code>Plant=Qn1 &amp; Plant=Qn2</code> as such formula is never true for
+any data row.</p>
+<p>The vector of disjoints can be easily created from the column names
+of the dataset, e.g., by obtaining the first part of column names before
+the equal sign, which is neatly provided by the <code>var_names()</code>
+function as follows:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>disj <span class="ot">&lt;-</span> <span class="fu">var_names</span>(<span class="fu">colnames</span>(fuzzyCO2))</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">print</span>(disj)</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt;  [1] &quot;Plant&quot;     &quot;Plant&quot;     &quot;Plant&quot;     &quot;Plant&quot;     &quot;Plant&quot;     &quot;Plant&quot;    </span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt;  [7] &quot;Plant&quot;     &quot;Plant&quot;     &quot;Plant&quot;     &quot;Plant&quot;     &quot;Plant&quot;     &quot;Plant&quot;    </span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt; [13] &quot;Type&quot;      &quot;Type&quot;      &quot;Treatment&quot; &quot;Treatment&quot; &quot;conc&quot;      &quot;conc&quot;     </span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; [19] &quot;conc&quot;      &quot;uptake&quot;    &quot;uptake&quot;    &quot;uptake&quot;</span></span></code></pre></div>
+<p>The function <code>dig_associations</code> takes the analyzed dataset
+as its first parameter and a pair of <code>tidyselect</code> expressions
+to select the column names to appear in the left-hand (antecedent) and
+right-hand (consequent) side of the rule. The following command searches
+for associations rules, such that:</p>
+<ul>
+<li>any column except those starting with “Treatment” is in the
+antecedent;</li>
+<li>any column starting with “Treatment” is in the consequent;</li>
+<li>the minimum support is 0.02 (support is the proportion of rows that
+satisfy the antecedent AND consequent));</li>
+<li>the minimum confidence is 0.8 (confidence is the proportion of rows
+satisfying the consequent GIVEN the antecedent is true).</li>
+</ul>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">dig_associations</span>(fuzzyCO2,</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>                           <span class="at">antecedent =</span> <span class="sc">!</span><span class="fu">starts_with</span>(<span class="st">&quot;Treatment&quot;</span>),</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>                           <span class="at">consequent =</span> <span class="fu">starts_with</span>(<span class="st">&quot;Treatment&quot;</span>),</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>                           <span class="at">disjoint =</span> disj,</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>                           <span class="at">min_support =</span> <span class="fl">0.02</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>                           <span class="at">min_confidence =</span> <span class="fl">0.8</span>)</span></code></pre></div>
+<p>The result is a tibble with found rules. We may arrange it by support
+in descending order:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">arrange</span>(result, <span class="fu">desc</span>(support))</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">print</span>(result)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt; # A tibble: 188 × 8</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt;    antecedent        consequent support confidence coverage conseq_support count</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt;    &lt;chr&gt;             &lt;chr&gt;        &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;          &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt;  1 {Type=Mississipp… {Treatmen…  0.135       0.895   0.151             0.5  11.4</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt;  2 {Plant=Mc3}       {Treatmen…  0.0833      1       0.0833            0.5   7  </span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co">#&gt;  3 {Plant=Mc1}       {Treatmen…  0.0833      1       0.0833            0.5   7  </span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co">#&gt;  4 {Plant=Qn1}       {Treatmen…  0.0833      1       0.0833            0.5   7  </span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co">#&gt;  5 {Plant=Mc2}       {Treatmen…  0.0833      1       0.0833            0.5   7  </span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co">#&gt;  6 {Plant=Mn1}       {Treatmen…  0.0833      1       0.0833            0.5   7  </span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co">#&gt;  7 {Plant=Mn2}       {Treatmen…  0.0833      1       0.0833            0.5   7  </span></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="co">#&gt;  8 {Plant=Mn3}       {Treatmen…  0.0833      1       0.0833            0.5   7  </span></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a><span class="co">#&gt;  9 {Plant=Qc2}       {Treatmen…  0.0833      1       0.0833            0.5   7  </span></span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a><span class="co">#&gt; 10 {Plant=Qc3}       {Treatmen…  0.0833      1       0.0833            0.5   7  </span></span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a><span class="co">#&gt; # ℹ 178 more rows</span></span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a><span class="co">#&gt; # ℹ 1 more variable: antecedent_length &lt;int&gt;</span></span></code></pre></div>
+</div>
+<div id="conditional-correlations" class="section level2">
+<h2>Conditional Correlations</h2>
+<p>TBD (<code>dig_correlations</code>)</p>
+</div>
+<div id="contrast-patterns" class="section level2">
+<h2>Contrast Patterns</h2>
+<p>TBD (<code>dig_contrasts</code>)</p>
+</div>
+</div>
+<div id="custom-patterns" class="section level1">
+<h1>Custom Patterns</h1>
+<p>The <code>nuggets</code> package allows to execute a user-defined
+callback function on each generated frequent condition. That way a
+custom type of patterns may be searched. The following example
+replicates the search for associations rules with the custom callback
+function. For that, a dataset has to be dichotomized and the disjoint
+vector created as in the <strong>Data Preparation</strong> section
+above:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">head</span>(fuzzyCO2)</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 22</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="co">#&gt;   `Plant=Qn1` `Plant=Qn2` `Plant=Qn3` `Plant=Qc1` `Plant=Qc3` `Plant=Qc2`</span></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="co">#&gt;   &lt;lgl&gt;       &lt;lgl&gt;       &lt;lgl&gt;       &lt;lgl&gt;       &lt;lgl&gt;       &lt;lgl&gt;      </span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="co">#&gt; 1 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co">#&gt; 2 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co">#&gt; 3 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="co">#&gt; 4 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="co">#&gt; 5 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="co">#&gt; 6 TRUE        FALSE       FALSE       FALSE       FALSE       FALSE      </span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="co">#&gt; # ℹ 16 more variables: `Plant=Mn3` &lt;lgl&gt;, `Plant=Mn2` &lt;lgl&gt;, `Plant=Mn1` &lt;lgl&gt;,</span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a><span class="co">#&gt; #   `Plant=Mc2` &lt;lgl&gt;, `Plant=Mc3` &lt;lgl&gt;, `Plant=Mc1` &lt;lgl&gt;,</span></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a><span class="co">#&gt; #   `Type=Quebec` &lt;lgl&gt;, `Type=Mississippi` &lt;lgl&gt;,</span></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a><span class="co">#&gt; #   `Treatment=nonchilled` &lt;lgl&gt;, `Treatment=chilled` &lt;lgl&gt;,</span></span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a><span class="co">#&gt; #   `conc=(-Inf;175;350)` &lt;dbl&gt;, `conc=(175;350;675)` &lt;dbl&gt;,</span></span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a><span class="co">#&gt; #   `conc=(350;675;Inf)` &lt;dbl&gt;, `uptake=(-Inf;18;28)` &lt;dbl&gt;,</span></span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a><span class="co">#&gt; #   `uptake=(18;28;37)` &lt;dbl&gt;, `uptake=(28;37;Inf)` &lt;dbl&gt;</span></span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a><span class="fu">print</span>(disj)</span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a><span class="co">#&gt;  [1] &quot;Plant&quot;     &quot;Plant&quot;     &quot;Plant&quot;     &quot;Plant&quot;     &quot;Plant&quot;     &quot;Plant&quot;    </span></span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a><span class="co">#&gt;  [7] &quot;Plant&quot;     &quot;Plant&quot;     &quot;Plant&quot;     &quot;Plant&quot;     &quot;Plant&quot;     &quot;Plant&quot;    </span></span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a><span class="co">#&gt; [13] &quot;Type&quot;      &quot;Type&quot;      &quot;Treatment&quot; &quot;Treatment&quot; &quot;conc&quot;      &quot;conc&quot;     </span></span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a><span class="co">#&gt; [19] &quot;conc&quot;      &quot;uptake&quot;    &quot;uptake&quot;    &quot;uptake&quot;</span></span></code></pre></div>
+<p>As we want to search for associations rules with some minimum support
+and confidence, we define the variables to hold that thresholds. We also
+need to define a callback function that will be called for each found
+frequent condition. Its purpose is to generate the rules with the
+obtained condition as an antecedent:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>min_support <span class="ot">&lt;-</span> <span class="fl">0.02</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>min_confidence <span class="ot">&lt;-</span> <span class="fl">0.8</span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>f <span class="ot">&lt;-</span> <span class="cf">function</span>(condition, support, foci_supports) {</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>    conf <span class="ot">&lt;-</span> foci_supports <span class="sc">/</span> support</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>    sel <span class="ot">&lt;-</span> <span class="sc">!</span><span class="fu">is.na</span>(conf) <span class="sc">&amp;</span> conf <span class="sc">&gt;=</span> min_confidence <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(foci_supports) <span class="sc">&amp;</span> foci_supports <span class="sc">&gt;=</span> min_support</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>    conf <span class="ot">&lt;-</span> conf[sel]</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>    supp <span class="ot">&lt;-</span> foci_supports[sel]</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>    </span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>    <span class="fu">lapply</span>(<span class="fu">seq_along</span>(conf), <span class="cf">function</span>(i) { </span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a>      <span class="fu">list</span>(<span class="at">antecedent =</span> <span class="fu">format_condition</span>(<span class="fu">names</span>(condition)),</span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>           <span class="at">consequent =</span> <span class="fu">format_condition</span>(<span class="fu">names</span>(conf)[[i]]),</span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>           <span class="at">support =</span> supp[[i]],</span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a>           <span class="at">confidence =</span> conf[[i]])</span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a>    })</span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a>}</span></code></pre></div>
+<p>The callback function <code>f()</code> defines three arguments:
+<code>condition</code>, <code>support</code> and
+<code>foci_supports</code>. The names of the arguments are not random.
+Based on the argument names of the callback function, the searching
+algorithm provides information to the function. Here
+<code>condition</code> is a vector of indices representing the
+conjunction of predicates in a condition. By the predicate we mean the
+column in the source dataset. The <code>support</code> argument gets the
+relative frequency of the condition in the dataset.
+<code>foci_supports</code> is a vector of supports of special
+predicates, which we call “foci” (plural of “focus”), within the rows
+satisfying the condition. For associations rules, foci are potential
+rule consequents.</p>
+<p>Now we can run the digging for rules:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">dig</span>(fuzzyCO2,</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>              <span class="at">f =</span> f,</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>              <span class="at">condition =</span> <span class="sc">!</span><span class="fu">starts_with</span>(<span class="st">&quot;Treatment&quot;</span>),</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>              <span class="at">focus =</span> <span class="fu">starts_with</span>(<span class="st">&quot;Treatment&quot;</span>),</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>              <span class="at">disjoint =</span> disj,</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>              <span class="at">min_length =</span> <span class="dv">1</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>              <span class="at">min_support =</span> min_support)</span></code></pre></div>
+<p>As we return a list of lists in the callback function, we have to
+flatten the first level of lists in the result and binding it into a
+data frame:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>result <span class="ot">&lt;-</span> result <span class="sc">|&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  <span class="fu">unlist</span>(<span class="at">recursive =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  <span class="fu">lapply</span>(as_tibble) <span class="sc">|&gt;</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  <span class="fu">do.call</span>(rbind, <span class="at">args =</span> _) <span class="sc">|&gt;</span></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(support))</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="fu">print</span>(result)</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="co">#&gt; # A tibble: 188 × 4</span></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="co">#&gt;    antecedent                           consequent            support confidence</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="co">#&gt;    &lt;chr&gt;                                &lt;chr&gt;                   &lt;dbl&gt;      &lt;dbl&gt;</span></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a><span class="co">#&gt;  1 {Type=Mississippi,uptake=(18;28;37)} {Treatment=nonchille…  0.135       0.895</span></span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a><span class="co">#&gt;  2 {Plant=Mc3}                          {Treatment=chilled}    0.0833      1    </span></span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a><span class="co">#&gt;  3 {Plant=Mc1}                          {Treatment=chilled}    0.0833      1    </span></span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a><span class="co">#&gt;  4 {Plant=Qn1}                          {Treatment=nonchille…  0.0833      1    </span></span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a><span class="co">#&gt;  5 {Plant=Mc2}                          {Treatment=chilled}    0.0833      1    </span></span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a><span class="co">#&gt;  6 {Plant=Mn1}                          {Treatment=nonchille…  0.0833      1    </span></span>
+<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a><span class="co">#&gt;  7 {Plant=Mn2}                          {Treatment=nonchille…  0.0833      1    </span></span>
+<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a><span class="co">#&gt;  8 {Plant=Mn3}                          {Treatment=nonchille…  0.0833      1    </span></span>
+<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a><span class="co">#&gt;  9 {Plant=Qc2}                          {Treatment=chilled}    0.0833      1    </span></span>
+<span id="cb13-20"><a href="#cb13-20" tabindex="-1"></a><span class="co">#&gt; 10 {Plant=Qc3}                          {Treatment=chilled}    0.0833      1    </span></span>
+<span id="cb13-21"><a href="#cb13-21" tabindex="-1"></a><span class="co">#&gt; # ℹ 178 more rows</span></span></code></pre></div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

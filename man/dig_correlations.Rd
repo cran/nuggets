@@ -9,14 +9,17 @@ dig_correlations(
   condition = where(is.logical),
   xvars = where(is.numeric),
   yvars = where(is.numeric),
+  disjoint = var_names(colnames(x)),
   method = "pearson",
   alternative = "two.sided",
   exact = NULL,
   min_length = 0L,
   max_length = Inf,
   min_support = 0,
-  threads = 1,
-  ...
+  max_support = 1,
+  max_results = Inf,
+  verbose = FALSE,
+  threads = 1
 )
 }
 \arguments{
@@ -33,6 +36,13 @@ specifying the columns to use for computation of correlations}
 \item{yvars}{a tidyselect expression (see
 \href{https://tidyselect.r-lib.org/articles/syntax.html}{tidyselect syntax})
 specifying the columns to use for computation of correlations}
+
+\item{disjoint}{an atomic vector of size equal to the number of columns of \code{x}
+that specifies the groups of predicates: if some elements of the \code{disjoint}
+vector are equal, then the corresponding columns of \code{x} will NOT be
+present together in a single condition. If \code{x} is prepared with
+\code{\link[=partition]{partition()}}, using the \code{\link[=var_names]{var_names()}} function on \code{x}'s column names
+is a convenient way to create the \code{disjoint} vector.}
 
 \item{method}{a character string indicating which correlation coefficient is
 to be used for the test. One of \code{"pearson"}, \code{"kendall"}, or \code{"spearman"}}
@@ -60,17 +70,60 @@ relative frequency of rows such that all condition predicates are TRUE on it.
 For numerical (double) input, the support is computed as the mean (over all
 rows) of multiplications of predicate values.}
 
-\item{threads}{the number of threads to use for parallel computation.}
+\item{max_support}{the maximum support of a condition to trigger the callback
+function for it. See argument \code{min_support} for details of what is the
+support of a condition.}
 
-\item{...}{Further arguments, currently unused.}
+\item{max_results}{the maximum number of generated conditions to execute the
+callback function on. If the number of found conditions exceeds
+\code{max_results}, the function stops generating new conditions and returns
+the results. To avoid long computations during the search, it is recommended
+to set \code{max_results} to a reasonable positive value. Setting \code{max_results}
+to \code{Inf} will generate all possible conditions.}
+
+\item{verbose}{a logical scalar indicating whether to print progress messages.}
+
+\item{threads}{the number of threads to use for parallel computation.}
 }
 \value{
-A tibble with found rules.
+A tibble with found patterns.
 }
 \description{
-Compute correlation between all combinations of \code{xvars} and \code{yvars} columns
-of \code{x} in sub-data corresponding to conditions generated from \code{condition}
-columns.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+
+Conditional correlations are patterns that identify strong relationships
+between pairs of numeric variables under specific conditions.
+
+\describe{
+\item{Scheme:}{\code{xvar ~ yvar | C}\cr\cr
+\code{xvar} and \code{yvar} highly correlates in data that satisfy the condition
+\code{C}.}
+\item{Example:}{\code{study_time ~ test_score | hard_exam}\cr\cr
+For \emph{hard exams}, the amount of \emph{study time} is highly correlated with
+the obtained exam's \emph{test score}.}
+}
+
+The function computes correlations between all combinations of \code{xvars} and
+\code{yvars} columns of \code{x} in multiple sub-data corresponding to conditions
+generated from \code{condition} columns.
+}
+\examples{
+# convert iris$Species into dummy logical variables
+d <- partition(iris, Species)
+
+# find conditional correlations between all pairs of numeric variables
+dig_correlations(d,
+                 condition = where(is.logical),
+                 xvars = Sepal.Length:Petal.Width,
+                 yvars = Sepal.Length:Petal.Width)
+
+# With `condition = NULL`, dig_correlations() computes correlations between
+# all pairs of numeric variables on the whole dataset only, which is an
+# alternative way of computing the correlation matrix
+dig_correlations(iris,
+                 condition = NULL,
+                 xvars = Sepal.Length:Petal.Width,
+                 yvars = Sepal.Length:Petal.Width)
 }
 \seealso{
 \code{\link[=dig]{dig()}}, \code{\link[stats:cor.test]{stats::cor.test()}}

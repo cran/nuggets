@@ -1,3 +1,21 @@
+# nuggets 1.4.0
+- released: 2025-01-08
+- added var_names(), dig_baseline_contrasts(), dig_complement_contrasts()
+- dig_contrasts() renamed to dig_paired_baseline_contrasts()
+- dig_implications() renamed to dig_associations()
+- dichotomize() is deprecated (use partition() instead)
+- added max_support argument to dig()
+- added max_results argument to dig()
+- optimized performance of dig()
+- added min_conditional_focus_support argument to dig()
+- fixed handling of NULL returned by a callback function in dig_grid()
+- argument d of the callback function in dig_grid() renamed to pd
+- added handling of nd argument of the callback function in dig_grid()
+- added max_p_value argument to dig_paired_baseline_contrasts()
+- improved error messages
+- added nuggets vignette
+- started using lifecycle and pkgdown
+
 # nuggets 1.3.0
 - released: 2024-11-13
 - added is_degree(), dig_contrasts(), partition()
@@ -15,7 +33,7 @@
 - fixed memory leaks
 
 # nuggets 1.1.0
-- released: 2024-10-07
+- released: 2024-10-08
 - added .other argument to dichotomize()
 - fixed handling of xvars, yvars tidy-selectors in dig_correlations()
 - added filtering of foci by their support
@@ -23,7 +41,7 @@
   (pp, pn, np, nn arguments)
 
 # nuggets 1.0.2
-- released: 2024-01-08
+- released: 2024-01-09
 - fixed handling of arguments min_coverage and min_support in dig_implications()
 - attempt to fix LTO error related to run_testhat_tests() - fixed by using
   an RC version of Rcpp (1.0.11.6)

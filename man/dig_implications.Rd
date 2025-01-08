@@ -2,13 +2,13 @@
 % Please edit documentation in R/dig_implications.R
 \name{dig_implications}
 \alias{dig_implications}
-\title{Search for implicative rules}
+\title{Search for association rules}
 \usage{
 dig_implications(
   x,
   antecedent = everything(),
   consequent = everything(),
-  disjoint = NULL,
+  disjoint = var_names(colnames(x)),
   min_length = 0L,
   max_length = Inf,
   min_coverage = 0,
@@ -37,7 +37,9 @@ specifying the columns to use in the consequent (right) part of the rules}
 \item{disjoint}{an atomic vector of size equal to the number of columns of \code{x}
 that specifies the groups of predicates: if some elements of the \code{disjoint}
 vector are equal, then the corresponding columns of \code{x} will NOT be
-present together in a single condition.}
+present together in a single condition. If \code{x} is prepared with
+\code{\link[=partition]{partition()}}, using the \code{\link[=var_names]{var_names()}} function on \code{x}'s column names
+is a convenient way to create the \code{disjoint} vector.}
 
 \item{min_length}{the minimum length, i.e., the minimum number of predicates in the
 antecedent, of a rule to be generated. Value must be greater or equal to 0.
@@ -78,13 +80,25 @@ for a description of the measures.}
 \item{...}{Further arguments, currently unused.}
 }
 \value{
-A tibble with found rules and computed quality measures.
+A tibble with found patterns and computed quality measures.
 }
 \description{
-Implicative rule is a rule of the form \eqn{A \Rightarrow c}{A => c},
-where \eqn{A} (\emph{antecedent}) is a set of predicates and \eqn{c} (\emph{consequent}) is a predicate.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+Association rules identify conditions (\emph{antecedents}) under which
+a specific feature (\emph{consequent}) is present very often.
+
+\describe{
+\item{Scheme:}{\verb{A => C}\cr\cr
+If condition \code{A} is satisfied, then the feature \code{C} is present very often.}
+\item{Example:}{\verb{university_edu & middle_age & IT_industry => high_income}\cr\cr
+People in \emph{middle age} with \emph{university education} working in IT industry
+have very likely a \emph{high income}.}
 }
-\details{
+
+Antecedent \code{A} is usually a set of predicates, and consequent \code{C} is a single
+predicate.
+
 For the following explanations we need a mathematical function \eqn{supp(I)}, which
 is defined for a set \eqn{I} of predicates as a relative frequency of rows satisfying
 all predicates from \eqn{I}. For logical data, \eqn{supp(I)} equals to the relative
@@ -93,7 +107,7 @@ For numerical (double) input, \eqn{supp(I)} is computed as the mean (over all ro
 of truth degrees of the formula \verb{i_1 AND i_2 AND ... AND i_n}, where
 \code{AND} is a triangular norm selected by the \code{t_norm} argument.
 
-Implicative rules are characterized with the following quality measures.
+Association rules are characterized with the following quality measures.
 
 \emph{Length} of a rule is the number of elements in the antecedent.
 
@@ -105,9 +119,19 @@ Implicative rules are characterized with the following quality measures.
 
 \emph{Confidence} of a rule is the fraction \eqn{supp(A) / supp(A \cup \{c\})}.
 }
+\examples{
+d <- partition(mtcars, .breaks = 2)
+dig_associations(d,
+                 antecedent = !starts_with("mpg"),
+                 consequent = starts_with("mpg"),
+                 min_support = 0.3,
+                 min_confidence = 0.8,
+                 measures = c("lift", "conviction"))
+}
 \seealso{
-\code{\link[=dig]{dig()}}
+\code{\link[=partition]{partition()}}, \code{\link[=var_names]{var_names()}}, \code{\link[=dig]{dig()}}
 }
 \author{
 Michal Burda
 }
+\keyword{internal}

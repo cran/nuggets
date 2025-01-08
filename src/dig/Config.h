@@ -8,6 +8,9 @@ class Config {
 public:
     Config(List configuration)
     {
+        IntegerVector nrowVec = configuration["nrow"];
+        nrow = nrowVec[0];
+
         parseArguments(configuration["arguments"]);
 
         IntegerVector predicates = configuration["predicates"];
@@ -37,8 +40,20 @@ public:
         NumericVector minFocusSupportVec = configuration["minFocusSupport"];
         minFocusSupport = minFocusSupportVec[0];
 
+        NumericVector minConditionalFocusSupportVec = configuration["minConditionalFocusSupport"];
+        minConditionalFocusSupport = minConditionalFocusSupportVec[0];
+
+        NumericVector maxSupportVec = configuration["maxSupport"];
+        maxSupport = maxSupportVec[0];
+
+        IntegerVector maxResultsVec = configuration["maxResults"];
+        maxResults = maxResultsVec[0]; // -1 means infinite
+
         LogicalVector filterEmptyFociVec = configuration["filterEmptyFoci"];
         filterEmptyFoci = filterEmptyFociVec[0];
+
+        LogicalVector verboseVec = configuration["verbose"];
+        verbose = verboseVec[0];
 
         CharacterVector tnormVec = configuration["tNorm"];
         if (tnormVec[0] == "goedel")
@@ -105,6 +120,9 @@ public:
     const vector<int>& getDisjointFoci() const
     { return disjointFoci; }
 
+    int getNrow() const
+    { return nrow; }
+
     int getThreads() const
     { return threads; }
 
@@ -114,14 +132,26 @@ public:
     int getMaxLength() const
     { return maxLength; }
 
+    int getMaxResults() const
+    { return maxResults; }
+
     double getMinSupport() const
     { return minSupport; }
 
     double getMinFocusSupport() const
     { return minFocusSupport; }
 
+    double getMinConditionalFocusSupport() const
+    { return minConditionalFocusSupport; }
+
+    double getMaxSupport() const
+    { return maxSupport; }
+
     bool hasFilterEmptyFoci() const
     { return filterEmptyFoci; }
+
+    bool isVerbose() const
+    { return verbose; }
 
     TNorm getTNorm() const
     { return tNorm; }
@@ -162,12 +192,17 @@ private:
     vector<int> disjointPredicates;
     vector<int> disjointFoci;
 
+    int nrow;
     int threads;
     int minLength;
     int maxLength;
+    int maxResults; // -1 means infinite
     double minSupport;
     double minFocusSupport;
+    double minConditionalFocusSupport;
+    double maxSupport;
     bool filterEmptyFoci;
+    bool verbose;
     TNorm tNorm;
 
     void parseArguments(const CharacterVector& vec)

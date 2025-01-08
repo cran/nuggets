@@ -10,13 +10,23 @@ dig_grid(
   condition = where(is.logical),
   xvars = where(is.numeric),
   yvars = where(is.numeric),
+  disjoint = var_names(colnames(x)),
+  allow = "all",
   na_rm = FALSE,
-  type = "bool",
+  type = "crisp",
   min_length = 0L,
   max_length = Inf,
   min_support = 0,
-  threads = 1,
-  ...
+  max_support = 1,
+  max_results = Inf,
+  verbose = FALSE,
+  threads = 1L,
+  error_context = list(arg_x = "x", arg_f = "f", arg_condition = "condition", arg_xvars =
+    "xvars", arg_yvars = "yvars", arg_disjoint = "disjoint", arg_allow = "allow",
+    arg_na_rm = "na_rm", arg_type = "type", arg_min_length = "min_length", arg_max_length
+    = "max_length", arg_min_support = "min_support", arg_max_support = "max_support",
+    arg_max_results = "max_results", arg_verbose = "verbose", arg_threads = "threads",
+    call = current_env())
 )
 }
 \arguments{
@@ -24,17 +34,26 @@ dig_grid(
 
 \item{f}{the callback function to be executed for each generated condition.
 The arguments of the callback function differ based on the value of the
-\code{type} argument (see below). If \code{type = "bool"}, the callback function
-\code{f} must accept a single argument \code{d} of type \code{data.frame} with two
-columns (xvar and yvar). It is a subset of the original data frame
-with all rows that satisfy the generated condition. If \code{type = "fuzzy"},
-the callback function \code{f} must accept an argument \code{d} of type
-\code{data.frame} with two columns (xvar and yvar) and a numeric \code{weights}
-argument with the same length as the number of rows in \code{d}. The
-\code{weights} argument contains the truth degree of the generated condition
-for each row of \code{d}. The truth degree is a number in the interval
-\eqn{[0, 1]} that represents the degree of satisfaction of the condition
-for the row.
+\code{type} argument (see below):
+\itemize{
+\item If \code{type = "crisp"} (that is, boolean),
+the callback function \code{f} must accept a single argument \code{pd} of type
+\code{data.frame} with single (if \code{yvars == NULL}) or two (if \code{yvars != NULL})
+columns, accessible as \code{pd[[1]]} and \code{pd[[2]]}. Data frame \code{pd} is
+a subset of the original
+data frame \code{x} with all rows that satisfy the generated condition.
+Optionally, the callback function may accept an argument \code{nd} that
+is a subset of the original data frame \code{x} with all rows that do not
+satisfy the generated condition.
+\item If \code{type = "fuzzy"}, the callback function \code{f} must accept an argument
+\code{d} of type \code{data.frame} with single (if \code{yvars == NULL}) or two (if
+\code{yvars != NULL}) columns, accessible as \code{d[[1]]} and \code{d[[2]]}, and
+a numeric argument \code{weights} with the same length as the number of rows
+in \code{d}. The \code{weights} argument contains the truth degree
+of the generated condition for each row of \code{d}. The truth degree is
+a number in the interval \eqn{[0, 1]} that represents the degree of
+satisfaction of the condition in the original data row.
+}
 In all cases, the function must return a list of scalar values, which
 will be converted into a single row of result of final tibble.}
 
@@ -49,16 +68,30 @@ considered.}
 specifying the columns of \code{x}, whose names will be used as a domain for
 combinations use at the first place (xvar)}
 
-\item{yvars}{a tidyselect expression (see
+\item{yvars}{\code{NULL} or a tidyselect expression (see
 \href{https://tidyselect.r-lib.org/articles/syntax.html}{tidyselect syntax})
 specifying the columns of \code{x}, whose names will be used as a domain for
 combinations use at the second place (yvar)}
+
+\item{disjoint}{an atomic vector of size equal to the number of columns of \code{x}
+that specifies the groups of predicates: if some elements of the \code{disjoint}
+vector are equal, then the corresponding columns of \code{x} will NOT be
+present together in a single condition. If \code{x} is prepared with
+\code{\link[=partition]{partition()}}, using the \code{\link[=var_names]{var_names()}} function on \code{x}'s column names
+is a convenient way to create the \code{disjoint} vector.}
+
+\item{allow}{a character string specifying which columns are allowed to be
+selected by \code{xvars} and \code{yvars} arguments. Possible values are:
+\itemize{
+\item \code{"all"} - all columns are allowed to be selected
+\item \code{"numeric"} - only numeric columns are allowed to be selected
+}}
 
 \item{na_rm}{a logical value indicating whether to remove rows with missing
 values from sub-data before the callback function \code{f} is called}
 
 \item{type}{a character string specifying the type of conditions to be processed.
-The \code{"bool"} type accepts only logical columns as condition predicates.
+The \code{"crisp"} type accepts only logical columns as condition predicates.
 The \code{"fuzzy"} type accepts both logical and numeric columns as condition
 predicates where numeric data are in the interval \eqn{[0, 1]}. The
 callback function \code{f} differs based on the value of the \code{type} argument
@@ -79,26 +112,97 @@ relative frequency of rows such that all condition predicates are TRUE on it.
 For numerical (double) input, the support is computed as the mean (over all
 rows) of multiplications of predicate values.}
 
+\item{max_support}{the maximum support of a condition to trigger the callback
+function for it. See argument \code{min_support} for details of what is the
+support of a condition.}
+
+\item{max_results}{the maximum number of generated conditions to execute the
+callback function on. If the number of found conditions exceeds
+\code{max_results}, the function stops generating new conditions and returns
+the results. To avoid long computations during the search, it is recommended
+to set \code{max_results} to a reasonable positive value. Setting \code{max_results}
+to \code{Inf} will generate all possible conditions.}
+
+\item{verbose}{a logical scalar indicating whether to print progress messages.}
+
 \item{threads}{the number of threads to use for parallel computation.}
 
-\item{...}{Further arguments, currently unused.}
+\item{error_context}{a list of details to be used in error messages.
+This argument is useful when \code{dig_grid()} is called from another
+function to provide error messages, which refer to arguments of the
+calling function. The list must contain the following elements:
+\itemize{
+\item \code{arg_x} - the name of the argument \code{x} as a character string
+\item \code{arg_condition} - the name of the argument \code{condition} as a character
+string
+\item \code{arg_xvars} - the name of the argument \code{xvars} as a character string
+\item \code{arg_yvars} - the name of the argument \code{yvars} as a character string
+\item \code{call} - an environment in which to evaluate the error messages.
+}}
 }
 \value{
-A tibble with found rules. Each row represents a single call of
+A tibble with found patterns. Each row represents a single call of
 the callback function \code{f}.
 }
 \description{
-This function creates a grid of combinations of pairs of columns specified
-by \code{xvars} and \code{yvars} (see also \code{\link[=var_grid]{var_grid()}}). After that, it enumerates all
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+
+This function creates a grid column names specified
+by \code{xvars} and \code{yvars} (see \code{\link[=var_grid]{var_grid()}}). After that, it enumerates all
 conditions created from data in \code{x} (by calling \code{\link[=dig]{dig()}}) and for each such
 condition and for each row of the grid of combinations, a user-defined
 function \code{f} is executed on each sub-data created from \code{x} by selecting all
 rows of \code{x} that satisfy the generated condition and by selecting the
 columns in the grid's row.
+
+Function is useful for searching for patterns that are based on the
+relationships between pairs of columns, such as in \code{\link[=dig_correlations]{dig_correlations()}}.
+}
+\examples{
+# *** Example of crisp (boolean) patterns:
+# dichotomize iris$Species
+crispIris <- partition(iris, Species)
+
+# a simple callback function that computes mean difference of `xvar` and `yvar`
+f <- function(pd) {
+    list(m = mean(pd[[1]] - pd[[2]]),
+         n = nrow(pd))
+    }
+
+# call f() for each condition created from column `Species`
+dig_grid(crispIris,
+         f,
+         condition = starts_with("Species"),
+         xvars = starts_with("Sepal"),
+         yvars = starts_with("Petal"),
+         type = "crisp")
+
+# *** Example of fuzzy patterns:
+# create fuzzy sets from Sepal columns
+fuzzyIris <- partition(iris,
+                       starts_with("Sepal"),
+                       .method = "triangle",
+                       .breaks = 3)
+
+# a simple callback function that computes a weighted mean of a difference of
+# `xvar` and `yvar`
+f <- function(d, weights) {
+    list(m = weighted.mean(d[[1]] - d[[2]], w = weights),
+         w = sum(weights))
+}
+
+# call f() for each fuzzy condition created from column fuzzy sets whose
+# names start with "Sepal"
+dig_grid(fuzzyIris,
+         f,
+         condition = starts_with("Sepal"),
+         xvars = Petal.Length,
+         yvars = Petal.Width,
+         type = "fuzzy")
 }
 \seealso{
-\code{\link[=dig]{dig()}}, \code{\link[=var_grid]{var_grid()}}, and \code{\link[=dig_correlations]{dig_correlations()}}, as it is using this
-function internally
+\code{\link[=dig]{dig()}}, \code{\link[=var_grid]{var_grid()}}; see also \code{\link[=dig_correlations]{dig_correlations()}} and
+\code{\link[=dig_paired_baseline_contrasts]{dig_paired_baseline_contrasts()}}, as they are using this function internally.
 }
 \author{
 Michal Burda

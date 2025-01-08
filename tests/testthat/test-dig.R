@@ -26,6 +26,27 @@ test_that("data frame", {
 })
 
 
+test_that("max_results limiting", {
+    d <- data.frame(a = 1:6 / 10,
+                    b = c(T, T, T, F, F, F))
+
+    res <- dig(d, function() 1, max_results = Inf)
+    expect_equal(length(res), 4)
+
+    res <- dig(d, function() 1, max_results = 1)
+    expect_equal(length(res), 1)
+
+    res <- dig(d, function() 1, max_results = 2)
+    expect_equal(length(res), 2)
+
+    res <- dig(d, function() 1, max_results = 4)
+    expect_equal(length(res), 4)
+
+    res <- dig(d, function() 1, max_results = 10)
+    expect_equal(length(res), 4)
+})
+
+
 test_that("select condition columns", {
     m <- matrix(rep(c(T, F), 12), ncol = 3)
 
@@ -402,6 +423,25 @@ test_that("min_support filter", {
     expect_equal(length(res), 1)
 })
 
+test_that("max_support filter", {
+    m <- matrix(c(T,T,T,T,F,F, T,F,T,F,T,F), ncol = 2)
+
+    res <- dig(m, function() 1, max_support = 1)
+    expect_equal(length(res), 4)
+
+    res <- dig(m, function() 1, max_support = 0.7)
+    expect_equal(length(res), 3)
+
+    res <- dig(m, function() 1, max_support = 0.6)
+    expect_equal(length(res), 2)
+
+    res <- dig(m, function() 1, max_support = 0.4)
+    expect_equal(length(res), 1)
+
+    res <- dig(m, function() 1, max_support = 0.3)
+    expect_equal(length(res), 0)
+})
+
 test_that("disjoint filter", {
     m <- matrix(T, ncol = 3)
 
@@ -414,14 +454,14 @@ test_that("disjoint filter", {
                disjoint = c(1, 2, 3))
 
     expect_equal(length(res), 8)
-    expect_equal(res, list(list(cond = integer(0)),
-                           list(cond = c("1"=1L)),
-                           list(cond = c("2"=2L)),
-                           list(cond = c("3"=3L)),
-                           list(cond = c("1"=1L, "3"=3L)),
-                           list(cond = c("2"=2L, "3"=3L)),
-                           list(cond = c("1"=1L, "2"=2L)),
-                           list(cond = c("1"=1L, "2"=2L, "3"=3L))))
+    expect_setequal(res, list(list(cond = integer(0)),
+                              list(cond = c("1"=1L)),
+                              list(cond = c("2"=2L)),
+                              list(cond = c("3"=3L)),
+                              list(cond = c("1"=1L, "3"=3L)),
+                              list(cond = c("2"=2L, "3"=3L)),
+                              list(cond = c("1"=1L, "2"=2L)),
+                              list(cond = c("1"=1L, "2"=2L, "3"=3L))))
 
     # disjoint 1, 1, 2
     res <- dig(m,
@@ -429,12 +469,12 @@ test_that("disjoint filter", {
                disjoint = c(1, 1, 2))
 
     expect_equal(length(res), 6)
-    expect_equal(res, list(list(cond = integer(0)),
-                           list(cond = c("1"=1L)),
-                           list(cond = c("2"=2L)),
-                           list(cond = c("3"=3L)),
-                           list(cond = c("1"=1L, "3"=3L)),
-                           list(cond = c("2"=2L, "3"=3L))))
+    expect_setequal(res, list(list(cond = integer(0)),
+                              list(cond = c("1"=1L)),
+                              list(cond = c("2"=2L)),
+                              list(cond = c("3"=3L)),
+                              list(cond = c("1"=1L, "3"=3L)),
+                              list(cond = c("2"=2L, "3"=3L))))
 
     # disjoint 1, 1, 1
     res <- dig(m,
@@ -442,10 +482,10 @@ test_that("disjoint filter", {
                disjoint = c(1, 1, 1))
 
     expect_equal(length(res), 4)
-    expect_equal(res, list(list(cond = integer(0)),
-                           list(cond = c("1"=1L)),
-                           list(cond = c("2"=2L)),
-                           list(cond = c("3"=3L))))
+    expect_setequal(res, list(list(cond = integer(0)),
+                              list(cond = c("1"=1L)),
+                              list(cond = c("2"=2L)),
+                              list(cond = c("3"=3L))))
 
 
     # disjoint 1, 1, 2 with condition and focus
@@ -457,12 +497,12 @@ test_that("disjoint filter", {
                focus = 4:6)
 
     expect_equal(length(res), 6)
-    expect_equal(res, list(list(cond = integer(0)),
-                           list(cond = c("1"=1L)),
-                           list(cond = c("2"=2L)),
-                           list(cond = c("3"=3L)),
-                           list(cond = c("1"=1L, "3"=3L)),
-                           list(cond = c("2"=2L, "3"=3L))))
+    expect_setequal(res, list(list(cond = integer(0)),
+                              list(cond = c("1"=1L)),
+                              list(cond = c("2"=2L)),
+                              list(cond = c("3"=3L)),
+                              list(cond = c("1"=1L, "3"=3L)),
+                              list(cond = c("2"=2L, "3"=3L))))
 })
 
 
@@ -697,25 +737,101 @@ test_that("min_focus_support & filter_empty_foci", {
 })
 
 
+test_that("min_conditional_focus_support & filter_empty_foci", {
+    m <- matrix(c(c(1,1,1,1,1,1,1,1,0,0),
+                  c(1,1,1,1,1,1,0,0,1,1),
+                  c(0,0,0,1,1,1,1,1,1,1),
+                  c(0,0,0,0,1,1,1,1,1,1)), ncol = 4)
+
+    f <- function(condition, support, foci_supports) {
+       paste(paste(condition, collapse = " & "),
+             ":", round(support, 1),
+             "=",
+             paste0(names(foci_supports), "/", round(foci_supports, 1), collapse = ", "))
+    }
+
+    res <- dig(m,
+               f,
+               condition = 1:2,
+               focus = 3:4,
+               min_support = 0.1,
+               min_conditional_focus_support = 0.6,
+               filter_empty_foci = FALSE)
+
+    expect_equal(unlist(res), c(" : 1 = 3/0.7, 4/0.6", "1 : 0.8 = 3/0.5", "2 : 0.8 = 3/0.5", "1 & 2 : 0.6 = /"))
+
+    res <- dig(m,
+               f,
+               condition = 1:2,
+               focus = 3:4,
+               min_support = 0.1,
+               min_conditional_focus_support = 0.6,
+               filter_empty_foci = TRUE)
+
+    expect_equal(unlist(res), c(" : 1 = 3/0.7, 4/0.6", "1 : 0.8 = 3/0.5", "2 : 0.8 = 3/0.5"))
+})
+
+
 test_that("errors", {
     f <- function(condition) { list() }
     d <- data.frame(n = 1:5 / 5, l = TRUE, i = 1:5, s = letters[1:5])
 
-    expect_error(dig(list(), f), "must be a matrix or a data frame")
-    expect_error(dig(matrix(0, nrow = 5, ncol = 0), f), "must have at least one column")
-    expect_error(dig(matrix(0, nrow = 0, ncol = 5), f), "must have at least one row")
+    expect_error(dig(list(), f), "`x` must be a matrix or a data frame.")
+    expect_error(dig(matrix(0, nrow = 5, ncol = 0), f), "`x` must have at least one column.")
+    expect_error(dig(matrix(0, nrow = 0, ncol = 5), f), "`x` must have at least one row.")
 
     expect_true(is.list(dig(d, f, condition = c(n, l))))
     expect_error(dig(d, f, condition = c(n, l, i)),
-                 "columns selected by `condition` must be logical or numeric")
+                 "All columns selected by `condition` must be logical or numeric")
     expect_error(dig(d, f, condition = c(n, l, s)),
-                 "columns selected by `condition` must be logical or numeric")
+                 "All columns selected by `condition` must be logical or numeric")
 
     expect_true(is.list(dig(d, f, condition = c(n, l), focus = c(n, l))))
     expect_error(dig(d, f, condition = c(n, l), focus = c(n, l, i)),
-                 "columns selected by `focus` must be logical or numeric")
+                 "All columns selected by `focus` must be logical or numeric")
     expect_error(dig(d, f, condition = c(n, l), focus = c(n, l, s)),
-                 "columns selected by `focus` must be logical or numeric")
+                 "All columns selected by `focus` must be logical or numeric")
+
+    expect_error(dig(d, f = "x", condition = n),
+                 "`f` must be a function.")
+    expect_error(dig(d, f = function(a) { }, condition = n),
+                 "Function `f` is allowed to have the following arguments")
+    expect_error(dig(d, f, condition = n, disjoint = list("x")),
+                 "`disjoint` must be a plain vector")
+    expect_error(dig(d, f, condition = n, disjoint = "x"),
+                 "The length of `disjoint` must be 0 or must be equal to the number of columns in `x`.")
+    expect_error(dig(d, f, condition = n, min_length = "x"),
+                 "`min_length` must be an integerish scalar.");
+    expect_error(dig(d, f, condition = n, min_length = Inf),
+                 "`min_length` must be finite.");
+    expect_error(dig(d, f, condition = n, min_length = -1),
+                 "`min_length` must be >= 0.");
+    expect_error(dig(d, f, condition = n, max_length = "x"),
+                 "`max_length` must be an integerish scalar.");
+    expect_error(dig(d, f, condition = n, max_length = -1),
+                 "`max_length` must be >= 0.");
+    expect_error(dig(d, f, condition = n, min_length = 5, max_length = 4),
+                 "`max_length` must be greater or equal to `min_length`.");
+    expect_error(dig(d, f, condition = n, min_support = "x"),
+                 "`min_support` must be a double scalar.");
+    expect_error(dig(d, f, condition = n, min_support = 1.1),
+                 "`min_support` must be between 0 and 1.");
+    expect_error(dig(d, f, condition = n, min_focus_support = "x"),
+                 "`min_focus_support` must be a double scalar.");
+    expect_error(dig(d, f, condition = n, min_focus_support = 1.1),
+                 "`min_focus_support` must be between 0 and 1.");
+    expect_error(dig(d, f, condition = n, filter_empty_foci = "x"),
+                 "`filter_empty_foci` must be a flag");
+    expect_error(dig(d, f, condition = n, t_norm = "x"),
+                 "`t_norm` must be equal to one of:");
+    expect_error(dig(d, f, condition = n, max_results = -1),
+                 "`max_results` must be >= 1.")
+    expect_error(dig(d, f, condition = n, verbose = "x"),
+                 "`verbose` must be a flag");
+    expect_error(dig(d, f, condition = n, threads = "x"),
+                 "`threads` must be an integerish scalar.");
+    expect_error(dig(d, f, condition = n, threads = 0),
+                 "`threads` must be >= 1.");
 })
 
 
@@ -727,7 +843,7 @@ test_that("bug on mixed logical and numeric chains", {
 
     disj <- sub("=.*", "", colnames(fuzzyCO2))
 
-    result <- dig_implications(fuzzyCO2,
+    result <- dig_associations(fuzzyCO2,
                                antecedent = !starts_with("Treatment"),
                                consequent = starts_with("Treatment"),
                                disjoint = disj,
