@@ -1,12 +1,12 @@
-14bd21ba667ada9d94b7dd3a708d1e30 *DESCRIPTION
-06737142b3beca403febef3663949f38 *NAMESPACE
-d875fb85eaf46ac630c8c341f3c9e52e *NEWS.md
+8cf49481e04b8be1f6abf164550d137d *DESCRIPTION
+f5031e994713db5ebb03451613c11804 *NAMESPACE
+5efe9cfb03cc4c8e0960db6115103f62 *NEWS.md
 da131281914a549127ec4adacf82b3c7 *R/RcppExports.R
 748af39adcc69f025c667bec749a6525 *R/algebra.R
+05ddaf514254df7de8b45321b1944640 *R/association_matrix.R
 41dfe2d3f74a57357434e74eb6146250 *R/bound_range.R
 36183d93dd139b6aa8b7a460d1f08024 *R/catch-routine-registration.R
 2096b443071985473bbf8558bec160cc *R/convert_data_to_list.R
-f5d9f3699df84d36e2c504b911a221d6 *R/dichotomize.R
 609ecd5ab2b4fbbac8878f25b269fe2e *R/dig.R
 c6e4469ec33ad6c52d7d175e89bcc9c1 *R/dig_associations.R
 e732c45678e5f88f5ac05fde35b4ae44 *R/dig_baseline_contrasts.R
@@ -15,7 +15,7 @@ d317da7ed11d64ea8e076aed4637f476 *R/dig_complement_contrasts.R
 302b8dfd3fc905c08b7344e92e324264 *R/dig_grid.R
 0ac63d1cb9c31a905a4a8be9cc6ba391 *R/dig_paired_baseline_contrasts.R
 a47e2c5967294762093fdeeb617ecd15 *R/dig_tautologies.R
-a97dabf1475921d0ca87049e8f1f138f *R/explore-associations.R
+b4e15c529354d63bbaeb01c4ba8b89c0 *R/explore-associations.R
 c0a23f95aa5e324bf07b41acd75babbc *R/extract_cols.R
 af10a2d203587e7bcb62e130bb26f037 *R/fire.R
 d6086d034a66a2342692e2673a601383 *R/format_condition.R
@@ -27,7 +27,7 @@ fe077fa64d394fe294c6341755463cbe *R/geom_diamond.R
 f8a0940df9bea964dd71785cac0bb4c3 *R/is_subset.R
 cdd330db8c2bc37a5b23d4b97d90c6b4 *R/msg.R
 c75584c3ec4f5d56bca8ac0504bf32f7 *R/nugget.R
-908e3c5295c688dee5cadbf572559c0f *R/nuggets-package.R
+8feaba0e12cc81c3320d0365bc7124b2 *R/nuggets-package.R
 4cf18f392d03cde8c8a42f61253e8e21 *R/parse_condition.R
 637dd36d15e6a245f41caea0305ea58a *R/partition.R
 0ce2a6864523cb82645ffd0f86ee94f7 *R/quietly.R
@@ -35,7 +35,7 @@ f742bba834cf3eebfd1fbb4de57630c6 *R/remove_almost_constant.R
 ca2cc0aee7d150a9165ca2e47986495e *R/remove_ill_conditions.R
 8d8e3d62cb4ae2ddac1b0f2662b5024f *R/shorten_condition.R
 e229186bfd324a7e7e76b32059746602 *R/t_test.R
-1c4bd28253b385f150c381068470e611 *R/testers.R
+2c5f929cba478fd384224730150d56ce *R/testers.R
 6f62cf3c894485f4073346552ee099f8 *R/ui-aboutTable.R
 f413fd7ad699652b89df2f4c8c86905c *R/ui-associationsDetailModule.R
 0df7008db267cc088eed9c78f469779a *R/ui-callDataTable.R
@@ -65,8 +65,8 @@ d3596a1c00b81793fee598368baacfa6 *R/var_test.R
 a703b729179d1729582cbad337c3eff7 *inst/doc/nuggets.html
 ae8ef27867be80bf3cc826d81997dc2f *inst/figures/logo.png
 97a7bfdac845f9a5bd2769ecdfca2cda *inst/figures/nugget.png
+c7098787a603ab6ff65c75c63f18e75d *man/association_matrix.Rd
 a6ff2f7f2ff18ca1fe2a83b28f0809b6 *man/bound_range.Rd
-47adfdb54e5bf8e1088b8359cd73a457 *man/dichotomize.Rd
 0899a32f5c23adb19d4e6f194cd8d8f4 *man/dig.Rd
 cd7b0310b6c258c3194cc8f34e947ac8 *man/dig_associations.Rd
 f381203e7c538df20af02eab9e1d2c1c *man/dig_baseline_contrasts.Rd
@@ -105,7 +105,7 @@ ae89778af966fe8cfe9044646f7a2911 *man/shorten_condition.Rd
 c2f605165d92abb27c156867705e3792 *man/var_names.Rd
 1663b361a52e13ff5b798095614db627 *man/which_antichain.Rd
 fc9559d4f3523e4e4fd5ec61f1934775 *src/AlignedVector.h
-2198968268c7338df0a7d3c4e0ad7612 *src/Makevars
+309acbd2985a009a8ec537918bfcf412 *src/Makevars
 2d7787b51939cb33d3ce689f81dfc103 *src/RcppExports.cpp
 a752c32d6f9918e0345402f0b0dc770b *src/algebra.cpp
 6120fa4fbc7cc6e8e68b284289749059 *src/antichain/AntichainData.h

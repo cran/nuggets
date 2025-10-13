@@ -1,6 +1,6 @@
 Package: nuggets
 Title: Extensible Framework for Data Pattern Exploration
-Version: 2.0.0
+Version: 2.0.1
 Date: 2025-10-13
 Authors@R: 
     person(given = "Michal",
@@ -35,14 +35,14 @@ Imports: classInt, cli, DT, fastmatch, generics, ggplot2, grid,
         shinyjs, shinyWidgets, stats, stringr, tibble, tidyr,
         tidyselect, utils
 LinkingTo: BH, cli, Rcpp, RcppThread, testthat
-SystemRequirements: C++20
+SystemRequirements: C++17
 Suggests: arules, dplyr, testthat (>= 3.0.0), xml2, withr, knitr,
         rmarkdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 NeedsCompilation: yes
-Packaged: 2025-10-13 04:44:06 UTC; michal
+Packaged: 2025-10-13 10:51:57 UTC; michal
 Author: Michal Burda [aut, cre] (ORCID:
     <https://orcid.org/0000-0002-4182-4407>)
 Repository: CRAN
-Date/Publication: 2025-10-13 07:30:07 UTC
+Date/Publication: 2025-10-13 13:30:02 UTC
