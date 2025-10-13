@@ -17,14 +17,18 @@ test_that("dig_grid empty condition", {
                     xvars = where(is.character),
                     yvars = where(is.character))
 
+    expect_true(is_nugget(res))
     expect_true(is_tibble(res))
+    res <- res[order(res$condition_length, res$condition), ]
+
     expect_equal(nrow(res), 3)
     expect_equal(colnames(res),
-                 c("condition", "support", "xvar", "yvar", "value"))
+                 c("condition", "support", "xvar", "yvar", "value", "condition_length"))
     expect_equal(res$condition, rep("{}", 3))
     expect_equal(res$xvar, c("x", "x", "y"))
     expect_equal(res$yvar, c("y", "z", "z"))
     expect_equal(res$support, rep(1.0, 3))
+    expect_equal(res$condition_length, rep(0, 3))
 
     v1 <- list(x = "a|b|c|d|e|f|g|h|i|j",
                y = "k|l|m|n|o|p|q|r|s|t",
@@ -61,10 +65,13 @@ test_that("dig_grid crisp", {
                     xvars = where(is.character),
                     yvars = where(is.character))
 
+    expect_true(is_nugget(res))
     expect_true(is_tibble(res))
+    res <- res[order(res$condition_length, res$condition), ]
+
     expect_equal(nrow(res), 12)
     expect_equal(colnames(res),
-                 c("condition", "support", "xvar", "yvar", "value"))
+                 c("condition", "support", "xvar", "yvar", "value", "condition_length"))
     expect_equal(res$condition,
                  c(rep("{}", 3), rep("{a}", 3), rep("{b}", 3), rep("{a,b}", 3)))
     expect_equal(res$xvar,
@@ -118,10 +125,13 @@ test_that("dig_grid crisp nd", {
                     xvars = where(is.character),
                     yvars = where(is.character))
 
+    expect_true(is_nugget(res))
     expect_true(is_tibble(res))
+    res <- res[order(res$condition_length, res$condition), ]
+
     expect_equal(nrow(res), 12)
     expect_equal(colnames(res),
-                 c("condition", "support", "xvar", "yvar", "p", "n"))
+                 c("condition", "support", "xvar", "yvar", "p", "n", "condition_length"))
     expect_equal(res$condition,
                  c(rep("{}", 3), rep("{a}", 3), rep("{b}", 3), rep("{a,b}", 3)))
     expect_equal(res$xvar,
@@ -182,10 +192,13 @@ test_that("dig_grid crisp with NA", {
                     xvars = where(is.character),
                     yvars = where(is.character))
 
+    expect_true(is_nugget(res))
     expect_true(is_tibble(res))
+    res <- res[order(res$condition_length, res$condition), ]
+
     expect_equal(nrow(res), 12)
     expect_equal(colnames(res),
-                 c("condition", "support", "xvar", "yvar", "value"))
+                 c("condition", "support", "xvar", "yvar", "value", "condition_length"))
     expect_equal(res$condition,
                  c(rep("{}", 3), rep("{a}", 3), rep("{b}", 3), rep("{a,b}", 3)))
     expect_equal(res$xvar,
@@ -232,18 +245,21 @@ test_that("dig_grid with NULL results", {
                     xvars = where(is.character),
                     yvars = where(is.character))
 
+    expect_true(is_nugget(res))
     expect_true(is_tibble(res))
+    res <- res[order(res$condition_length, res$condition), ]
+
     expect_equal(nrow(res), 8)
     expect_equal(colnames(res),
-                 c("condition", "support", "xvar", "yvar", "value"))
+                 c("condition", "support", "xvar", "yvar", "value", "condition_length"))
     expect_equal(res$condition,
-                 c(rep("{}", 2), rep("{b}", 2), rep("{a}", 2), rep("{a,b}", 2)))
+                 c(rep("{}", 2), rep("{a}", 2), rep("{b}", 2), rep("{a,b}", 2)))
     expect_equal(res$xvar,
                  rep(c("x", "y"), 4))
     expect_equal(res$yvar,
                  rep(c("z", "z"), 4))
     expect_equal(res$support,
-                 c(1, 1, 2/3, 2/3, 1/2, 1/2, 1/3, 1/3), tolerance = 1e-3)
+                 c(1, 1, 1/2, 1/2, 2/3, 2/3, 1/3, 1/3), tolerance = 1e-3)
     expect_equal(res$value,
                  rep(1, 8))
 
@@ -261,19 +277,21 @@ test_that("dig_grid with NULL results", {
                     condition = where(is.logical),
                     xvars = where(is.character),
                     yvars = where(is.character))
+    res <- res[order(res$condition_length, res$condition), ]
 
+    expect_true(is_nugget(res))
     expect_true(is_tibble(res))
     expect_equal(nrow(res), 8)
     expect_equal(colnames(res),
-                 c("condition", "support", "xvar", "yvar", "value"))
+                 c("condition", "support", "xvar", "yvar", "value", "condition_length"))
     expect_equal(res$condition,
-                 c(rep("{}", 2), rep("{b}", 2), rep("{a}", 2), rep("{a,b}", 2)))
+                 c(rep("{}", 2), rep("{a}", 2), rep("{b}", 2), rep("{a,b}", 2)))
     expect_equal(res$xvar,
                  rep(c("x", "y"), 4))
     expect_equal(res$yvar,
                  rep(c("z", "z"), 4))
     expect_equal(res$support,
-                 c(1, 1, 2/3, 2/3, 1/2, 1/2, 1/3, 1/3), tolerance = 1e-3)
+                 c(1, 1, 1/2, 1/2, 2/3, 2/3, 1/3, 1/3), tolerance = 1e-3)
     expect_equal(res$value,
                  rep(1, 8))
 
@@ -292,18 +310,21 @@ test_that("dig_grid with NULL results", {
                     xvars = where(is.character),
                     yvars = where(is.character))
 
+    expect_true(is_nugget(res))
     expect_true(is_tibble(res))
+    res <- res[order(res$condition_length, res$condition), ]
+
     expect_equal(nrow(res), 8)
     expect_equal(colnames(res),
-                 c("condition", "support", "xvar", "yvar", "value"))
+                 c("condition", "support", "xvar", "yvar", "value", "condition_length"))
     expect_equal(res$condition,
-                 c(rep("{}", 2), rep("{b}", 2), rep("{a}", 2), rep("{a,b}", 2)))
+                 c(rep("{}", 2), rep("{a}", 2), rep("{b}", 2), rep("{a,b}", 2)))
     expect_equal(res$xvar,
                  rep(c("x", "y"), 4))
     expect_equal(res$yvar,
                  rep(c("z", "z"), 4))
     expect_equal(res$support,
-                 c(1, 1, 2/3, 2/3, 1/2, 1/2, 1/3, 1/3), tolerance = 1e-3)
+                 c(1, 1, 1/2, 1/2, 2/3, 2/3, 1/3, 1/3), tolerance = 1e-3)
     expect_equal(res$value,
                  rep(1, 8))
 })
@@ -328,10 +349,13 @@ test_that("dig_grid fuzzy", {
                     xvars = where(is.character),
                     yvars = where(is.character))
 
+    expect_true(is_nugget(res))
     expect_true(is_tibble(res))
+    res <- res[order(res$condition_length, res$condition), ]
+
     expect_equal(nrow(res), 12)
     expect_equal(colnames(res),
-                 c("condition", "support", "xvar", "yvar", "value"))
+                 c("condition", "support", "xvar", "yvar", "value", "condition_length"))
     expect_equal(res$condition,
                  c(rep("{}", 3), rep("{a}", 3), rep("{b}", 3), rep("{a,b}", 3)))
     expect_equal(res$xvar,
@@ -376,6 +400,7 @@ test_that("dig_grid number of columns in data frames", {
                     xvars = where(is.character),
                     yvars = where(is.character))
 
+    expect_true(is_nugget(res))
     expect_true(is_tibble(res))
     expect_equal(nrow(res), 3)
     expect_equal(res$value, rep(2, 3))
@@ -388,6 +413,7 @@ test_that("dig_grid number of columns in data frames", {
                     xvars = where(is.character),
                     yvars = where(is.character))
 
+    expect_true(is_nugget(res))
     expect_true(is_tibble(res))
     expect_equal(nrow(res), 3)
     expect_equal(res$value, rep("2 2", 3))
@@ -400,6 +426,7 @@ test_that("dig_grid number of columns in data frames", {
                     xvars = where(is.character),
                     yvars = where(is.character))
 
+    expect_true(is_nugget(res))
     expect_true(is_tibble(res))
     expect_equal(nrow(res), 3)
     expect_equal(res$value, rep(2, 3))
@@ -412,6 +439,7 @@ test_that("dig_grid number of columns in data frames", {
                     xvars = where(is.character),
                     yvars = NULL)
 
+    expect_true(is_nugget(res))
     expect_true(is_tibble(res))
     expect_equal(nrow(res), 3)
     expect_equal(res$value, rep(1, 3))
@@ -424,6 +452,7 @@ test_that("dig_grid number of columns in data frames", {
                     xvars = where(is.character),
                     yvars = NULL)
 
+    expect_true(is_nugget(res))
     expect_true(is_tibble(res))
     expect_equal(nrow(res), 3)
     expect_equal(res$value, rep("1 1", 3))
@@ -436,9 +465,102 @@ test_that("dig_grid number of columns in data frames", {
                     xvars = where(is.character),
                     yvars = NULL)
 
+    expect_true(is_nugget(res))
     expect_true(is_tibble(res))
     expect_equal(nrow(res), 3)
     expect_equal(res$value, rep(1, 3))
+})
+
+test_that("disjoint is applied on xvars/yvars combinations", {
+    d <- data.frame(a = TRUE,
+                    b = c(TRUE, FALSE),
+                    x = letters[1:10],
+                    y = letters[11:20],
+                    z = LETTERS[1:10])
+
+    f <- function(pd) {
+        return(list(res=1))
+    }
+
+    res <- dig_grid(x = d,
+                    f = f,
+                    type = "crisp",
+                    disjoint = c("a", "b", "xz", "y", "xz"),
+                    condition = where(is.logical),
+                    xvars = where(is.character),
+                    yvars = where(is.character))
+    res <- res[order(res$condition_length, res$condition), ]
+
+    expect_true(is_nugget(res))
+    expect_true(is_tibble(res))
+    expect_equal(nrow(res), 8)
+    expect_equal(colnames(res),
+                 c("condition", "support", "xvar", "yvar", "res", "condition_length"))
+    expect_equal(res$condition,
+                 c(rep("{}", 2), rep("{a}", 2), rep("{b}", 2), rep("{a,b}", 2)))
+    expect_equal(res$xvar,
+                 rep(c("x", "y"), 4))
+    expect_equal(res$yvar,
+                 rep(c("y", "z"), 4))
+    expect_equal(res$support,
+                 c(rep(1, 4), rep(0.5, 4)))
+    expect_equal(res$res,
+                 rep(1, 8))
+    expect_equal(res$condition_length,
+                 c(0, 0, 1, 1, 1, 1, 2, 2))
+})
+
+test_that("dig_grid call args", {
+    d <- data.frame(a = TRUE,
+                    b = c(TRUE, FALSE),
+                    x = letters[1:10],
+                    y = letters[11:20],
+                    z = LETTERS[1:10])
+
+    f <- function(pd) { return(list(res=1)) }
+
+    res <- dig_grid(x = d,
+                    f = f,
+                    condition = where(is.logical),
+                    xvars = x:y,
+                    yvars = y:z,
+                    disjoint = c("a", "b", "xz", "y", "xz"),
+                    excluded = list("x"),
+                    allow = "all",
+                    na_rm = TRUE,
+                    type = "crisp",
+                    min_length = 1L,
+                    max_length = 2L,
+                    min_support = 0.1,
+                    max_support = 0.9,
+                    max_results = 100L,
+                    verbose = TRUE,
+                    threads = 1L)
+
+    expect_true(is_nugget(res))
+    expect_true(is_tibble(res))
+    expect_equal(attr(res, "call_function"), "dig_grid")
+    expect_true(is.list(attr(res, "call_data")))
+    expect_equal(attr(res, "call_data")$nrow, nrow(d))
+    expect_equal(attr(res, "call_data")$ncol, ncol(d))
+    expect_equal(attr(res, "call_data")$colnames, as.character(colnames(d)))
+    expect_true(is.list(attr(res, "call_args")))
+    expect_equal(attr(res, "call_args")$x, "d")
+    expect_equal(attr(res, "call_args")$condition, c("a", "b"))
+    expect_equal(attr(res, "call_args")$xvars, c("x", "y"))
+    expect_equal(attr(res, "call_args")$yvars, c("y", "z"))
+    expect_equal(attr(res, "call_args")$disjoint, c("a", "b", "xz", "y", "xz"))
+    expect_equal(attr(res, "call_args")$excluded, list("x"))
+    expect_equal(attr(res, "call_args")$allow, "all")
+    expect_true(attr(res, "call_args")$na_rm)
+    expect_equal(attr(res, "call_args")$type, "crisp")
+    expect_equal(attr(res, "call_args")$min_length, 1L)
+    expect_equal(attr(res, "call_args")$max_length, 2L)
+    expect_equal(attr(res, "call_args")$min_support, 0.1)
+    expect_equal(attr(res, "call_args")$max_support, 0.9)
+    expect_equal(attr(res, "call_args")$max_results, 100L)
+    expect_equal(attr(res, "call_args")$verbose, TRUE)
+    expect_equal(attr(res, "call_args")$threads, 1L)
 })
 
 test_that("errors", {
@@ -483,4 +605,9 @@ test_that("errors", {
                  "`min_support` must be a double scalar")
     expect_error(dig_grid(d, f = fb, type = "crisp", condition = l, threads = "x"),
                  "`threads` must be an integerish scalar")
+
+    expect_error(dig_grid(d, f = fb, disjoint = list("x")),
+                 "`disjoint` must be a plain vector")
+    expect_error(dig_grid(d, f = fb, disjoint = "x"),
+                 "The length of `disjoint` must be 0 or must be equal to the number of columns in `x`.")
 })

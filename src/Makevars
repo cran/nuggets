@@ -1,18 +1,32 @@
-CXX_STD = CXX17
 PKG_CPPFLAGS=-I.
 PKG_CXXFLAGS=$(SHLIB_OPENMP_CXXFLAGS)
-PKG_LIBS=$(SHLIB_OPENMP_CXXFLAGS)
+#PKG_CXXFLAGS=$(SHLIB_OPENMP_CXXFLAGS) -O3 -march=native -mtune=native
+PKG_LIBS=$(SHLIB_OPENMP_CXXFLAGS) `"$(R_HOME)/bin/Rscript" -e "RcppThread::LdFlags()"`
 
 SOURCES=RcppExports.cpp \
+	algebra.cpp \
 	dig.cpp \
 	triangle.cpp \
 	raisedcos.cpp \
 	which_antichain.cpp \
 	test-runner.cpp \
-	test-antichain-Condition.cpp test-antichain-Node.cpp test-antichain-Tree.cpp test-dig-Bitset.cpp \
-	test-dig-BitChain.cpp test-dig-DualChain.cpp test-dig-Iterator.cpp test-dig-SparseBitChain.cpp \
-	test-dig-Task.cpp test-dig-TaskSequence.cpp test-dig-VectorNumChain.cpp \
-	dig/SimdVectorNumChain.cpp dig/VectorNumChain.cpp
+	test-antichain-Condition.cpp \
+	test-antichain-Node.cpp \
+	test-antichain-Tree.cpp \
+	test-dig-BinomialCoefficients.cpp \
+	test-dig-BitChain.cpp \
+	test-dig-ChainCollection.cpp \
+	test-dig-Config.cpp \
+	test-dig-FloatChain.cpp \
+	test-dig-FubitChain.cpp \
+	test-dig-TautologyTree.cpp
+	#test-dig-Data.cpp \
+	#test-dig-DataSorter.cpp \
+	#test-dig-DualChain.cpp \
+	#test-dig-Iterator.cpp \
+	#test-dig-Task.cpp \
+	#test-dig-TaskSequence.cpp \
+	#test-dig-VectorNumChain.cpp
 
 # Obtain the object files
 OBJECTS=$(SOURCES:.cpp=.o)

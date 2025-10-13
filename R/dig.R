@@ -1,179 +1,201 @@
-#' Search for patterns of custom type
+#' Search for patterns of a custom type
 #'
-#' @description
-#' `r lifecycle::badge("experimental")`
+#' A general function for searching for patterns of a custom type. The function
+#' allows selection of columns of `x` to be used as condition predicates. It
+#' enumerates all possible conditions in the form of elementary conjunctions of
+#' selected predicates, and for each condition executes a user-defined callback
+#' function `f`. The callback is expected to perform some analysis and return an
+#' object (often a list) representing a pattern or patterns related to the
+#' condition. The results of all calls are returned as a list.
 #'
-#' A general function for searching for patterns of custom type. The function
-#' allows for the selection of columns of `x` to be used as condition
-#' predicates. The function enumerates all possible conditions in the form of
-#' elementary conjunctions of selected predicates, and for each condition,
-#' a user-defined callback function `f` is executed. The callback function is
-#' intended to perform some analysis and return an object representing a pattern
-#' or patterns related to the condition. [dig()] returns a list of these
-#' returned objects.
+#' The callback function `f` may accept a number of arguments (see `f` argument
+#' description). The algorithm automatically provides condition-related
+#' information to `f` based on which arguments are present.
 #'
-#' The callback function `f` may have some arguments that are listed in the
-#' `f` argument description. The algorithm provides information about the
-#' generated condition based on the present arguments.
+#' In addition to conditions, the function can evaluate *focus* predicates
+#' (foci). Foci are specified separately and are tested within each generated
+#' condition. Extra information about them is then passed to `f`.
 #'
-#' Additionally to `condition`, the function allows for the selection of
-#' the so-called *focus* predicates. The focus predicates, a.k.a. *foci*, are
-#' predicates that are evaluated within each condition and some additional
-#' information is provided to the callback function about them.
+#' Restrictions may be imposed on generated conditions, such as:
+#' - minimum and maximum condition length (`min_length`, `max_length`);
+#' - minimum condition support (`min_support`);
+#' - minimum focus support (`min_focus_support`), i.e. support of rows where
+#'   both the condition and the focus hold.
 #'
-#' `dig()` allows to specify some restrictions on the generated conditions,
-#' such as:
-#' - the minimum and maximum length of the condition (`min_length` and
-#'   `max_length` arguments).
-#' - the minimum support of the condition (`min_support` argument). Support
-#'   of the condition is the relative frequency of the condition in the dataset
-#'   `x`.
-#' - the minimum support of the focus (`min_focus_support` argument). Support
-#'   of the focus is the relative frequency of rows such that all condition
-#'   predicates AND the focus are TRUE on it. Foci with support lower than
-#'   `min_focus_support` are filtered out.
+#' @details
+#' Let \eqn{P} be the set of condition predicates selected by `condition` and
+#' \eqn{E} be the set of focus predicates selected by `focus`. The function
+#' generates all possible conditions as elementary conjunctions of distinct
+#' predicates from \eqn{P}. These conditions are filtered using `disjoint`,
+#' `excluded`, `min_length`, `max_length`, `min_support`, and `max_support`.
 #'
-#' @param x a matrix or data frame. The matrix must be numeric (double) or logical.
-#'      If `x` is a data frame then each column must be either numeric (double) or
-#'      logical.
-#' @param f the callback function executed for each generated condition. This
-#'      function may have some of the following arguments. Based on the present
-#'      arguments, the algorithm would provide information about the generated
-#'      condition:
-#'      \itemize{
-#'      \item `condition` - a named integer vector of column indices that represent
-#'        the predicates of the condition. Names of the vector correspond to
-#'        column names;
-#'      \item `support` - a numeric scalar value of the current condition's support;
-#'      \item `indices` - a logical vector indicating the rows satisfying the condition;
-#'      \item `weights` - (similar to indices) weights of rows to which they satisfy
-#'        the current condition;
-#'      \item `pp` - a value of a contingency table, `condition & focus`.
-#'        `pp` is a named numeric vector where each value is a support of conjunction
-#'        of the condition with a foci column (see the `focus` argument to specify,
-#'        which columns). Names of the vector are foci column names.
-#'      \item `pn` - a value of a contingency table, `condition & neg focus`.
-#'        `pn` is a named numeric vector where each value is a support of conjunction
-#'        of the condition with a negated foci column (see the `focus` argument to
-#'        specify, which columns are foci) - names of the vector are foci column names.
-#'      \item `np` - a value of a contingency table, `neg condition & focus`.
-#'        `np` is a named numeric vector where each value is a support of conjunction
-#'        of the negated condition with a foci column (see the `focus` argument to
-#'        specify, which columns are foci) - names of the vector are foci column names.
-#'      \item `nn` - a value of a contingency table, `neg condition & neg focus`.
-#'        `nn` is a named numeric vector where each value is a support of conjunction
-#'        of the negated condition with a negated foci column (see the `focus`
-#'        argument to specify, which columns are foci) - names of the vector are foci
-#'        column names.
-#'      \item `foci_supports` - (deprecated, use `pp` instead)
-#'        a named numeric vector of supports of foci columns
-#'        (see `focus` argument to specify, which columns are foci) - names of the
-#'        vector are foci column names.
-#'      }
-#' @param condition a tidyselect expression (see
+#' For each remaining condition, all foci from \eqn{E} are tested and filtered
+#' using `min_focus_support` and `min_conditional_focus_support`. If at least
+#' one focus remains (or if `filter_empty_foci = FALSE`), the callback `f` is
+#' executed with details of the condition and foci. Results of all calls are
+#' collected and returned as a list.
+#'
+#' Let \eqn{C} be a condition (\eqn{C \subseteq P}), \eqn{F} the set of
+#' filtered foci (\eqn{F \subseteq E}), \eqn{R} the set of rows of `x`, and
+#' \eqn{\mu_C(r)} the truth degree of condition \eqn{C} on row \eqn{r}. The
+#' parameters passed to `f` are defined as:
+#'
+#' - `condition`: a named integer vector of column indices representing the
+#'   predicates of \eqn{C}. Names correspond to column names.
+#'
+#' - `sum`: a numeric scalar value of the number of rows satisfying \eqn{C} for
+#'   logical data, or the sum of truth degrees for fuzzy data,
+#'   \eqn{sum = \sum_{r \in R} \mu_C(r)}.
+#'
+#' - `support`: a numeric scalar value of relative frequency of rows satisfying \eqn{C},
+#'   \eqn{supp = sum / |R|}.
+#'
+#' - `pp`, `pn`, `np`, `nn`: a numeric vector of entries of a contingency table
+#'   for \eqn{C} and \eqn{F}, satisfying the Ruspini condition
+#'   \eqn{pp + pn + np + nn = |R|}.
+#'   The \eqn{i}-th elements of these vectors correspond to the \eqn{i}-th focus
+#'   \eqn{F_i} from \eqn{F} and are defined as:
+#'   * `pp[i]`: rows satisfying both \eqn{C} and \eqn{F_i},
+#'     \eqn{pp_i = \sum_{r \in R} \mu_{C \land F_i}(r)}.
+#'   * `pn[i]`: rows satisfying \eqn{C} but not \eqn{F_i},
+#'     \eqn{pn_i = \sum_{r \in R} \mu_C(r) - pp_i}.
+#'   * `np[i]`: rows satisfying \eqn{F_i} but not \eqn{C},
+#'     \eqn{np_i = \sum_{r \in R} \mu_{F_i}(r) - pp_i}.
+#'   * `nn[i]`: rows satisfying neither \eqn{C} nor \eqn{F_i},
+#'     \eqn{nn_i = |R| - (pp_i + pn_i + np_i)}.
+#'
+#' @param x A matrix or data frame. If a matrix, it must be numeric (double) or
+#'   logical. If a data frame, all columns must be numeric (double) or logical.
+#' @param f A callback function executed for each generated condition. It may
+#'   accept arguments such as
+#'   `condition`, `sum`, `support`, `indices`,
+#'   `weights`, `pp`, `pn`, `np`, `nn`, or `foci_supports` (deprecated). The
+#'   algorithm supplies matching values automatically. `f` should return an
+#'   object (typically a list). Results of all calls are collected and returned.
+#' @param f A callback function executed for each generated condition. It may
+#'   declare any subset of the arguments listed below. The algorithm detects
+#'   which arguments are present and provides only those values to `f`. This
+#'   design allows the user to control both the amount of information received
+#'   and the computational cost, as some arguments are more expensive to
+#'   compute than others. The function `f` is expected to return an object
+#'   (typically a list) representing a pattern or patterns related to the
+#'   condition. The results of all calls of `f` are collected and returned as
+#'   a list. Possible arguments are: `condition`, `sum`, `support`, `indices`,
+#'   `weights`, `pp`, `pn`, `np`, `nn`, or `foci_supports` (deprecated), which
+#'   are thoroughly described below in the "Details" section.
+#' @param condition tidyselect expression (see
 #'      [tidyselect syntax](https://tidyselect.r-lib.org/articles/syntax.html))
-#'      specifying the columns to use as condition predicates
-#' @param focus a tidyselect expression (see
+#'      specifying columns of `x` to use as condition predicates
+#' @param focus tidyselect expression (see
 #'      [tidyselect syntax](https://tidyselect.r-lib.org/articles/syntax.html))
-#'      specifying the columns to use as focus predicates
-#' @param disjoint an atomic vector of size equal to the number of columns of `x`
-#'      that specifies the groups of predicates: if some elements of the `disjoint`
-#'      vector are equal, then the corresponding columns of `x` will NOT be
-#'      present together in a single condition. If `x` is prepared with
-#'      [partition()], using the [var_names()] function on `x`'s column names
-#'      is a convenient way to create the `disjoint` vector.
-#' @param min_length the minimum size (the minimum number of predicates) of the
-#'      condition to be generated (must be greater or equal to 0). If 0, the empty
-#'      condition is generated in the first place.
-#' @param max_length The maximum size (the maximum number of predicates) of the
-#'      condition to be generated. If equal to Inf, the maximum length of conditions
-#'      is limited only by the number of available predicates.
-#' @param min_support the minimum support of a condition to trigger the callback
-#'      function for it. The support of the condition is the relative frequency
-#'      of the condition in the dataset `x`. For logical data, it equals to the
-#'      relative frequency of rows such that all condition predicates are TRUE on it.
-#'      For numerical (double) input, the support is computed as the mean (over all
-#'      rows) of multiplications of predicate values.
-#' @param min_focus_support the minimum support of a focus, for the focus to be passed
-#'      to the callback function. The support of the focus is the relative frequency
-#'      of rows such that all condition predicates AND the focus are TRUE on it.
-#'      For numerical (double) input, the support is computed as the mean (over all
-#'      rows) of multiplications of predicate values.
-#' @param min_conditional_focus_support the minimum relative support of a focus
-#'      within a condition. The conditional support of the focus is the relative
-#'      frequency of rows with focus being TRUE within rows where the condition is
-#'      TRUE.
-#' @param max_support the maximum support of a condition to trigger the callback
-#' @param filter_empty_foci a logical scalar indicating whether to skip conditions,
-#'      for which no focus remains available after filtering by `min_focus_support`.
-#'      If `TRUE`, the condition is passed to the callback function only if at least
-#'      one focus remains after filtering. If `FALSE`, the condition is passed to the
-#'      callback function regardless of the number of remaining foci.
-#' @param t_norm a t-norm used to compute conjunction of weights. It must be one of
-#'      `"goedel"` (minimum t-norm), `"goguen"` (product t-norm), or `"lukas"`
-#'      (Lukasiewicz t-norm).
-#' @param max_results the maximum number of generated conditions to execute the
-#'      callback function on. If the number of found conditions exceeds
-#'      `max_results`, the function stops generating new conditions and returns
-#'      the results. To avoid long computations during the search, it is recommended
-#'      to set `max_results` to a reasonable positive value. Setting `max_results`
-#'      to `Inf` will generate all possible conditions.
-#' @param verbose a logical scalar indicating whether to print progress messages.
-#' @param threads the number of threads to use for parallel computation.
-#' @param error_context a list of details to be used in error messages.
-#'      This argument is useful when `dig()` is called from another
-#'      function to provide error messages, which refer to arguments of the
-#'      calling function. The list must contain the following elements:
-#'      \itemize{
-#'      \item `arg_x` - the name of the argument `x` as a character string
-#'      \item `arg_f` - the name of the argument `f` as a character string
-#'      \item `arg_condition` - the name of the argument `condition` as a character
-#'         string
-#'      \item `arg_focus` - the name of the argument `focus` as a character string
-#'      \item `arg_disjoint` - the name of the argument `disjoint` as a character
-#'         string
-#'      \item `arg_min_length` - the name of the argument `min_length` as a character
-#'         string
-#'      \item `arg_max_length` - the name of the argument `max_length` as a character
-#'         string
-#'      \item `arg_min_support` - the name of the argument `min_support` as a character
-#'         string
-#'      \item `arg_min_focus_support` - the name of the argument `min_focus_support`
-#'         as a character string
-#'      \item `arg_max_support` - the name of the argument `max_support` as a character
-#'      \item `arg_filter_empty_foci` - the name of the argument `filter_empty_foci`
-#'         as a character string
-#'      \item `arg_t_norm` - the name of the argument `t_norm` as a character string
-#'      \item `arg_threads` - the name of the argument `threads` as a character string
-#'      \item `call` - an environment in which to evaluate the error messages.
-#'      }
-#' @returns A list of results provided by the callback function `f`.
+#'      specifying columns of `x` to use as focus predicates
+#' @param disjoint An atomic vector (length = number of columns in `x`) defining
+#'   groups of predicates. Columns in the same group cannot appear together in
+#'   a condition. With data from [partition()], use [var_names()] on column
+#'   names to construct `disjoint`.
+#' @param excluded `NULL` or a list of character vectors, each representing an
+#'   implication formula. In each vector, all but the last element form the
+#'   antecedent and the last element is the consequent. These formulae are
+#'   treated as *tautologies* and used to filter out generated conditions. If
+#'   a condition contains both the antecedent and the consequent of any such
+#'   formula, it is not passed to the callback function `f`. Likewise, if a
+#'   condition contains the antecedent, the corresponding focus (the consequent)
+#'   is not passed to `f`.
+#' @param min_length Minimum number of predicates in a condition required to
+#'   trigger the callback `f`. Must be \eqn{\ge 0}. If set to 0, the empty
+#'   condition also triggers the callback.
+#' @param max_length Maximum number of predicates allowed in a condition.
+#'   Conditions longer than `max_length` are not generated. If `Inf`, the only
+#'   limit is the total number of available predicates. Must be \eqn{\ge 0} and
+#'   \eqn{\ge min_length}. This setting strongly influences both the number of
+#'   generated conditions and the speed of the search.
+#' @param min_support Minimum support of a condition required to trigger `f`.
+#'   Support is the relative frequency of the condition in `x`. For logical
+#'   data, this is the proportion of rows where all condition predicates are
+#'   `TRUE`. For numeric (double) data, support is the mean (over all rows) of
+#'   the products of predicate values. Must be in \eqn{[0,1]}. If a condition’s
+#'   support falls below `min_support`, recursive generation of its extensions
+#'   is stopped. Thus, `min_support` directly affects search speed and the
+#'   number of callback calls.
+#' @param min_focus_support Minimum support of a focus required for it to be
+#'   passed to `f`. For logical data, this is the proportion of rows where both
+#'   the condition and the focus are `TRUE`. For numeric (double) data, support
+#'   is computed as the mean (over all rows) of a t-norm of predicate values
+#'   (the t-norm is selected by `t_norm`). Must be in \eqn{[0,1]}. Foci with
+#'   support below this threshold are excluded. Together with
+#'   `filter_empty_foci`, this parameter influences both search speed and the
+#'   number of triggered calls of `f`.
+#' @param min_conditional_focus_support Minimum conditional support of a focus
+#'   within a condition. Defined as the relative frequency of rows where the
+#'   focus is `TRUE` among those where the condition is `TRUE`. If \eqn{sum}
+#'   (see `support` in *Details*) is the number of rows (or sum of truth
+#'   degrees for fuzzy data) satisfying the condition, and \eqn{pp} (see
+#'   `pp[i]` in *Details*) is the sum of truth degrees where both the condition
+#'   and the focus hold, then conditional support is \eqn{pp / sum}. Must be in
+#'   \eqn{[0,1]}. Foci below this threshold are not passed to `f`. Together with
+#'   `filter_empty_foci`, this parameter influences search speed and the number
+#'   of callback calls.
+#' @param max_support Maximum support of a condition to trigger `f`. Conditions
+#'   with support above this threshold are skipped, but recursive generation of
+#'   their supersets continues. Must be in \eqn{[0,1]}.
+#' @param filter_empty_foci Logical; controls whether `f` is triggered for
+#'   conditions with no remaining foci after filtering by `min_focus_support`
+#'   or `min_conditional_focus_support`. If `TRUE`, `f` is called only when at
+#'   least one focus remains. If `FALSE`, `f` is called regardless.
+#' @param t_norm T-norm used for conjunction of weights: `"goedel"` (minimum),
+#'   `"goguen"` (product), or `"lukas"` (Łukasiewicz).
+#' @param max_results Maximum number of results (objects returned by the
+#'   callback `f`) to store and return in the output list. When this limit
+#'   is reached, generation of further conditions stops. Use a positive
+#'   integer to enable early stopping; set to `Inf` to remove the cap.
+#' @param verbose Logical; if `TRUE`, print progress messages.
+#' @param threads Number of threads for parallel computation.
+#' @param error_context A list of details to be used when constructing error
+#'   messages. This is mainly useful when `dig()` is called from another
+#'   function and errors should refer to the caller’s argument names rather
+#'   than those of `dig()`. The list must contain:
+#'   \itemize{
+#'     \item `arg_x` – name of the argument `x` as a character string
+#'     \item `arg_f` – name of the argument `f` as a character string
+#'     \item `arg_condition` – name of the argument `condition`
+#'     \item `arg_focus` – name of the argument `focus`
+#'     \item `arg_disjoint` – name of the argument `disjoint`
+#'     \item `arg_excluded` – name of the argument `excluded`
+#'     \item `arg_min_length` – name of the argument `min_length`
+#'     \item `arg_max_length` – name of the argument `max_length`
+#'     \item `arg_min_support` – name of the argument `min_support`
+#'     \item `arg_min_focus_support` – name of the argument
+#'       `min_focus_support`
+#'     \item `arg_min_conditional_focus_support` – name of the argument
+#'       `min_conditional_focus_support`
+#'     \item `arg_max_support` – name of the argument `max_support`
+#'     \item `arg_filter_empty_foci` – name of the argument `filter_empty_foci`
+#'     \item `arg_t_norm` – name of the argument `t_norm`
+#'     \item `arg_threads` – name of the argument `threads`
+#'     \item `call` – environment in which to evaluate error messages
+#'   }
+#' @returns A list of results returned by the callback function `f`.
 #' @seealso [partition()], [var_names()], [dig_grid()]
 #' @author Michal Burda
+#'
 #' @examples
 #' library(tibble)
 #'
-#' # Prepare iris data for use with dig()
+#' # Prepare iris data
 #' d <- partition(iris, .breaks = 2)
 #'
-#' # Call f() for each condition with support >= 0.5. The result is a list
-#' # of strings representing the conditions.
+#' # Simple callback: return formatted condition names
 #' dig(x = d,
-#'     f = function(condition) {
-#'         format_condition(names(condition))
-#'     },
+#'     f = function(condition) format_condition(names(condition)),
 #'     min_support = 0.5)
 #'
-#' # Create a more complex pattern object - a list with some statistics
+#' # Callback returning condition and support
 #' res <- dig(x = d,
 #'            f = function(condition, support) {
 #'                list(condition = format_condition(names(condition)),
 #'                     support = support)
 #'            },
 #'            min_support = 0.5)
-#' print(res)
-#'
-#' # Format the result as a data frame
 #' do.call(rbind, lapply(res, as_tibble))
 #'
 #' # Within each condition, evaluate also supports of columns starting with
@@ -188,11 +210,9 @@
 #'            focus = starts_with("Species"),
 #'            min_support = 0.5,
 #'            min_focus_support = 0)
-#'
-#' # Format the result as a tibble
 #' do.call(rbind, lapply(res, as_tibble))
 #'
-#' # For each condition, create multiple patterns based on the focus columns
+#' # Multiple patterns per condition based on foci
 #' res <- dig(x = d,
 #'            f = function(condition, support, pp) {
 #'                lapply(seq_along(pp), function(i) {
@@ -207,22 +227,21 @@
 #'            min_support = 0.5,
 #'            min_focus_support = 0)
 #'
-#' # As res is now a list of lists, we need to flatten it before converting to
-#' # a tibble
+#' # Flatten result and convert to tibble
 #' res <- unlist(res, recursive = FALSE)
-#'
-#' # Format the result as a tibble
 #' do.call(rbind, lapply(res, as_tibble))
+#'
 #' @export
 dig <- function(x,
                 f,
                 condition = everything(),
                 focus = NULL,
                 disjoint = var_names(colnames(x)),
+                excluded = NULL,
                 min_length = 0,
                 max_length = Inf,
                 min_support = 0.0,
-                min_focus_support = min_support,
+                min_focus_support = 0.0,
                 min_conditional_focus_support = 0.0,
                 max_support = 1.0,
                 filter_empty_foci = FALSE,
@@ -235,6 +254,7 @@ dig <- function(x,
                                      arg_condition = "condition",
                                      arg_focus = "focus",
                                      arg_disjoint = "disjoint",
+                                     arg_excluded = "excluded",
                                      arg_min_length = "min_length",
                                      arg_max_length = "max_length",
                                      arg_min_support = "min_support",
@@ -277,10 +297,14 @@ dig <- function(x,
         arguments <- ""
     }
 
-    .must_be_vector(disjoint,
-                    null = TRUE,
-                    arg = error_context$arg_disjoint,
-                    call = error_context$call)
+    fun <- function(l) {
+        do.call(f, l)
+    }
+
+    .must_be_vector_or_factor(disjoint,
+                              null = TRUE,
+                              arg = error_context$arg_disjoint,
+                              call = error_context$call)
     if (!isTRUE(length(disjoint) == 0 || length(disjoint) == ncol(x))) {
         cli_abort(c("The length of {.arg {error_context$arg_disjoint}} must be 0 or must be equal to the number of columns in {.arg {error_context$arg_x}}.",
                     "x" = "The number of columns in {.arg {error_context$arg_x}} is {ncol(x)}.",
@@ -288,12 +312,32 @@ dig <- function(x,
                   call = error_context$call)
     }
 
-    disjoint_predicates <- integer(0L)
-    disjoint_foci <- integer(0L)
+    orig_disjoint <- disjoint
     if (length(disjoint) > 0) {
         disjoint <- as.integer(as.factor(disjoint))
-        disjoint_predicates <- disjoint[condition_cols$indices]
-        disjoint_foci <- disjoint[foci_cols$indices]
+    } else {
+        disjoint <- seq_along(cols)
+    }
+
+    .must_be_list_of_characters(excluded,
+                                null = TRUE,
+                                arg = error_context$arg_excluded,
+                                call = error_context$call)
+    orig_excluded <- excluded
+    if (is.null(excluded)) {
+        excluded <- list()
+    } else {
+        excluded_predicates <- unique(unlist(excluded))
+        excluded_undefined <- setdiff(excluded_predicates, colnames(x))
+        if (length(excluded_undefined) > 0) {
+            details <- paste0("Column {.var ", excluded_undefined, "} can't be found.")
+            cli_abort(c("Can't find some column names in {.arg {error_context$arg_x}} that correspond to all predicates in {.arg {error_context$arg_excluded}}.",
+                        "i" = "Consider using {.fn remove_ill_conditions()} to remove conditions with undefined predicates.",
+                        ..error_details(details)))
+        }
+        excluded <- lapply(excluded,
+                           fmatch,
+                           colnames(x))
     }
 
     .must_be_integerish_scalar(min_length,
@@ -390,10 +434,8 @@ dig <- function(x,
 
     config <- list(nrow = nrow(x),
                    arguments = arguments,
-                   predicates = condition_cols$indices,
-                   foci = foci_cols$indices,
-                   disjoint_predicates = disjoint_predicates,
-                   disjoint_foci = disjoint_foci,
+                   disjoint = disjoint,
+                   excluded = excluded,
                    minLength = min_length,
                    maxLength = max_length,
                    minSupport = min_support,
@@ -406,11 +448,33 @@ dig <- function(x,
                    verbose = verbose,
                    threads = threads)
 
-    res <- dig_(condition_cols$logicals,
-                condition_cols$doubles,
-                foci_cols$logicals,
-                foci_cols$doubles, config)
+    res <- dig_(cols,
+                names(cols),
+                condition_cols$selected,
+                foci_cols$selected,
+                fun,
+                config)
 
-    .msg(verbose, "dig: executing callback function on the results")
-    lapply(res, do.call, what = f)
+    nugget(res,
+           flavour = NULL,
+           call_function = "dig",
+           call_data = list(nrow = nrow(x),
+                            ncol = ncol(x),
+                            colnames = as.character(colnames(x))),
+           call_args = list(x = deparse(substitute(x)),
+                            condition = names(cols)[condition_cols$selected],
+                            focus = names(cols)[foci_cols$selected],
+                            disjoint = orig_disjoint,
+                            excluded = orig_excluded,
+                            min_length = min_length,
+                            max_length = if (max_length < 0) Inf else max_length,
+                            min_support = min_support,
+                            min_focus_support = min_focus_support,
+                            min_conditional_focus_support = min_conditional_focus_support,
+                            max_support = max_support,
+                            filter_empty_foci = filter_empty_foci,
+                            t_norm = t_norm,
+                            max_results = max_results,
+                            verbose = verbose,
+                            threads = threads))
 }

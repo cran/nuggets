@@ -6,64 +6,84 @@
 
 class Config {
 public:
-    Config(List configuration)
+    Config(List configuration, CharacterVector namesVector)
     {
-        IntegerVector nrowVec = configuration["nrow"];
-        nrow = nrowVec[0];
+        int nrow_i = as<IntegerVector>(configuration["nrow"])[0];
+        if (nrow_i < 0)
+            throw invalid_argument("nrow must be non-negative");
+        else
+            nrow = static_cast<size_t>(nrow_i);
+
+        int threads_i = as<IntegerVector>(configuration["threads"])[0];
+        if (threads_i < 0)
+            throw invalid_argument("threads must be non-negative");
+        else
+            threads = static_cast<size_t>(threads_i);
+
+        int minLength_i = as<IntegerVector>(configuration["minLength"])[0];
+        if (minLength_i < 0)
+            throw invalid_argument("minLength must be non-negative");
+        else
+            minLength = static_cast<size_t>(minLength_i);
+
+        int maxLength_i = as<IntegerVector>(configuration["maxLength"])[0];
+        if (maxLength < 0)
+            maxLength = SIZE_MAX;
+        else
+            maxLength = static_cast<size_t>(maxLength_i);
+
+        int maxResults_i = as<IntegerVector>(configuration["maxResults"])[0];
+        if (maxResults < 0)
+            maxResults = SIZE_MAX;
+        else
+            maxResults = static_cast<size_t>(maxResults_i);
+
+        minSupport = as<NumericVector>(configuration["minSupport"])[0];
+        if (minSupport < 0.0f || minSupport > 1.0f)
+            throw invalid_argument("minSupport must be in the range [0, 1]");
+
+        minSum = minSupport * nrow;
+
+        minFocusSupport = as<NumericVector>(configuration["minFocusSupport"])[0];
+        if (minFocusSupport < 0.0f || minFocusSupport > 1.0f)
+            throw invalid_argument("minFocusSupport must be in the range [0, 1]");
+
+        minFocusSum = minFocusSupport * nrow;
+
+        minConditionalFocusSupport = as<NumericVector>(configuration["minConditionalFocusSupport"])[0];
+        if (minConditionalFocusSupport < 0.0f || minConditionalFocusSupport > 1.0f)
+            throw invalid_argument("minConditionalFocusSupport must be in the range [0, 1]");
+
+        maxSupport = as<NumericVector>(configuration["maxSupport"])[0];
+        if (maxSupport < 0.0f || maxSupport > 1.0f)
+            throw invalid_argument("maxSupport must be in the range [0, 1]");
+
+        maxSum = maxSupport * nrow;
+
+        tNorm = parseTNorm(configuration["tNorm"]);
+
+        excluded = as<List>(configuration["excluded"]);
+
+        filterEmptyFoci = as<LogicalVector>(configuration["filterEmptyFoci"])[0];
+
+        verbose = as<LogicalVector>(configuration["verbose"])[0];
 
         parseArguments(configuration["arguments"]);
 
-        IntegerVector predicates = configuration["predicates"];
-        copy(predicates, predicateIndices, predicateNames);
+        IntegerVector disjVec = configuration["disjoint"];
+        disjoint.reserve(disjVec.size() + 1);
+        disjoint.push_back(0); // 0th index is unused, as R uses predicates' indices starting from 1
+        for (R_xlen_t i = 0; i < disjVec.size(); ++i) {
+            disjoint.push_back(disjVec[i]);
+        }
+        disjointDefined = disjoint.size() > 1;
+        filterExcluded = excluded.size() > 0;
 
-        IntegerVector foci = configuration["foci"];
-        copy(foci, fociIndices, fociNames);
-
-        IntegerVector disjPred = configuration["disjoint_predicates"];
-        copy(disjPred, disjointPredicates);
-
-        IntegerVector disjFoci = configuration["disjoint_foci"];
-        copy(disjFoci, disjointFoci);
-
-        IntegerVector threadsVec = configuration["threads"];
-        threads = threadsVec[0];
-
-        IntegerVector minLengthVec = configuration["minLength"];
-        minLength = minLengthVec[0];
-
-        IntegerVector maxLengthVec = configuration["maxLength"];
-        maxLength = maxLengthVec[0];
-
-        NumericVector minSupportVec = configuration["minSupport"];
-        minSupport = minSupportVec[0];
-
-        NumericVector minFocusSupportVec = configuration["minFocusSupport"];
-        minFocusSupport = minFocusSupportVec[0];
-
-        NumericVector minConditionalFocusSupportVec = configuration["minConditionalFocusSupport"];
-        minConditionalFocusSupport = minConditionalFocusSupportVec[0];
-
-        NumericVector maxSupportVec = configuration["maxSupport"];
-        maxSupport = maxSupportVec[0];
-
-        IntegerVector maxResultsVec = configuration["maxResults"];
-        maxResults = maxResultsVec[0]; // -1 means infinite
-
-        LogicalVector filterEmptyFociVec = configuration["filterEmptyFoci"];
-        filterEmptyFoci = filterEmptyFociVec[0];
-
-        LogicalVector verboseVec = configuration["verbose"];
-        verbose = verboseVec[0];
-
-        CharacterVector tnormVec = configuration["tNorm"];
-        if (tnormVec[0] == "goedel")
-            tNorm = TNorm::GOEDEL;
-        else if (tnormVec[0] == "goguen")
-            tNorm = TNorm::GOGUEN;
-        else if (tnormVec[0] == "lukas")
-            tNorm = TNorm::LUKASIEWICZ;
-        else
-            throw runtime_error("Unknown t-norm in Config");
+        chainNames.reserve(namesVector.size() + 1);
+        chainNames.push_back(""); // 0th index is unused, as R uses predicates' indices starting from 1
+        for (R_xlen_t i = 0; i < namesVector.size(); ++i) {
+            chainNames.push_back(as<string>(namesVector[i]));
+        }
     }
 
     bool hasConditionArgument() const
@@ -84,6 +104,9 @@ public:
     bool hasContiNnArgument() const
     { return contiNnArgument; }
 
+    bool hasAnyContiArgument() const
+    { return anyContiArgument; }
+
     bool hasIndicesArgument() const
     { return indicesArgument; }
 
@@ -96,167 +119,136 @@ public:
     bool hasWeightsArgument() const
     { return weightsArgument; }
 
-    bool hasDisjointPredicates() const
-    { return disjointPredicates.size() > 0; }
-
-    bool hasDisjointFoci() const
-    { return disjointFoci.size() > 0; }
-
-    const vector<int>& getPredicateIndices() const
-    { return predicateIndices; }
-
-    const vector<string>& getPredicateNames() const
-    { return predicateNames; }
-
-    const vector<int>& getFociIndices() const
-    { return fociIndices; }
-
-    const vector<string>& getFociNames() const
-    { return fociNames; }
-
-    const vector<int>& getDisjointPredicates() const
-    { return disjointPredicates; }
-
-    const vector<int>& getDisjointFoci() const
-    { return disjointFoci; }
-
-    int getNrow() const
-    { return nrow; }
-
-    int getThreads() const
-    { return threads; }
-
-    int getMinLength() const
-    { return minLength; }
-
-    int getMaxLength() const
-    { return maxLength; }
-
-    int getMaxResults() const
-    { return maxResults; }
-
-    double getMinSupport() const
-    { return minSupport; }
-
-    double getMinFocusSupport() const
-    { return minFocusSupport; }
-
-    double getMinConditionalFocusSupport() const
-    { return minConditionalFocusSupport; }
-
-    double getMaxSupport() const
-    { return maxSupport; }
+    bool hasDisjoint() const
+    { return disjointDefined; }
 
     bool hasFilterEmptyFoci() const
     { return filterEmptyFoci; }
 
+    bool hasFilterExcluded() const
+    { return filterExcluded; }
+
     bool isVerbose() const
     { return verbose; }
+
+    const vector<int>& getDisjoint() const
+    { return disjoint; }
+
+    const List getExcluded() const
+    { return excluded; }
+
+    size_t getNrow() const
+    { return nrow; }
+
+    size_t getThreads() const
+    { return threads; }
+
+    size_t getMinLength() const
+    { return minLength; }
+
+    size_t getMaxLength() const
+    { return maxLength; }
+
+    size_t getMaxResults() const
+    { return maxResults; }
+
+    float getMinSupport() const
+    { return minSupport; }
+
+    float getMinSum() const
+    { return minSum; }
+
+    float getMinFocusSupport() const
+    { return minFocusSupport; }
+
+    float getMinFocusSum() const
+    { return minFocusSum; }
+
+    float getMinConditionalFocusSupport() const
+    { return minConditionalFocusSupport; }
+
+    float getMaxSupport() const
+    { return maxSupport; }
+
+    float getMaxSum() const
+    { return maxSum; }
 
     TNorm getTNorm() const
     { return tNorm; }
 
-    void permuteConditions(const vector<size_t> permutation)
-    {
-        vector<int> newPredicateIndices;
-        permute(predicateIndices, newPredicateIndices, permutation);
-        predicateIndices = newPredicateIndices;
-
-        vector<string> newPredicateNames;
-        permute(predicateNames, newPredicateNames, permutation);
-        predicateNames = newPredicateNames;
-
-        vector<int> newDisjointPredicates;
-        permute(disjointPredicates, newDisjointPredicates, permutation);
-        disjointPredicates = newDisjointPredicates;
-    }
+    const string& getChainName(size_t i) const
+    { return chainNames[i]; }
 
 private:
+    size_t nrow;
+    size_t threads;
+    size_t minLength;
+    size_t maxLength;
+    size_t maxResults;
+    float minSupport;
+    float minSum;
+    float minFocusSupport;
+    float minFocusSum;
+    float minConditionalFocusSupport;
+    float maxSupport;
+    float maxSum;
+    TNorm tNorm;
+    List excluded;
+    vector<int> disjoint;
+    vector<string> chainNames;
+
+    bool filterEmptyFoci;
+    bool verbose;
+    bool filterExcluded;
+    bool disjointDefined;
+
     bool conditionArgument = false;
     bool fociSupportsArgument = false;
     bool contiPpArgument = false;
     bool contiNpArgument = false;
     bool contiPnArgument = false;
     bool contiNnArgument = false;
+    bool anyContiArgument = false;
     bool indicesArgument = false;
     bool sumArgument = false;
     bool supportArgument = false;
     bool weightsArgument = false;
 
-    vector<int> predicateIndices;
-    vector<string> predicateNames;
-
-    vector<int> fociIndices;
-    vector<string> fociNames;
-
-    vector<int> disjointPredicates;
-    vector<int> disjointFoci;
-
-    int nrow;
-    int threads;
-    int minLength;
-    int maxLength;
-    int maxResults; // -1 means infinite
-    double minSupport;
-    double minFocusSupport;
-    double minConditionalFocusSupport;
-    double maxSupport;
-    bool filterEmptyFoci;
-    bool verbose;
-    TNorm tNorm;
+    static TNorm parseTNorm(const CharacterVector& vec)
+    {
+        if (vec[0] == "goguen")
+            return TNorm::GOGUEN;
+        else if (vec[0] == "lukas")
+            return TNorm::LUKASIEWICZ;
+        else
+            return TNorm::GOEDEL;
+    }
 
     void parseArguments(const CharacterVector& vec)
     {
         for (R_xlen_t i = 0; i < vec.size(); ++i) {
             if (vec[i] == "condition")
                 conditionArgument = true;
-            if (vec[i] == "foci_supports")
-                fociSupportsArgument = true;
-            if (vec[i] == "pp")
-                contiPpArgument = true;
-            if (vec[i] == "np")
-                contiNpArgument = true;
-            if (vec[i] == "pn")
-                contiPnArgument = true;
-            if (vec[i] == "nn")
-                contiNnArgument = true;
-            if (vec[i] == "indices")
-                indicesArgument = true;
-            if (vec[i] == "sum")
-                sumArgument = true;
-            if (vec[i] == "support")
+            else if (vec[i] == "support")
                 supportArgument = true;
-            if (vec[i] == "weights")
+            else if (vec[i] == "sum")
+                sumArgument = true;
+            else if (vec[i] == "pp")
+                contiPpArgument = true;
+            else if (vec[i] == "np")
+                contiNpArgument = true;
+            else if (vec[i] == "pn")
+                contiPnArgument = true;
+            else if (vec[i] == "nn")
+                contiNnArgument = true;
+            else if (vec[i] == "indices")
+                indicesArgument = true;
+            else if (vec[i] == "weights")
                 weightsArgument = true;
+            else if (vec[i] == "foci_supports")
+                fociSupportsArgument = true;
         }
-    }
 
-    void copy(const IntegerVector& source, vector<int>& values)
-    {
-        for (R_xlen_t i = 0; i < source.size(); ++i) {
-            values.push_back(source[i]);
-        }
-    }
-
-    void copy(const IntegerVector& source, vector<int>& values, vector<string>& names)
-    {
-        if (!source.hasAttribute("names")) {
-            copy(source, values);
-        } else {
-            CharacterVector sourceNames = source.names();
-            for (R_xlen_t i = 0; i < source.size(); ++i) {
-                names.push_back(as<string>(sourceNames[i]));
-                values.push_back(source[i]);
-            }
-        }
-    }
-
-    template <typename T>
-    void permute(const vector<T>& source, vector<T>& target, const vector<size_t>& permutation)
-    {
-        target.resize(source.size());
-        for (size_t i = 0; i < source.size(); ++i) {
-            target[i] = source[permutation[i]];
-        }
+        anyContiArgument = contiPpArgument || contiNpArgument || contiPnArgument || contiNnArgument;
     }
 };

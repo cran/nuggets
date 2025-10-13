@@ -15,6 +15,8 @@
 #   \item{logicals}{A list of logical columns.}
 #   \item{doubles}{A list of numeric columns from the interval [0,1].}
 #   \item{indices}{A vector of indices of selected columns in `cols`.}
+#   \item{selected}{A logical vector of the same length as `cols` indicating
+#       which columns were selected.}
 # }
 # @author Michal Burda
 .extract_cols <- function(cols,
@@ -35,6 +37,9 @@
                     "x" = "{.arg {error_context$arg_selection}} resulted in an empty list."),
                   call = error_context$call)
     }
+
+    selected <- rep(FALSE, length(cols))
+    selected[indices] <- TRUE
 
     cols <- cols[indices]
     logicals <- vapply(cols, is.logical, logical(1))
@@ -59,7 +64,8 @@
 
     list(logicals = cols[logicals],
          doubles = cols[doubles],
-         indices = c(indices[logicals], indices[doubles]))
+         indices = c(indices[logicals], indices[doubles]),
+         selected = selected)
 }
 
 

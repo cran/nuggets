@@ -10,6 +10,7 @@ dig_baseline_contrasts(
   condition = where(is.logical),
   vars = where(is.numeric),
   disjoint = var_names(colnames(x)),
+  excluded = NULL,
   min_length = 0L,
   max_length = Inf,
   min_support = 0,
@@ -45,6 +46,10 @@ vector are equal, then the corresponding columns of \code{x} will NOT be
 present together in a single condition. If \code{x} is prepared with
 \code{\link[=partition]{partition()}}, using the \code{\link[=var_names]{var_names()}} function on \code{x}'s column names
 is a convenient way to create the \code{disjoint} vector.}
+
+\item{excluded}{NULL or a list of character vectors, where each character vector
+contains the names of columns that must not appear together in a single
+condition.}
 
 \item{min_length}{the minimum size (the minimum number of predicates) of the
 condition to be generated (must be greater or equal to 0). If 0, the
@@ -116,8 +121,9 @@ to \code{Inf} will generate all possible conditions.}
 \item{threads}{the number of threads to use for parallel computation.}
 }
 \value{
-A tibble with found patterns in rows. The following columns are always
-present:
+An S3 object which is an instance of \code{baseline_contrasts} and \code{nugget}
+classes and which is a tibble with found patterns in rows. The following
+columns are always present:
 \item{condition}{the condition of the pattern as a character string
 in the form \code{{p1 & p2 & ... & pn}} where \code{p1}, \code{p2}, ..., \code{pn} are
 \code{x}'s column names.}

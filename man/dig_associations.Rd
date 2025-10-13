@@ -9,6 +9,7 @@ dig_associations(
   antecedent = everything(),
   consequent = everything(),
   disjoint = var_names(colnames(x)),
+  excluded = NULL,
   min_length = 0L,
   max_length = Inf,
   min_coverage = 0,
@@ -19,7 +20,14 @@ dig_associations(
   t_norm = "goguen",
   max_results = Inf,
   verbose = FALSE,
-  threads = 1
+  threads = 1,
+  error_context = list(arg_x = "x", arg_antecedent = "antecedent", arg_consequent =
+    "consequent", arg_disjoint = "disjoint", arg_excluded = "excluded", arg_min_length =
+    "min_length", arg_max_length = "max_length", arg_min_coverage = "min_coverage",
+    arg_min_support = "min_support", arg_min_confidence = "min_confidence",
+    arg_contingency_table = "contingency_table", arg_measures = "measures", arg_t_norm =
+    "t_norm", arg_max_results = "max_results", arg_verbose = "verbose", arg_threads =
+    "threads", call = current_env())
 )
 }
 \arguments{
@@ -41,6 +49,10 @@ vector are equal, then the corresponding columns of \code{x} will NOT be
 present together in a single condition. If \code{x} is prepared with
 \code{\link[=partition]{partition()}}, using the \code{\link[=var_names]{var_names()}} function on \code{x}'s column names
 is a convenient way to create the \code{disjoint} vector.}
+
+\item{excluded}{NULL or a list of character vectors, where each character vector
+contains the names of columns that must not appear together in a single
+antecedent.}
 
 \item{min_length}{the minimum length, i.e., the minimum number of predicates in the
 antecedent, of a rule to be generated. Value must be greater or equal to 0.
@@ -74,7 +86,7 @@ for a description of the measures.}
 
 \item{t_norm}{a t-norm used to compute conjunction of weights. It must be one of
 \code{"goedel"} (minimum t-norm), \code{"goguen"} (product t-norm), or \code{"lukas"}
-(Lukasiewicz t-norm).}
+(Łukasiewicz t-norm).}
 
 \item{max_results}{the maximum number of generated conditions to execute the
 callback function on. If the number of found conditions exceeds
@@ -86,9 +98,33 @@ to \code{Inf} will generate all possible conditions.}
 \item{verbose}{a logical value indicating whether to print progress messages.}
 
 \item{threads}{the number of threads to use for parallel computation.}
+
+\item{error_context}{a named list providing context for error messages.
+This is mainly useful when \code{dig_associations()} is called from another
+function and you want error messages to refer to the argument names
+of that calling function. The list must contain the following elements:
+\itemize{
+\item \code{arg_x} - name of the argument \code{x}
+\item \code{arg_antecedent} - name of the argument \code{antecedent}
+\item \code{arg_consequent} - name of the argument \code{consequent}
+\item \code{arg_disjoint} - name of the argument \code{disjoint}
+\item \code{arg_excluded} - name of the argument \code{excluded}
+\item \code{arg_min_length} - name of the argument \code{min_length}
+\item \code{arg_max_length} - name of the argument \code{max_length}
+\item \code{arg_min_coverage} - name of the argument \code{min_coverage}
+\item \code{arg_min_support} - name of the argument \code{min_support}
+\item \code{arg_min_confidence} - name of the argument \code{min_confidence}
+\item \code{arg_contingency_table} - name of the argument \code{contingency_table}
+\item \code{arg_measures} - name of the argument \code{measures}
+\item \code{arg_t_norm} - name of the argument \code{t_norm}
+\item \code{arg_max_results} - name of the argument \code{max_results}
+\item \code{arg_verbose} - name of the argument \code{verbose}
+\item \code{arg_threads} - name of the argument \code{threads}
+}}
 }
 \value{
-A tibble with found patterns and computed quality measures.
+An S3 object, which is an instance of \code{associations} and \code{nugget}
+classes, and which is a tibble with found patterns and computed quality measures.
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}

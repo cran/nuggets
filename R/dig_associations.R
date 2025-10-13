@@ -52,6 +52,9 @@
 #'      present together in a single condition. If `x` is prepared with
 #'      [partition()], using the [var_names()] function on `x`'s column names
 #'      is a convenient way to create the `disjoint` vector.
+#' @param excluded NULL or a list of character vectors, where each character vector
+#'      contains the names of columns that must not appear together in a single
+#'      antecedent.
 #' @param min_length the minimum length, i.e., the minimum number of predicates in the
 #'      antecedent, of a rule to be generated. Value must be greater or equal to 0.
 #'       If 0, rules with empty antecedent are generated in the first place.
@@ -77,7 +80,7 @@
 #'      for a description of the measures.
 #' @param t_norm a t-norm used to compute conjunction of weights. It must be one of
 #'      `"goedel"` (minimum t-norm), `"goguen"` (product t-norm), or `"lukas"`
-#'      (Lukasiewicz t-norm).
+#'      (Łukasiewicz t-norm).
 #' @param max_results the maximum number of generated conditions to execute the
 #'      callback function on. If the number of found conditions exceeds
 #'      `max_results`, the function stops generating new conditions and returns
@@ -86,7 +89,30 @@
 #'      to `Inf` will generate all possible conditions.
 #' @param verbose a logical value indicating whether to print progress messages.
 #' @param threads the number of threads to use for parallel computation.
-#' @returns A tibble with found patterns and computed quality measures.
+#' @param error_context a named list providing context for error messages.
+#'      This is mainly useful when `dig_associations()` is called from another
+#'      function and you want error messages to refer to the argument names
+#'      of that calling function. The list must contain the following elements:
+#'      \itemize{
+#'          \item `arg_x` - name of the argument `x`
+#'          \item `arg_antecedent` - name of the argument `antecedent`
+#'          \item `arg_consequent` - name of the argument `consequent`
+#'          \item `arg_disjoint` - name of the argument `disjoint`
+#'          \item `arg_excluded` - name of the argument `excluded`
+#'          \item `arg_min_length` - name of the argument `min_length`
+#'          \item `arg_max_length` - name of the argument `max_length`
+#'          \item `arg_min_coverage` - name of the argument `min_coverage`
+#'          \item `arg_min_support` - name of the argument `min_support`
+#'          \item `arg_min_confidence` - name of the argument `min_confidence`
+#'          \item `arg_contingency_table` - name of the argument `contingency_table`
+#'          \item `arg_measures` - name of the argument `measures`
+#'          \item `arg_t_norm` - name of the argument `t_norm`
+#'          \item `arg_max_results` - name of the argument `max_results`
+#'          \item `arg_verbose` - name of the argument `verbose`
+#'          \item `arg_threads` - name of the argument `threads`
+#'      }
+#' @returns An S3 object, which is an instance of `associations` and `nugget`
+#'     classes, and which is a tibble with found patterns and computed quality measures.
 #' @author Michal Burda
 #' @seealso [partition()], [var_names()], [dig()]
 #' @examples
@@ -102,6 +128,7 @@ dig_associations <- function(x,
                              antecedent = everything(),
                              consequent = everything(),
                              disjoint = var_names(colnames(x)),
+                             excluded = NULL,
                              min_length = 0L,
                              max_length = Inf,
                              min_coverage = 0,
@@ -112,23 +139,66 @@ dig_associations <- function(x,
                              t_norm = "goguen",
                              max_results = Inf,
                              verbose = FALSE,
-                             threads = 1) {
-    .must_be_double_scalar(min_coverage)
-    .must_be_in_range(min_coverage, c(0, 1))
+                             threads = 1,
+                             error_context = list(arg_x = "x",
+                                                  arg_antecedent = "antecedent",
+                                                  arg_consequent = "consequent",
+                                                  arg_disjoint = "disjoint",
+                                                  arg_excluded = "excluded",
+                                                  arg_min_length = "min_length",
+                                                  arg_max_length = "max_length",
+                                                  arg_min_coverage = "min_coverage",
+                                                  arg_min_support = "min_support",
+                                                  arg_min_confidence = "min_confidence",
+                                                  arg_contingency_table = "contingency_table",
+                                                  arg_measures = "measures",
+                                                  arg_t_norm = "t_norm",
+                                                  arg_max_results = "max_results",
+                                                  arg_verbose = "verbose",
+                                                  arg_threads = "threads",
+                                                  call = current_env())) {
+    .must_be_double_scalar(min_coverage,
+                           arg = error_context$arg_min_coverage,
+                           call = error_context$call)
+    .must_be_in_range(min_coverage, c(0, 1),
+                      arg = error_context$arg_min_coverage,
+                      call = error_context$call)
 
-    .must_be_double_scalar(min_support)
-    .must_be_in_range(min_support, c(0, 1))
+    .must_be_double_scalar(min_support,
+                           arg = error_context$arg_min_support,
+                           call = error_context$call)
+    .must_be_in_range(min_support, c(0, 1),
+                      arg = error_context$arg_min_support,
+                      call = error_context$call)
 
-    .must_be_double_scalar(min_confidence)
-    .must_be_in_range(min_confidence, c(0, 1))
+    .must_be_double_scalar(min_confidence,
+                           arg = error_context$arg_min_confidence,
+                           call = error_context$call)
+    .must_be_in_range(min_confidence, c(0, 1),
+                      arg = error_context$arg_min_confidence,
+                      call = error_context$call)
 
-    .must_be_flag(contingency_table)
-    .must_be_flag(verbose)
+    .must_be_flag(contingency_table,
+                  arg = error_context$arg_contingency_table,
+                  call = error_context$call)
+    .must_be_flag(verbose,
+                  arg = error_context$arg_verbose,
+                  call = error_context$call)
     .must_be_enum(measures,
                   values = c("lift", "conviction", "added_value"),
                   null = TRUE,
-                  multi = TRUE)
+                  multi = TRUE,
+                  arg = error_context$arg_measures,
+                  call = error_context$call)
 
+    .must_be_integerish_scalar(max_results,
+                               arg = error_context$arg_max_results,
+                               call = error_context$call)
+    .must_be_greater_eq(max_results, 1,
+                        arg = error_context$arg_max_results,
+                        call = error_context$call)
+
+    orig_min_coverage <- min_coverage
     min_coverage <- max(min_coverage, min_support)
     n <- nrow(x)
 
@@ -152,20 +222,19 @@ dig_associations <- function(x,
                            min_support = 0.0,
                            verbose = verbose,
                            threads = threads,
-                           error_context = list(arg_x = "x",
-                                                arg_condition = "consequent",
-                                                arg_disjoint = "disjoint",
-                                                arg_min_length = "min_length",
-                                                arg_max_length = "max_length",
-                                                arg_min_support = "min_support",
-                                                arg_verbose = "verbose",
-                                                arg_threads = "threads",
-                                                call = current_env()))
+                           error_context = list(arg_x = error_context$arg_x,
+                                                arg_condition = error_context$arg_consequent,
+                                                arg_disjoint = error_context$arg_disjoint,
+                                                arg_min_length = error_context$arg_min_length,
+                                                arg_max_length = error_context$arg_max_length,
+                                                arg_min_support = error_context$arg_min_support,
+                                                arg_verbose = error_context$arg_verbose,
+                                                arg_threads = error_context$arg_threads,
+                                                call = error_context$call))
     conseq_supports <- unlist(conseq_supports)
 
     basic_callback <- function(condition, sum, pp) {
         conf <- pp / sum
-        conf <- conf
         supp <- pp / n
         ante <- format_condition(names(condition))
         cons <- unlist(lapply(names(conf), format_condition))
@@ -212,6 +281,7 @@ dig_associations <- function(x,
                condition = !!antecedent,
                focus = !!consequent,
                disjoint = disjoint,
+               excluded = excluded,
                min_length = min_length,
                max_length = max_length,
                min_support = min_coverage,
@@ -222,41 +292,74 @@ dig_associations <- function(x,
                max_results = max_results,
                verbose = verbose,
                threads = threads,
-               error_context = list(arg_x = "x",
-                                    arg_condition = "antecedent",
-                                    arg_focus = "consequent",
-                                    arg_disjoint = "disjoint",
-                                    arg_min_length = "min_length",
-                                    arg_max_length = "max_length",
-                                    arg_min_support = "min_coverage",
-                                    arg_min_focus_support = "min_support",
-                                    arg_min_conditional_focus_support = "min_confidence",
-                                    arg_t_norm = "t_norm",
-                                    arg_max_results = "max_results",
-                                    arg_verbose = "verbose",
-                                    arg_threads = "threads",
-                                    call = current_env()))
+               error_context = list(arg_x = error_context$arg_x,
+                                    arg_condition = error_context$arg_antecedent,
+                                    arg_focus = error_context$arg_consequent,
+                                    arg_disjoint = error_context$arg_disjoint,
+                                    arg_excluded = error_context$arg_excluded,
+                                    arg_min_length = error_context$arg_min_length,
+                                    arg_max_length = error_context$arg_max_length,
+                                    arg_min_support = error_context$arg_min_coverage,
+                                    arg_min_focus_support = error_context$arg_min_support,
+                                    arg_min_conditional_focus_support = error_context$arg_min_confidence,
+                                    arg_t_norm = error_context$arg_t_norm,
+                                    arg_max_results = error_context$arg_max_results,
+                                    arg_verbose = error_context$arg_verbose,
+                                    arg_threads = error_context$arg_threads,
+                                    call = error_context$call))
 
     .msg(verbose, "dig_associations: post-processing")
+    digattr <- attributes(res)
     res <- do.call(rbind, res)
 
-    if ("lift" %in% measures) {
-        res$lift <- res$support / (res$coverage * res$conseq_support)
-    }
-    if ("conviction" %in% measures) {
-        res$conviction <- res$coverage * (1 - res$conseq_support) / (res$pn / n)
+    if (is.null(res)) {
+        res <- tibble()
     }
 
-    if ("added_value" %in% measures) {
-        res$added_value <- res$confidence - res$conseq_support
+    if (nrow(res) > 0) {
+        if (is.finite(max_results) && nrow(res) > max_results) {
+            res <- res[seq_len(max_results), , drop = FALSE]
+        }
+
+        if ("lift" %in% measures) {
+            res$lift <- res$support / (res$coverage * res$conseq_support)
+        }
+        if ("conviction" %in% measures) {
+            res$conviction <- res$coverage * (1 - res$conseq_support) / (res$pn / n)
+        }
+
+        if ("added_value" %in% measures) {
+            res$added_value <- res$confidence - res$conseq_support
+        }
+
+        if (!contingency_table) {
+            res$pp <- NULL
+            res$pn <- NULL
+            res$np <- NULL
+            res$nn <- NULL
+        }
     }
 
-    if (!contingency_table) {
-        res$pp <- NULL
-        res$pn <- NULL
-        res$np <- NULL
-        res$nn <- NULL
-    }
-
-    as_tibble(res)
+    nugget(res,
+           flavour = "associations",
+           call_function = "dig_associations",
+           call_data = list(nrow = nrow(x),
+                            ncol = ncol(x),
+                            colnames = as.character(colnames(x))),
+           call_args = list(x = deparse(substitute(x)),
+                            antecedent = digattr$call_args$condition,
+                            consequent = digattr$call_args$focus,
+                            disjoint = disjoint,
+                            excluded = excluded,
+                            min_length = min_length,
+                            max_length = max_length,
+                            min_coverage = orig_min_coverage,
+                            min_support = min_support,
+                            min_confidence = min_confidence,
+                            contingency_table = contingency_table,
+                            measures = measures,
+                            t_norm = t_norm,
+                            max_results = max_results,
+                            verbose = verbose,
+                            threads = threads))
 }

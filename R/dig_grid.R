@@ -54,10 +54,14 @@
 #'      combinations use at the second place (yvar)
 #' @param disjoint an atomic vector of size equal to the number of columns of `x`
 #'      that specifies the groups of predicates: if some elements of the `disjoint`
-#'      vector are equal, then the corresponding columns of `x` will NOT be
-#'      present together in a single condition. If `x` is prepared with
+#'      vector are equal, then the corresponding columns of `x` will NEITHER be
+#'      present together in a single condition NOR in a single combination of
+#'      `xvars` and `yvars`. If `x` is prepared with
 #'      [partition()], using the [var_names()] function on `x`'s column names
 #'      is a convenient way to create the `disjoint` vector.
+#' @param excluded NULL or a list of character vectors, where each character vector
+#'      contains the names of columns that must not appear together in a single
+#'      condition.
 #' @param allow a character string specifying which columns are allowed to be
 #'      selected by `xvars` and `yvars` arguments. Possible values are:
 #'      \itemize{
@@ -107,7 +111,8 @@
 #'      \item `arg_yvars` - the name of the argument `yvars` as a character string
 #'      \item `call` - an environment in which to evaluate the error messages.
 #'      }
-#' @return A tibble with found patterns. Each row represents a single call of
+#' @return An S3 object, which is an instance of `nugget` class, and which is
+#'      a tibble with found patterns. Each row represents a single call of
 #'      the callback function `f`.
 #' @author Michal Burda
 #' @seealso [dig()], [var_grid()]; see also [dig_correlations()] and
@@ -160,6 +165,7 @@ dig_grid <- function(x,
                      xvars = where(is.numeric),
                      yvars = where(is.numeric),
                      disjoint = var_names(colnames(x)),
+                     excluded = NULL,
                      allow = "all",
                      na_rm = FALSE,
                      type = "crisp",
@@ -176,6 +182,7 @@ dig_grid <- function(x,
                                           arg_xvars = "xvars",
                                           arg_yvars = "yvars",
                                           arg_disjoint = "disjoint",
+                                          arg_excluded = "excluded",
                                           arg_allow = "allow",
                                           arg_na_rm = "na_rm",
                                           arg_type = "type",
@@ -224,7 +231,9 @@ dig_grid <- function(x,
                      !!xvars,
                      !!yvars,
                      allow = allow,
+                     disjoint = disjoint,
                      error_context = error_context)
+    gridattr <- attributes(grid)
 
     processF <- function(condition, support, result) {
         isnull <- sapply(result, is.null)
@@ -237,7 +246,8 @@ dig_grid <- function(x,
             result <- cbind(condition = rep(cond, nrow(gr)),
                             support = support,
                             gr,
-                            result)
+                            result,
+                            condition_length = rep(length(condition), nrow(gr)))
         }
 
         result
@@ -301,6 +311,7 @@ dig_grid <- function(x,
                f = callbackF,
                condition = !!condition,
                disjoint = disjoint,
+               excluded = excluded,
                min_length = min_length,
                max_length = max_length,
                min_support = min_support,
@@ -311,6 +322,7 @@ dig_grid <- function(x,
                error_context = list(arg_x = error_context$arg_x,
                                     arg_condition = error_context$arg_condition,
                                     arg_disjoint = error_context$arg_disjoint,
+                                    arg_excluded = error_context$arg_excluded,
                                     arg_min_length = error_context$arg_min_length,
                                     arg_max_length = error_context$arg_max_length,
                                     arg_min_support = error_context$arg_min_support,
@@ -319,9 +331,30 @@ dig_grid <- function(x,
                                     arg_verbose = error_context$arg_verbose,
                                     arg_threads = error_context$arg_threads,
                                     call = error_context$call))
-
+    digattr <- attributes(res)
     res <- do.call(rbind, res)
 
-    as_tibble(res)
+    nugget(res,
+           flavour = NULL,
+           call_function = "dig_grid",
+           call_data = list(nrow = nrow(x),
+                            ncol = ncol(x),
+                            colnames = as.character(colnames(x))),
+           call_args = list(x = deparse(substitute(x)),
+                            condition = digattr$call_args$condition,
+                            xvars = gridattr$xvars,
+                            yvars = gridattr$yvars,
+                            disjoint = digattr$call_args$disjoint,
+                            excluded = digattr$call_args$excluded,
+                            allow = allow,
+                            na_rm = na_rm,
+                            type = type,
+                            min_length = digattr$call_args$min_length,
+                            max_length = digattr$call_args$max_length,
+                            min_support = digattr$call_args$min_support,
+                            max_support = digattr$call_args$max_support,
+                            max_results = digattr$call_args$max_results,
+                            verbose = digattr$call_args$verbose,
+                            threads = digattr$call_args$threads))
 }
 

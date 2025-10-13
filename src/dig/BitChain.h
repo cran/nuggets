@@ -1,74 +1,78 @@
 #pragma once
 
 #include "../common.h"
-#include "Bitset.h"
+#include "BaseChain.h"
+#include <boost/dynamic_bitset.hpp>
 
 
 /**
- * Implementation of chain of bits based on the Bitset class, which realizes
- * a growable array of bits.
+ * Implementation of chain of bits.
  */
-class BitChain {
+class BitChain : public BaseChain {
 public:
-    BitChain()
-        : cachedSum(0)
+    BitChain(float sum)
+        : BaseChain(sum)
     { }
 
-    BitChain(const LogicalVector& vals)
-        : cachedSum(0)
+    BitChain(size_t id, PredicateType type, const LogicalVector& vec)
+        : BaseChain(id, type, 0),
+          data(vec.size())
     {
-        reserve(vals.size());
-        for (R_xlen_t i = 0; i < vals.size(); i++)
-            push_back(vals.at(i));
+        for (R_xlen_t i = 0; i < vec.size(); ++i) {
+            if (vec[i]) {
+                data.set(i);
+                this->sum++;
+            }
+        }
     }
 
-    void clear()
-    {
-        values.clear();
-        cachedSum = 0;
-    }
+    BitChain(size_t id, PredicateType type, const NumericVector& vec)
+        : BaseChain(id, type, 0),
+          data(vec.size())
+    { throw std::invalid_argument("BitChain: NumericVector constructor not implemented"); }
 
-    void reserve(size_t size)
-    { values.reserve(size); }
+    BitChain(const BitChain& a, const BitChain& b, const bool toFocus)
+        : BaseChain(a, b, toFocus),
+          data(a.data & b.data)
+    { sum = data.count(); }
 
-    void push_back(bool value)
-    {
-        values.push_back(value);
-        if (value)
-            cachedSum++;
-    }
+    // Disable copy
+    BitChain(const BitChain& other) = delete;
+    BitChain& operator=(const BitChain& other) = delete;
 
-    void negate()
-    {
-        values.negate();
-        cachedSum = values.size() - cachedSum;
-    }
+    // Allow move
+    BitChain(BitChain&& other) = default;
+    BitChain& operator=(BitChain&& other) = default;
 
-    void conjunctWith(const BitChain& other)
-    {
-        values &= other.values;
-        cachedSum = values.getSum();
-    }
+    bool operator==(const BitChain& other) const
+    { return BaseChain::operator==(other) && (data == other.data); }
 
-    size_t size() const
-    { return values.size(); }
-
-    bool empty() const
-    { return values.empty(); }
-
-    float getSum() const
-    { return 1.0 * cachedSum; }
-
-    bool at(size_t i) const
-    { return values.at(i); }
-
-    bool operator == (const BitChain& other) const
-    { return values == other.values; }
-
-    bool operator != (const BitChain& other) const
+    bool operator!=(const BitChain& other) const
     { return !(*this == other); }
 
+    bool operator[](size_t index) const
+    { return data[index]; }
+
+    bool at(size_t index) const
+    { return data.at(index); }
+
+    size_t size() const
+    { return data.size(); }
+
+    bool empty() const
+    { return data.empty(); }
+
+    string toString() const
+    {
+        stringstream res;
+        res << "[n=" << data.size() << "]";
+        for (size_t i = 0; i < data.size(); ++i) {
+            res << data[i];
+        }
+
+        return res.str();
+    }
+
 private:
-    Bitset values;
-    size_t cachedSum;
+    boost::dynamic_bitset<> data;
 };

@@ -35,6 +35,9 @@
 #'      present together in a single condition. If `x` is prepared with
 #'      [partition()], using the [var_names()] function on `x`'s column names
 #'      is a convenient way to create the `disjoint` vector.
+#' @param excluded NULL or a list of character vectors, where each character vector
+#'      contains the names of columns that must not appear together in a single
+#'      condition.
 #' @param method a character string indicating which correlation coefficient is
 #'      to be used for the test. One of `"pearson"`, `"kendall"`, or `"spearman"`
 #' @param alternative indicates the alternative hypothesis and must be one of
@@ -66,7 +69,8 @@
 #'      to `Inf` will generate all possible conditions.
 #' @param verbose a logical scalar indicating whether to print progress messages.
 #' @param threads the number of threads to use for parallel computation.
-#' @return A tibble with found patterns.
+#' @return An S3 object which is an instance of `correlations` and `nugget`
+#'      classes and which is tibble with found patterns.
 #' @author Michal Burda
 #' @seealso [dig()], [stats::cor.test()]
 #' @examples
@@ -92,6 +96,7 @@ dig_correlations <- function(x,
                              xvars = where(is.numeric),
                              yvars = where(is.numeric),
                              disjoint = var_names(colnames(x)),
+                             excluded = NULL,
                              method = "pearson",
                              alternative = "two.sided",
                              exact = NULL,
@@ -123,31 +128,58 @@ dig_correlations <- function(x,
                     rows = nrow(pd)))
     }
 
-    dig_grid(x = x,
-             f = f,
-             condition = !!condition,
-             xvars = !!xvars,
-             yvars = !!yvars,
-             disjoint = disjoint,
-             na_rm = TRUE,
-             type = "crisp",
-             min_length = min_length,
-             max_length = max_length,
-             min_support = min_support,
-             max_support = max_support,
-             max_results = max_results,
-             verbose = verbose,
-             threads = threads,
-             error_context = list(arg_x = "x",
-                                  arg_condition = "condition",
-                                  arg_xvars = "xvars",
-                                  arg_yvars = "yvars",
-                                  arg_min_length = "min_length",
-                                  arg_max_length = "max_length",
-                                  arg_min_support = "min_support",
-                                  arg_max_support = "max_support",
-                                  arg_max_results = "max_results",
-                                  arg_verbose = "verbose",
-                                  arg_threads = "threads",
-                                  call = current_env()))
+    res <- dig_grid(x = x,
+                    f = f,
+                    condition = !!condition,
+                    xvars = !!xvars,
+                    yvars = !!yvars,
+                    disjoint = disjoint,
+                    excluded = excluded,
+                    na_rm = TRUE,
+                    type = "crisp",
+                    min_length = min_length,
+                    max_length = max_length,
+                    min_support = min_support,
+                    max_support = max_support,
+                    max_results = max_results,
+                    verbose = verbose,
+                    threads = threads,
+                    error_context = list(arg_x = "x",
+                                         arg_condition = "condition",
+                                         arg_xvars = "xvars",
+                                         arg_yvars = "yvars",
+                                         arg_disjoint = "disjoint",
+                                         arg_excluded = "excluded",
+                                         arg_min_length = "min_length",
+                                         arg_max_length = "max_length",
+                                         arg_min_support = "min_support",
+                                         arg_max_support = "max_support",
+                                         arg_max_results = "max_results",
+                                         arg_verbose = "verbose",
+                                         arg_threads = "threads",
+                                         call = current_env()))
+    digattr <- attributes(res)
+
+    nugget(res,
+           flavour = "correlations",
+           call_function = "dig_correlations",
+           call_data = list(nrow = nrow(x),
+                            ncol = ncol(x),
+                            colnames = as.character(colnames(x))),
+           call_args = list(x = deparse(substitute(x)),
+                            condition = digattr$call_args$condition,
+                            xvars = digattr$call_args$xvars,
+                            yvars = digattr$call_args$yvars,
+                            disjoint = digattr$call_args$disjoint,
+                            excluded = digattr$call_args$excluded,
+                            method = method,
+                            alternative = alternative,
+                            exact = exact,
+                            min_length = digattr$call_args$min_length,
+                            max_length = digattr$call_args$max_length,
+                            min_support = digattr$call_args$min_support,
+                            max_support = digattr$call_args$max_support,
+                            max_results = digattr$call_args$max_results,
+                            verbose = digattr$call_args$verbose,
+                            threads = digattr$call_args$threads))
 }

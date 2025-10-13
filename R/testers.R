@@ -31,11 +31,13 @@
 ..must_be_list_of <- function(f, msg) {
     function(x,
              null = FALSE,
+             null_elements = FALSE,
              arg = caller_arg(x),
              call = caller_env()) {
         .must_be_list(x, null = null, arg = arg, call = call)
         if (!is.null(x)) {
-            test <- sapply(x, f)
+            f2 <- function(i) f(i) | (isTRUE(null_elements) && is.null(i))
+            test <- sapply(x, f2)
             if (!isTRUE(all(test))) {
                 types <- sapply(x, function(i) class(i)[1])
                 details <- paste0("Element ", seq_along(types), " is a {.cls ", types, "}.")
@@ -55,7 +57,7 @@
              call = caller_env()) {
         test <- f(x)
         if (!isTRUE(all(test))) {
-            details <- paste0("Element ", seq_along(x), " equals ", x, ".")
+            details <- paste0("Element ", seq_along(x), " equals {.val ", x, "}.")
             details <- details[!test]
             cli_abort(c("{.arg {arg}} must be {msg}.",
                         ..error_details(details)),
@@ -73,12 +75,12 @@
         test <- f(x, value)
         if (!isTRUE(all(test))) {
             if (length(x) == 1) {
-                details <- paste0("Value ", x, " was provided instead.")
+                details <- paste0("Value {.val ", x, "} was provided instead.")
             } else {
-                details <- paste0("Element ", seq_along(x), " equals ", x, ".")
+                details <- paste0("Element ", seq_along(x), " equals {.val ", x, "}.")
                 details <- details[!test]
             }
-            cli_abort(c("{.arg {arg}} must be {msg} {value}.",
+            cli_abort(c("{.arg {arg}} must be {msg} {.val {value}}.",
                         ..error_details(details)),
                       call = call)
         }
@@ -114,6 +116,22 @@
     }
 }
 
+
+.must_inherit <- function(x,
+                          clazz,
+                          null = FALSE,
+                          arg = caller_arg(x),
+                          call = caller_env()) {
+    if (!isTRUE(inherits(x, clazz) | (isTRUE(null) && is.null(x)))) {
+        na <- if (length(x) == 1 && is.na(x)) " NA" else ""
+        msg <- if (null) " or NULL" else ""
+        cli_abort(c("{.arg {arg}} must be an S3 object that inherits from {.cls {clazz}}{msg}.",
+                    "x" = "You've supplied a {.cls {class(x)}}{na}."),
+                  call = call)
+    }
+}
+
+
 .must_be_atomic_scalar <- ..must_be_type(is_scalar_atomic, "an atomic scalar")
 .must_be_integerish_scalar <- ..must_be_type(is_scalar_integerish, "an integerish scalar")
 .must_be_double_scalar <- ..must_be_type(is_scalar_double, "a double scalar")
@@ -121,10 +139,16 @@
 .must_be_logical_scalar <- ..must_be_type(is_scalar_logical, "a logical scalar")
 
 .is_just_vector <- function(x) {
-    is.vector(x) && !is.matrix(x) && !is.list(x) && !is.array(x)
+    (is.character(x) || is.logical(x) || is.integer(x) || is.numeric(x)) &&
+        !is.matrix(x) && !is.list(x) && !is.array(x)
+}
+
+.is_just_vector_or_factor <- function(x) {
+    .is_just_vector(x) || is.factor(x)
 }
 
 .must_be_vector <- ..must_be_type(.is_just_vector, "a plain vector (not a matrix, list, or array)")
+.must_be_vector_or_factor <- ..must_be_type(.is_just_vector_or_factor, "a plain vector or a factor (not a matrix, list, or array)")
 .must_be_integer_vector <- ..must_be_type(is_integer, "an integer vector")
 .must_be_integerish_vector <- ..must_be_type(is_integerish, "an integerish vector")
 .must_be_numeric_vector <- ..must_be_type(is.numeric, "a numeric vector")
@@ -134,6 +158,8 @@
 .must_be_list <- ..must_be_type(is.list, "a list")
 .must_be_data_frame <- ..must_be_type(is.data.frame, "a data frame")
 
+.must_be_matrix_or_data_frame <- ..must_be_type(function(x) is.matrix(x) || is.data.frame(x),
+                                                "a matrix or a data frame")
 
 ..must_be_function <- ..must_be_type(is.function, "a function")
 
@@ -230,7 +256,7 @@
         single <- if (isTRUE(multi)) "any" else "one"
         vals <- paste0('"', values, '"', collapse = ", ")
         cli_abort(c("{.arg {arg}} must be equal to {single} of: {vals}{msg}.",
-                    "x" = "You've supplied {x}."),
+                    "x" = "You've supplied {.val {x}}."),
                   call = call)
     }
 }
@@ -273,3 +299,28 @@
                   call = call)
     }
 }
+
+
+..must_have_column <- function(f, msg) {
+    function(x,
+             column,
+             arg_x = caller_arg(x),
+             arg_column = caller_arg(column),
+             call = caller_env()) {
+        col <- x[[column]]
+        if (is.null(col)) {
+            cli_abort(c("Column {.var {column}} must be present in {.arg {arg_x}}.",
+                        "i" = "{.arg {arg_x}} has the following columns: {.var {names(x)}}."),
+                      call = call)
+        } else {
+            if (!isTRUE(f(col))) {
+                cli_abort(c("Column {.var {column}} must be {msg}.",
+                            "x" = "You've supplied a {.cls {class(col)}}."),
+                          call = call)
+            }
+        }
+    }
+}
+
+.must_have_column <- ..must_have_column(function(x) TRUE, "")
+.must_have_character_column <- ..must_have_column(is.character, "a character vector")

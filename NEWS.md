@@ -1,3 +1,20 @@
+# nuggets 2.0.0
+- released: 2025-10-13
+- completely rewritten the core algorithm in dig()
+- all dig_*() functions now return nugget S3 objects
+- added is_almost_constant(), remove_almost_constant(), parse_condition(),
+  fire(), is_condition(), remove_ill_conditions(), shorten_condition()
+- added dig_tautologies()
+- added geom_diamond()
+- added .span and .inc arguments to partition()
+- added various styles (quantile, k-means, hclust, bclust, ...) of crisp
+  partitioning to partition()
+- added explore() function for interactive exploration of patterns
+- added exclude argument to dig() and other dig_*() functions
+- added support for the disjoint parameter to var_grid() and dig_grid()
+- added progress bar to the dig() function
+- added "dummy" method to partition()
+
 # nuggets 1.4.0
 - released: 2025-01-08
 - added var_names(), dig_baseline_contrasts(), dig_complement_contrasts()
@@ -43,7 +60,7 @@
 # nuggets 1.0.2
 - released: 2024-01-09
 - fixed handling of arguments min_coverage and min_support in dig_implications()
-- attempt to fix LTO error related to run_testhat_tests() - fixed by using
+- attempt to fix LTO error related to run_testthat_tests() - fixed by using
   an RC version of Rcpp (1.0.11.6)
 
 # nuggets 1.0.1

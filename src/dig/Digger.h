@@ -1,337 +1,230 @@
 #pragma once
 
-//#include <omp.h>
-#include <mutex>
-#include <condition_variable>
+#include <algorithm>
 
-#include "Data.h"
+#include "../common.h"
 #include "Config.h"
-#include "TaskSequence.h"
-#include "Filter.h"
-#include "Argumentator.h"
+#include "CombinatorialProgress.h"
+#include "ChainCollection.h"
+#include "Selector.h"
+#include "TautologyTree.h"
 
 
-template <typename DATA>
+template <typename CHAIN, typename STORAGE>
 class Digger {
 public:
-    using DataType = DATA;
-    using TaskType = Task<DATA>;
-    using FilterType = Filter<TaskType>;
-    using ArgumentatorType = Argumentator<TaskType>;
-
-    Digger(DataType& data, const Config& config)
-        : config(config),
-          data(data),
-          initialTask(Iterator(data.size()),          // condition predicates to "soFar"
-                      Iterator({}, data.fociSize())), // focus predicates to "available"
-          sequence(),
-          allThreads(config.getThreads())
-    { }
-
-    virtual ~Digger()
+    Digger(const Config& config,
+           const List& data,
+           const LogicalVector& isCondition,
+           const LogicalVector& isFocus,
+           STORAGE& storage)
+        : storage(storage),
+          config(config),
+          initialCollection(data, isCondition, isFocus),
+          predicateSums(data.size() + 1),
+          tree(initialCollection),
+          progress(nullptr)
     {
-        for (FilterType* f : filters)
-            delete f;
+        for (const CHAIN& chain : initialCollection) {
+            size_t id = chain.getClause().back();
+            predicateSums[id] = chain.getSum();
+        }
 
-        for (ArgumentatorType* a : argumentators)
-            delete a;
+        tree.addTautologies(config.getExcluded());
     }
 
-    void addFilter(FilterType* filter)
-    { filters.push_back(filter); }
+    // Disable copy
+    Digger(const Digger&) = delete;
+    Digger& operator=(const Digger&) = delete;
 
-    void addArgumentator(ArgumentatorType* argumentator)
-    { argumentators.push_back(argumentator); }
+    // Allow move
+    Digger(Digger&&) = default;
+    Digger& operator=(Digger&&) = default;
 
     void run()
     {
-        initializeRun();
+        ChainCollection<CHAIN> filteredCollection;
+        CHAIN emptyChain(config.getNrow());
+        tree.updateDeduction(emptyChain);
 
-        #if defined(_OPENMP)
-            //#pragma omp parallel num_threads(allThreads) default(shared)
-            #pragma omp parallel num_threads(allThreads) shared(data, initialTask, sequence, filters, argumentators, result, workingThreads, allThreads, sequenceMutex, resultMutex, condVar)
-        #endif
-        {
-            while (!workDone()) {
-                TaskType task;
-                if (receiveTask(task)) {
-                    if (!isStorageFull()) {
-                        processTask(task);
-                    }
-                    taskFinished(task);
+        for (size_t i = 0; i < initialCollection.size(); ++i) {
+            CHAIN& chain = initialCollection[i];
+            if (isNonRedundant(emptyChain, chain)) {
+                if (isCandidate(chain)) {
+                    filteredCollection.append(std::move(chain));
                 }
             }
-            //cout << omp_get_thread_num() << "exit" << endl;
-            condVar.notify_all();
         }
+
+        progress = new CombinatorialProgress(config.getMaxLength(),
+                                             filteredCollection.conditionCount());
+        {
+            auto batch = progress->createBatch(0, filteredCollection.conditionCount());
+            processChildrenChains(emptyChain, filteredCollection);
+        }
+        delete progress;
     }
-
-    void setPositiveConditionChainsNeeded()
-    { positiveConditionChainsNeeded = true; }
-
-    void setNegativeConditionChainsNeeded()
-    {
-        setPositiveConditionChainsNeeded(); // cannot compute negative condition chains without positive condition chains
-        negativeConditionChainsNeeded = true;
-    }
-
-    void setPpFocusChainsNeeded()
-    {
-        setPositiveConditionChainsNeeded(); // cannot compute focus chains without condition chains
-        ppFocusChainsNeeded = true;
-    }
-
-    void setNpFocusChainsNeeded()
-    {
-        setNegativeConditionChainsNeeded();
-        npFocusChainsNeeded = true;
-    }
-
-    void setPnFocusChainsNeeded()
-    {
-        setPositiveConditionChainsNeeded();
-        pnFocusChainsNeeded = true;
-    }
-
-    void setNnFocusChainsNeeded()
-    {
-        setNegativeConditionChainsNeeded();
-        nnFocusChainsNeeded = true;
-    }
-
-    bool isNegativeFociChainsNeeded() const
-    { return npFocusChainsNeeded || pnFocusChainsNeeded || nnFocusChainsNeeded; }
-
-    vector<ArgumentValues> getResult() const
-    { return result; }
 
 private:
+    STORAGE& storage;
     const Config& config;
-    DataType& data;
-    TaskType initialTask;
-    TaskSequence<TaskType> sequence;
-    vector<FilterType*> filters;
-    vector<ArgumentatorType*> argumentators;
-    vector<ArgumentValues> result;
-    bool positiveConditionChainsNeeded = false;
-    bool negativeConditionChainsNeeded = false;
-    bool ppFocusChainsNeeded = false;
-    bool npFocusChainsNeeded = false;
-    bool pnFocusChainsNeeded = false;
-    bool nnFocusChainsNeeded = false;
+    ChainCollection<CHAIN> initialCollection;
+    vector<float> predicateSums;
+    TautologyTree<CHAIN> tree;
+    CombinatorialProgress* progress;
 
-    int workingThreads;
-    int allThreads;
-    mutex sequenceMutex;
-    mutex resultMutex;
-    condition_variable condVar;
-
-
-    void initializeRun()
+    void processChains(ChainCollection<CHAIN>& collection)
     {
-        sequence.clear();
-        sequence.add(initialTask);
-        workingThreads = 0;
-    }
+        for (size_t i = 0; i < collection.conditionCount(); ++i) {
+            ChainCollection<CHAIN> childCollection;
+            CHAIN& chain = collection[i];
+            auto batch = progress->createBatch(chain.getClause().size(),
+                                               collection.conditionCount() - i - 1);
 
-    bool workDone()
-    {
-        unique_lock lock(sequenceMutex);
-        //cout << omp_get_thread_num() << "workDone" << endl;
-        return sequence.empty() && workingThreads <= 0;
-    }
+            tree.updateDeduction(chain);
+            if (chain.deducesItself())
+                continue;
 
-    bool receiveTask(TaskType& task)
-    {
-        unique_lock lock(sequenceMutex);
-        //cout << omp_get_thread_num() << "receiveTask" << endl;
-        while (sequence.empty() && workingThreads > 0) {
-            //cout << omp_get_thread_num() << "waiting" << endl;
-            condVar.wait(lock);
+            if (isExtendable(chain)) {
+                // need conjunction with everything
+                combine(childCollection, collection, i, false);
+            }
+            else if (collection.hasFoci()) {
+                // need conjunction with foci only
+                combine(childCollection, collection, i, true);
+            }
+            else {
+                // do not need childCollection at all
+            }
+
+            processChildrenChains(chain, childCollection);
         }
-
-        //cout << omp_get_thread_num() << "continue" << endl;
-        bool received = false;
-        if (!sequence.empty()) {
-            task = sequence.pop();
-            //cout << "receiving: " + task.toString() << endl;
-            workingThreads++;
-            received = true;
-            //cout << "received task - working: " << workingThreads << " queue size: " << queue.size() << endl;
-        }
-
-        return received;
     }
 
-    void sendTask(const TaskType& task)
+    void processChildrenChains(const CHAIN& chain, ChainCollection<CHAIN>& childCollection)
     {
-        unique_lock lock(sequenceMutex);
-        //cout << omp_get_thread_num() << "sendTask" << endl;
-        //cout << "sending: " + task.toString() << endl;
-        sequence.add(task);
-        lock.unlock();
-        condVar.notify_one();
-    }
-
-    void processTask(TaskType& task)
-    {
-        //cout << "processing: " + task.toString() << endl;
-        do {
-            if (!isConditionRedundant(task)) {
-                updateConditionChain(task);
-                if (!isConditionPrunable(task)) {
-
-                    task.resetFoci();
-                    Iterator& iter = task.getMutableFocusIterator();
-                    while (iter.hasPredicate()) {
-                        if (!isFocusRedundant(task)) {
-                            computeFocusChain(task);
-                            if (!isFocusPrunable(task)) {
-                                iter.putCurrentToSoFar();
-                                if (isFocusStorable(task)) {
-                                    iter.storeCurrent();
-                                }
-                            }
-                        }
-                        iter.next();
-                    }
-
-                    if (isConditionStorable(task)) {
-                        store(task);
-                    }
-                    if (isConditionExtendable(task)) {
-                        if (task.getConditionIterator().hasSoFar()) {
-                            TaskType child = task.createChild();
-                            sendTask(child);
-                        }
-                        if (task.getConditionIterator().hasPredicate()) {
-                            task.getMutableConditionIterator().putCurrentToSoFar();
-                        }
-                    }
+        if (!config.hasFilterEmptyFoci() || childCollection.hasFoci()) {
+            if (isStorable(chain)) {
+                Selector selector = createSelectorOfStorable(chain, childCollection);
+                if (isStorable(selector)) {
+                    storage.store(chain, childCollection, selector, predicateSums);
                 }
             }
-
-            task.getMutableConditionIterator().next();
-        }
-        while (task.getConditionIterator().hasPredicate());
-    }
-
-    void taskFinished(TaskType& task)
-    {
-        unique_lock lock(sequenceMutex);
-        //cout << omp_get_thread_num() << "taskFinished" << endl;
-        //cout << "finished: " + task.toString() << endl;
-        workingThreads--;
-    }
-
-    void store(const TaskType& task)
-    {
-        //cout << "storing: " + task.toString() << endl;
-        ArgumentValues args;
-        for (const ArgumentatorType* a : argumentators) {
-            a->prepare(args, task);
-        }
-        unique_lock lock(resultMutex);
-        //cout << omp_get_thread_num() << "store" << endl;
-        if (!isStorageFull()) {
-            result.push_back(args);
+            progress->increment(1);
+            if (isExtendable(chain)) {
+                processChains(childCollection);
+            }
         }
     }
 
-    bool isStorageFull() {
-        if (config.getMaxResults() < 0)
-            return false;
+    void combine(ChainCollection<CHAIN>& target,
+                 ChainCollection<CHAIN>& parent,
+                 const size_t conditionChainIndex,
+                 bool onlyFoci) const
+    {
+        CHAIN& conditionChain = parent[conditionChainIndex];
 
-        return result.size() >= config.getMaxResults();
+        size_t begin = conditionChainIndex + 1;
+        if (onlyFoci && begin < parent.firstFocusIndex()) {
+            begin = parent.firstFocusIndex();
+        }
+
+        size_t bothLen = (conditionChainIndex > parent.firstFocusIndex()) ? conditionChainIndex - parent.firstFocusIndex() : 0;
+
+        target.reserve(parent.size() - begin + bothLen);
+        for (size_t i = begin; i < parent.size(); ++i) {
+            combineInternal(target, conditionChain, parent[i], false);
+        }
+        for (size_t i = parent.firstFocusIndex(); i < conditionChainIndex; ++i) {
+            combineInternal(target, conditionChain, parent[i], true);
+        }
     }
 
-    void updateConditionChain(TaskType& task) const
+    void combineInternal(ChainCollection<CHAIN>& target,
+                         const CHAIN& conditionChain,
+                         const CHAIN& secondChain,
+                         const bool toFocus) const
     {
-        if (positiveConditionChainsNeeded) {
-            task.updatePositiveChain(data);
+        if (isNonRedundant(conditionChain, secondChain)) {
+            CHAIN newChain(conditionChain, secondChain, toFocus);
+            if (isCandidate(newChain)) {
+                target.append(std::move(newChain));
+            }
+        }
+    }
 
-            if (negativeConditionChainsNeeded) {
-                task.updateNegativeChain(data);
+    bool isNonRedundant(const CHAIN& parent, const CHAIN& chain) const
+    {
+        size_t curr = chain.getClause().back();
+
+        if (parent.getClause().size() > 0) {
+            size_t pref = parent.getClause().back();
+
+            if (pref == curr) {
+                // Filter of focus even if disjoint is not defined
+                // (should never happen as we always have disjoint defined)
+                return false;
+            }
+
+            if (config.hasDisjoint() && config.getDisjoint()[pref] == config.getDisjoint()[curr]) {
+                // It is enough to check the last element of the prefix because
+                // previous elements were already checked in parent tasks
+                //cout << "redundant: " << parent.clauseAsString() << " , " << chain.clauseAsString() << endl;
+                return false;
             }
         }
 
-    }
-
-    void computeFocusChain(TaskType& task) const
-    {
-        if (ppFocusChainsNeeded)
-            task.computePpFocusChain(data);
-
-        if (npFocusChainsNeeded)
-            task.computeNpFocusChain(data);
-
-        if (pnFocusChainsNeeded)
-            task.computePnFocusChain(data);
-
-        if (nnFocusChainsNeeded)
-            task.computeNnFocusChain(data);
-    }
-
-    bool isConditionRedundant(const TaskType& task) const
-    {
-        for (const FilterType* e : filters)
-            if (e->isConditionRedundant(task))
-                return true;
-
-        return false;
-    }
-
-    bool isFocusRedundant(const TaskType& task) const
-    {
-        for (const FilterType* e : filters)
-            if (e->isFocusRedundant(task))
-                return true;
-
-        return false;
-    }
-
-    bool isConditionPrunable(const TaskType& task) const
-    {
-        for (const FilterType* e : filters)
-            if (e->isConditionPrunable(task))
-                return true;
-
-        return false;
-    }
-
-    bool isFocusPrunable(const TaskType& task) const
-    {
-        for (const FilterType* e : filters)
-            if (e->isFocusPrunable(task))
-                return true;
-
-        return false;
-    }
-
-    bool isFocusStorable(const TaskType& task) const
-    {
-        for (const FilterType* e : filters)
-            if (!e->isFocusStorable(task))
-                return false;
+        if (config.hasFilterExcluded() && parent.deduces(curr)) {
+            return false;
+        }
 
         return true;
     }
 
-    bool isConditionStorable(const TaskType& task) const
+    bool isCandidate(const CHAIN& chain) const
     {
-        for (const FilterType* e : filters)
-            if (!e->isConditionStorable(task))
-                return false;
+        //cout << "chain.getSum() = " << chain.getSum() << " config.getMinSum() = " << config.getMinSum() << endl;
+        if (chain.isCondition() && chain.getSum() >= config.getMinSum())
+            return true;
 
-        return true;
+        if (chain.isFocus() && chain.getSum() >= config.getMinFocusSum())
+            return true;
+
+        return false;
     }
 
-    bool isConditionExtendable(const TaskType& task) const
+    bool isExtendable(const CHAIN& chain) const
     {
-        for (const FilterType* e : filters)
-            if (!e->isConditionExtendable(task))
-                return false;
+        return chain.getClause().size() < config.getMaxLength()
+            && chain.getSum() >= config.getMinSum()
+            && storage.size() < config.getMaxResults();
+    }
 
-        return true;
+    bool isStorable(const CHAIN& chain) const
+    {
+        return chain.getClause().size() >= config.getMinLength()
+            && chain.getSum() >= config.getMinSum()
+            && chain.getSum() <= config.getMaxSum()
+            && storage.size() < config.getMaxResults();
+    }
+
+    bool isStorable(const Selector& selector) const
+    { return (!config.hasFilterEmptyFoci() || selector.getSelectedCount() > 0); }
+
+    Selector createSelectorOfStorable(const CHAIN& chain, const ChainCollection<CHAIN>& collection) const
+    {
+        bool constant = config.getMinConditionalFocusSupport() <= 0.0f;
+        Selector result(collection.focusCount(), constant);
+        if (!constant) {
+            float chainSumReciprocal = 1.0f / chain.getSum();
+            for (size_t i = 0; i < collection.focusCount(); ++i) {
+                const CHAIN& focus = collection[i + collection.firstFocusIndex()];
+                if (focus.getSum() * chainSumReciprocal < config.getMinConditionalFocusSupport()) {
+                    result.unselect(i);
+                }
+            }
+        }
+
+        return result;
     }
 };
