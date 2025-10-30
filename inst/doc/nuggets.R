@@ -13,144 +13,43 @@ library(tidyr)
 options(tibble.width = Inf)
 
 ## -----------------------------------------------------------------------------
-mtcars$cyl <- factor(mtcars$cyl,
-                     levels= c(4, 6, 8),
-                     labels = c("four", "six", "eight"))
-head(mtcars)
-
-## -----------------------------------------------------------------------------
-partition(mtcars, cyl)
-
-## -----------------------------------------------------------------------------
-partition(mtcars, vs:gear, .method = "dummy")
-
-## -----------------------------------------------------------------------------
-partition(mtcars, mpg, .method = "crisp", .breaks = c(-Inf, 15, 20, 30, Inf))
-
-## -----------------------------------------------------------------------------
-partition(mtcars, disp, .method = "crisp", .breaks = 3)
-
-## -----------------------------------------------------------------------------
-crispMtcars <- mtcars |>
+# Transform the whole dataset to crisp predicates
+# First, convert cyl to a factor for illustration
+crisp_mtcars <- mtcars |>
+    mutate(cyl = factor(cyl, levels = c(4, 6, 8), labels = c("four", "six", "eight"))) |>
     partition(cyl, vs:gear, .method = "dummy") |>
     partition(mpg, .method = "crisp", .breaks = c(-Inf, 15, 20, 30, Inf)) |>
     partition(disp:carb, .method = "crisp", .breaks = 3) 
 
-head(crispMtcars, n = 3)
-
-## -----------------------------------------------------------------------------
-data.frame(x = seq(-15, 15, length.out = 1000)) |>
-    partition(x, .method = "triangle", .breaks = c(-10, 0, 10), .labels = "triangle", .keep = TRUE) |>
-    partition(x, .method = "raisedcos", .breaks = c(-10, 0, 10), .labels = "raisedcos", .keep = TRUE) |>
-    pivot_longer(starts_with("x="), names_to = "method", values_to = "value") |>
-    mutate(method = gsub("x=", "", method)) |>
-    ggplot() +
-        aes(x = x, y = value, color = method) +
-        geom_line(size = 1.2) +
-        labs(x = "x", y = "membership degree", title = ".breaks = c(-10, 0, 10)") +
-        theme_gray(base_size = 16) +
-        theme(legend.position = "right")
-
-## -----------------------------------------------------------------------------
-data.frame(x = seq(-15, 15, length.out = 1000)) |>
-    partition(x, .method = "triangle", .breaks = c(-10, -5, 0, 5, 10), .keep = TRUE) |>
-    pivot_longer(starts_with("x="), names_to = "fuzzy set", values_to = "value") |>
-    ggplot() +
-        aes(x = x, y = value, color = `fuzzy set`) +
-        geom_line(size = 1.2) +
-        labs(x = "x", y = "membership degree", title = ".breaks = c(-10, -5, 0, 5, 10)") +
-        theme_gray(base_size = 16) +
-        theme(legend.position = "right")
-
-## -----------------------------------------------------------------------------
-data.frame(x = seq(-15, 15, length.out = 1000)) |>
-    partition(x, .method = "triangle", .breaks = c(-Inf, -5, 0, 5, Inf), .keep = TRUE) |>
-    pivot_longer(starts_with("x="), names_to = "fuzzy set", values_to = "value") |>
-    ggplot() +
-        aes(x = x, y = value, color = `fuzzy set`) +
-        geom_line(size = 1.2) +
-        labs(x = "x", y = "membership degree", title = ".breaks = c(-Inf, -5, 0, 5, Inf)") +
-        theme_gray(base_size = 16) +
-        theme(legend.position = "right")
-
-## -----------------------------------------------------------------------------
-data.frame(x = seq(-15, 15, length.out = 1000)) |>
-    partition(x, .method = "triangle", .breaks = 4, .keep = TRUE) |>
-    pivot_longer(starts_with("x="), names_to = "fuzzy set", values_to = "value") |>
-    ggplot() +
-        aes(x = x, y = value, color = `fuzzy set`) +
-        geom_line(size = 1.2) +
-        labs(x = "x", y = "membership degree", title = ".breaks = 4") +
-        theme_gray(base_size = 16) +
-        theme(legend.position = "right")
-
-## -----------------------------------------------------------------------------
-data.frame(x = seq(-15, 15, length.out = 1000)) |>
-    partition(x, .method = "raisedcos", .breaks = c(-Inf, -10, -5, 0, 5, 10, Inf), .keep = TRUE) |>
-    pivot_longer(starts_with("x="), names_to = "fuzzy set", values_to = "value") |>
-    ggplot() +
-        aes(x = x, y = value, color = `fuzzy set`) +
-        geom_line(size = 1.2) +
-        labs(x = "x", y = "membership degree", title = ".breaks = c(-Inf, -10, -5, 0, 5, 10, Inf)") +
-        theme_gray(base_size = 16) +
-        theme(legend.position = "right")
+head(crisp_mtcars, n = 3)
 
 ## ----message=FALSE------------------------------------------------------------
-fuzzyMtcars <- mtcars |>
+# Start with fresh mtcars and transform to fuzzy predicates
+fuzzy_mtcars <- mtcars |>
+    mutate(cyl = factor(cyl, levels = c(4, 6, 8), labels = c("four", "six", "eight"))) |>
     partition(cyl, vs:gear, .method = "dummy") |>
     partition(mpg, .method = "triangle", .breaks = c(-Inf, 15, 20, 30, Inf)) |>
     partition(disp:carb, .method = "triangle", .breaks = 3) 
 
-head(fuzzyMtcars, n = 3)
+head(fuzzy_mtcars, n = 3)
 
 ## -----------------------------------------------------------------------------
-data.frame(x = seq(-15, 15, length.out = 1000)) |>
-    partition(x, .method = "triangle", .breaks = c(-10, -5, 5, 10), .span = 2, .keep = TRUE) |>
-    pivot_longer(starts_with("x="), names_to = "fuzzy set", values_to = "value") |>
-    ggplot() +
-        aes(x = x, y = value, color = `fuzzy set`) +
-        geom_line(size = 1.2) +
-        labs(x = "x", y = "membership degree", title = ".span = 2, .breaks = c(-10, -5, 5, 10)") +
-        theme_gray(base_size = 16) +
-        theme(legend.position = "right")
+disj <- var_names(colnames(fuzzy_mtcars))
+print(disj)
 
 ## -----------------------------------------------------------------------------
-data.frame(x = seq(-15, 15, length.out = 1000)) |>
-    partition(x, .method = "triangle", .breaks = c(-15, -10, -5, 0, 5, 10, 15), .inc = 1, .span = 2, .keep = TRUE) |>
-    pivot_longer(starts_with("x="), names_to = "fuzzy set", values_to = "value") |>
-    ggplot() +
-        aes(x = x, y = value, color = `fuzzy set`) +
-        geom_line(size = 1.2) +
-        labs(x = "x", y = "membership degree", title = ".inc = 1, .span = 2, .breaks = c(-15, -10, -5, 0, 5, 10, 15)") +
-        theme_gray(base_size = 16) +
-        theme(legend.position = "right")
+result <- dig_associations(fuzzy_mtcars,
+                           antecedent = !starts_with("am"),
+                           consequent = starts_with("am"),
+                           disjoint = disj,
+                           min_support = 0.02,
+                           min_confidence = 0.8,
+                           measures = c("lift", "conviction"),
+                           contingency_table = TRUE)
 
 ## -----------------------------------------------------------------------------
-data.frame(x = seq(-15, 15, length.out = 1000)) |>
-    partition(x, .method = "triangle", .breaks = c(-15, -10, -5, 0, 5, 10, 15), .inc = 3, .span = 2, .keep = TRUE) |>
-    pivot_longer(starts_with("x="), names_to = "fuzzy set", values_to = "value") |>
-    ggplot() +
-        aes(x = x, y = value, color = `fuzzy set`) +
-        geom_line(size = 1.2) +
-        labs(x = "x", y = "membership degree", title = ".inc = 3, .span = 2, .breaks = c(-15, -10, -5, 0, 5, 10, 15)") +
-        theme_gray(base_size = 16) +
-        theme(legend.position = "right")
-
-## -----------------------------------------------------------------------------
-#disj <- var_names(colnames(fuzzyCO2))
-#print(disj)
-
-## -----------------------------------------------------------------------------
-#result <- dig_associations(fuzzyCO2,
-                           #antecedent = !starts_with("Treatment"),
-                           #consequent = starts_with("Treatment"),
-                           #disjoint = disj,
-                           #min_support = 0.02,
-                           #min_confidence = 0.8)
-
-## -----------------------------------------------------------------------------
-#result <- arrange(result, desc(support))
-#print(result)
+result <- arrange(result, desc(support))
+print(result)
 
 ## -----------------------------------------------------------------------------
 #head(fuzzyCO2)

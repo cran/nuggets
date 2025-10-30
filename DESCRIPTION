@@ -1,7 +1,7 @@
 Package: nuggets
 Title: Extensible Framework for Data Pattern Exploration
-Version: 2.0.1
-Date: 2025-10-13
+Version: 2.0.2
+Date: 2025-10-31
 Authors@R: 
     person(given = "Michal",
            family = "Burda",
@@ -41,8 +41,8 @@ Suggests: arules, dplyr, testthat (>= 3.0.0), xml2, withr, knitr,
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 NeedsCompilation: yes
-Packaged: 2025-10-13 10:51:57 UTC; michal
+Packaged: 2025-10-30 18:04:14 UTC; michal
 Author: Michal Burda [aut, cre] (ORCID:
     <https://orcid.org/0000-0002-4182-4407>)
 Repository: CRAN
-Date/Publication: 2025-10-13 13:30:02 UTC
+Date/Publication: 2025-10-30 18:30:02 UTC

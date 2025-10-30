@@ -1,6 +1,6 @@
-8cf49481e04b8be1f6abf164550d137d *DESCRIPTION
+baddc98387383345f4ee0f728e05c082 *DESCRIPTION
 f5031e994713db5ebb03451613c11804 *NAMESPACE
-5efe9cfb03cc4c8e0960db6115103f62 *NEWS.md
+cfe095da98fe3c26efb8986387a532d1 *NEWS.md
 da131281914a549127ec4adacf82b3c7 *R/RcppExports.R
 748af39adcc69f025c667bec749a6525 *R/algebra.R
 05ddaf514254df7de8b45321b1944640 *R/association_matrix.R
@@ -58,11 +58,14 @@ d3596a1c00b81793fee598368baacfa6 *R/var_test.R
 00fd48cf6a2b2252f53c45b1d0bc9737 *R/wilcox_test.R
 42c7da56631589c4e6e8731fdb5d06aa *README.md
 1bf18d9c216b8d95033f0bd2fe2906b2 *build/partial.rdb
-85808d2028708ecb28ee6af77e682bcd *build/vignette.rds
+acfc1a5d1b47dfacdbd3c16fd6089332 *build/vignette.rds
 2539b0e08b3808bbf77cc6a8f81df2ca *inst/CITATION
-02e8221d59702747478b4edea55e67c8 *inst/doc/nuggets.R
-20e19fb7529e45ee4f3ec63cded11838 *inst/doc/nuggets.Rmd
-a703b729179d1729582cbad337c3eff7 *inst/doc/nuggets.html
+75c175b609810e367e3e1a3a4f1d15ef *inst/doc/data-preparation.R
+a5c0b7c555ef589c7d79e0eba96edc56 *inst/doc/data-preparation.Rmd
+eefb0f9de066aa21c2009262c53d0e2a *inst/doc/data-preparation.html
+af16d5a2afada328852e280715926492 *inst/doc/nuggets.R
+0bdc95ed6c8633befda99882f5674505 *inst/doc/nuggets.Rmd
+9f1dae85defbcd47134c5a81dd15ceb9 *inst/doc/nuggets.html
 ae8ef27867be80bf3cc826d81997dc2f *inst/figures/logo.png
 97a7bfdac845f9a5bd2769ecdfca2cda *inst/figures/nugget.png
 c7098787a603ab6ff65c75c63f18e75d *man/association_matrix.Rd
@@ -120,7 +123,7 @@ f321d119c1703ce62bde97e7d00ec860 *src/dig/BitChain.h
 7ffa7ddf5fc2fff80894ba83062f025f *src/dig/CallbackCaller.h
 47814e293cd216c7765beb18053c5a99 *src/dig/ChainCollection.h
 8e51c39ec7297b133ceab1b7a6f7ddb6 *src/dig/Clause.h
-1f7605058a6cc911cb574e6841fefe63 *src/dig/CombinatorialProgress.h
+581706043acd3a684f8cec829ecd7d1f *src/dig/CombinatorialProgress.h
 4550c90756a63f6ac40ac5bfb9644814 *src/dig/Config.h
 ff0152e04490473a940baf5927122a22 *src/dig/Digger.h
 5d04476cf6cbe6054e38a968a4ca218e *src/dig/FloatChain.h
@@ -253,4 +256,5 @@ ed8ba579c9e25fe9029e6c78e8b4246c *tests/testthat/test-ui-numericFilterModule.R
 1fd12ed001c738e2f57086239c9e4aac *tests/testthat/test-var_test.R
 2365d4987d16e1b295c8156f7ae00634 *tests/testthat/test-which_antichain.R
 4c693873d5dc7f42f086964570dc790e *tests/testthat/test-wilcox_test.R
-20e19fb7529e45ee4f3ec63cded11838 *vignettes/nuggets.Rmd
+a5c0b7c555ef589c7d79e0eba96edc56 *vignettes/data-preparation.Rmd
+0bdc95ed6c8633befda99882f5674505 *vignettes/nuggets.Rmd
