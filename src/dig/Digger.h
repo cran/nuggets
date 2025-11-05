@@ -1,3 +1,22 @@
+/**********************************************************************
+ * nuggets: An R framework for exploration of patterns in data
+ * Copyright (C) 2025 Michal Burda
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ **********************************************************************/
+
+
 #pragma once
 
 #include <algorithm>
@@ -58,11 +77,19 @@ public:
 
         progress = new CombinatorialProgress(config.getMaxLength(),
                                              filteredCollection.conditionCount());
+
+        // cli progress bar has to be protected from R's garbage collector
+        SEXP bar = PROTECT(cli_progress_bar(progress->getTotal(),
+                                            List::create(Named("name") = "searching rules")));
+        progress->assignBar(bar);
         {
             auto batch = progress->createBatch(0, filteredCollection.conditionCount());
             processChildrenChains(emptyChain, filteredCollection);
         }
         delete progress;
+
+        // free the protection from R's garbage collector
+        UNPROTECT(1);
     }
 
 private:

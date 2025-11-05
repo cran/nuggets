@@ -1,3 +1,22 @@
+/**********************************************************************
+ * nuggets: An R framework for exploration of patterns in data
+ * Copyright (C) 2025 Michal Burda
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ **********************************************************************/
+
+
 #pragma once
 
 #include <RcppThread.h>
@@ -51,7 +70,6 @@ public:
           actual(0),
           bar(R_NilValue)
     {
-        bar = PROTECT(cli_progress_bar(total, List::create(Named("name") = "searching rules")));
         //RcppThread::Rcout << "creating progress for "
                           //<< this->maxLevel << " levels and "
                           //<< elements << " elements: total = "
@@ -60,9 +78,10 @@ public:
 
     ~CombinatorialProgress()
     {
-        cli_progress_set(bar, total);
-        cli_progress_done(bar);
-        UNPROTECT(1);
+        if (bar) {
+            cli_progress_set(bar, total);
+            cli_progress_done(bar);
+        }
     }
 
     Batch createBatch(size_t currentLevel, size_t currentElements)
@@ -94,6 +113,11 @@ public:
     size_t getTotal() const
     { return total; }
 
+    void assignBar(SEXP bar)
+    {
+        this->bar = bar;
+        updateBar();
+    }
 private:
     /**
      * A table of binomial coefficients
@@ -125,7 +149,9 @@ private:
     {
         if (CLI_SHOULD_TICK) {
             RcppThread::checkUserInterrupt();
-            cli_progress_set(bar, actual);
+            if (bar) {
+                cli_progress_set(bar, actual);
+            }
         }
     }
 
