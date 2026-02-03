@@ -19,10 +19,11 @@
 
 #pragma once
 
-#include <RcppThread.h>
-#include <cli/progress.h>
-
 #include "../common.h"
+#include <cli/progress.h>
+#include <R.h>
+#include <Rinternals.h>
+
 #include "BinomialCoefficients.h"
 
 
@@ -50,9 +51,6 @@ public:
 
         ~Batch()
         {
-            //RcppThread::Rcout << "finishing batch: "
-                              //<< onStart << " + " << total
-                              //<< " = " << (onStart + total) << std::endl;
             progress->set(onStart + total);
         }
 
@@ -69,12 +67,7 @@ public:
           total(computeSize(maxLevel, elements)),
           actual(0),
           bar(R_NilValue)
-    {
-        //RcppThread::Rcout << "creating progress for "
-                          //<< this->maxLevel << " levels and "
-                          //<< elements << " elements: total = "
-                          //<< this->total << std::endl;
-    }
+    { }
 
     ~CombinatorialProgress()
     {
@@ -87,33 +80,28 @@ public:
     Batch createBatch(size_t currentLevel, size_t currentElements)
     {
         size_t batchTotal = computeSize(maxLevel - currentLevel, currentElements);
-        //RcppThread::Rcout << "creating batch for level " << currentLevel
-                          //<< " with " << currentElements << " elements: total = "
-                          //<< total << std::endl;
         return Batch(this, actual, batchTotal);
     }
 
-    void set(size_t value)
+    inline void set(const size_t value)
     {
         actual = value;
         updateBar();
-        //RcppThread::Rcout << "progress: " << actual << "/" << total << std::endl;
     }
 
-    void increment(size_t inc)
+    inline void increment(const size_t inc)
     {
         actual += inc;
         updateBar();
-        //RcppThread::Rcout << "progress: " << actual << "/" << total << std::endl;
     }
 
-    size_t getActual() const
+    inline size_t getActual() const
     { return actual; }
 
-    size_t getTotal() const
+    inline size_t getTotal() const
     { return total; }
 
-    void assignBar(SEXP bar)
+    inline void assignBar(SEXP bar)
     {
         this->bar = bar;
         updateBar();
@@ -148,7 +136,7 @@ private:
     void updateBar()
     {
         if (CLI_SHOULD_TICK) {
-            RcppThread::checkUserInterrupt();
+            R_CheckUserInterrupt();
             if (bar) {
                 cli_progress_set(bar, actual);
             }
@@ -160,7 +148,7 @@ private:
      * The function returns b(n, 0) + b(n, 1) + ... + b(n, k),
      * where "n" is the number of elements and "k" is the number of levels.
      */
-    size_t computeSize(size_t levels, size_t elements) const
+    inline size_t computeSize(const size_t levels, const size_t elements) const
     {
         size_t size = 1;
         for (size_t i = 1; i <= min(levels, elements); ++i) {
