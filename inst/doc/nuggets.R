@@ -47,8 +47,10 @@ result <- dig_associations(fuzzy_mtcars,
                            consequent = starts_with("am"),
                            disjoint = disj,
                            min_support = 0.02,
-                           min_confidence = 0.8,
-                           contingency_table = TRUE)
+                           min_confidence = 0.8)
+
+## -----------------------------------------------------------------------------
+result <- add_interest(result, measures = c("conviction", "leverage"))
 
 ## -----------------------------------------------------------------------------
 result <- arrange(result, desc(support))
@@ -148,7 +150,7 @@ ggplot(vis_rules) +
          subtitle = "consequent: am=1")
 
 ## ----eval=FALSE---------------------------------------------------------------
-# # Launch interactive explorer for association rules
+# # Search for association rules
 # rules <- dig_associations(fuzzy_mtcars,
 #                          antecedent = everything(),
 #                          consequent = everything(),

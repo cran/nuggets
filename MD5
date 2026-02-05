@@ -1,6 +1,6 @@
-fd070b199bfcf47eb7b47a06102f7d1d *DESCRIPTION
-af11cf4328794a15c938f0cf29d7b897 *NAMESPACE
-af972ae76083e5cfbc9f35c529528aed *NEWS.md
+72b3ea01845318d5c07bfc4132757fd6 *DESCRIPTION
+a84cf98942d69949b58eac2f3edf869f *NAMESPACE
+40c2f80ce7a83655e0236f596e2f84d9 *NEWS.md
 ee4cc71d6d45626c5fd5b4e2719c2072 *R/RcppExports.R
 46d9c641c85aafc192a4c51107a0fe23 *R/add_interest-associations.R
 1afa60137cdc36af17886cf2d84d11a1 *R/add_interest.R
@@ -11,7 +11,7 @@ ee4cc71d6d45626c5fd5b4e2719c2072 *R/RcppExports.R
 b2089564f72e4d497d63722092656697 *R/catch-routine-registration.R
 f7c6296e7134fd6331431401f3837f75 *R/cluster_associations.R
 00fd09710cb8ae777f8ffd4c8f52dbda *R/convert_data_to_list.R
-431f55500970848d62f3a3193d0569c9 *R/dig.R
+824e21a083ef4f22a038c0c86b928462 *R/dig.R
 14b09ac3f699a3126954e1f852a735c5 *R/dig_associations.R
 7022b0f49544f08d609b410c078af115 *R/dig_baseline_contrasts.R
 823675b29b29dedba29413a707bb633b *R/dig_complement_contrasts.R
@@ -20,7 +20,7 @@ ca31f3c4f96f4d515995fe8cc3c23e30 *R/dig_grid.R
 d77ff08952b8df4e414eb708f65262bf *R/dig_paired_baseline_contrasts.R
 5f037f706ed0c9dec1ef186096d40f80 *R/dig_tautologies.R
 bf558bf0b59fd8dd49adf4e69337e96e *R/explore-associations.R
-ea6f86a0b0d9167534a177fd56f20cec *R/extract_cols.R
+85c13d853c593e1a03b90cac303b1b5d *R/extract_cols.R
 d6316ebcfa1e15eca66862543f74f492 *R/fire.R
 f11f40b4d628ad2bbc84248963468aa1 *R/format_condition.R
 662ed75b56ceef70b5b85707a8ecfdff *R/geom_diamond.R
@@ -28,6 +28,7 @@ f11f40b4d628ad2bbc84248963468aa1 *R/format_condition.R
 79de2a730f13320be5f4312b63810863 *R/is_almost_constant.R
 619384836eae16600d1104d23a93393b *R/is_condition.R
 c5fa47a32611c2a48bc6b9cc8f6941fc *R/is_degree.R
+afe02f2d34152245b45d334c2a9acc5c *R/is_logicalish.R
 9e6d33a8aaa1a64cfb462399ed0adca2 *R/is_nugget.R
 084dc0191b11e91f0b69df9d36f39507 *R/is_subset.R
 8af3441cac0a45455997426c1adc7fe8 *R/msg.R
@@ -42,7 +43,7 @@ a52b5a9f671d1f62fa0eceb7044fdf20 *R/require_shiny.R
 36f6a03b14fbf2e5cbb8854f3773bb1d *R/shorten_condition.R
 bea4fc926434484270fff94b3bd7a2d7 *R/t_test.R
 f60dfac78e77f6ba434d21b2abe86851 *R/testers.R
-22cfe610c9359f45606bd9fd08c7a707 *R/ui-aboutTable.R
+88accec74f485b513f5f9bec5634fdef *R/ui-aboutTable.R
 e38985b7c4e902899950a1a5ab98e7dd *R/ui-associationsClusterModule.R
 692349ffd41431ceb48b39525e813717 *R/ui-associationsDetailModule.R
 b9af2a1bff7c314a11c41830309d0ae8 *R/ui-callDataTable.R
@@ -67,17 +68,17 @@ a31ff534c537274d1a0bbd335288faef *R/ui-scatterFilterModule.R
 b37982a3cf66a97bb104343d771bdfea *R/var_test.R
 30eac2fc4faed6f639fb464b61a9bb17 *R/which_antichain.R
 bd639cf53d07d065e2b1a5aa1a6fe0ba *R/wilcox_test.R
-c6a1e749f8fa01ce4342775a9a280074 *README.md
+4a7b293c2e4797342e6f8a2c65a48471 *README.md
 76e123f5dcc8dee07678412adc0a2a84 *build/partial.rdb
 363c1452e380cf77acbedbd7883df1f2 *build/vignette.rds
 2539b0e08b3808bbf77cc6a8f81df2ca *inst/CITATION
 8f52112ec3437d4f6b7d19d6c36832e4 *inst/COPYRIGHTS
 75c175b609810e367e3e1a3a4f1d15ef *inst/doc/data-preparation.R
 a5c0b7c555ef589c7d79e0eba96edc56 *inst/doc/data-preparation.Rmd
-1c68127e189aac7207d5b0a7ac3433c1 *inst/doc/data-preparation.html
-54784c2b92214e28c36a67cd29682c5d *inst/doc/nuggets.R
-35d996cfa80bb87d7dddf650e4203127 *inst/doc/nuggets.Rmd
-7fcee0db1454c21ed46098b175492eb7 *inst/doc/nuggets.html
+8530c765a3dedf2debacc8b909a359f4 *inst/doc/data-preparation.html
+211396e1678ea40c1afbe3546c2f829c *inst/doc/nuggets.R
+895bf990bba1e6fc42ca13d60839ca59 *inst/doc/nuggets.Rmd
+3689205f7ae32044b51cbf804f0e7af7 *inst/doc/nuggets.html
 ae8ef27867be80bf3cc826d81997dc2f *inst/figures/logo.png
 97a7bfdac845f9a5bd2769ecdfca2cda *inst/figures/nugget.png
 9f7ac8a9a0f87f6e19377c8deedab7c8 *man/add_interest.Rd
@@ -107,6 +108,7 @@ ae8ef27867be80bf3cc826d81997dc2f *man/figures/logo.png
 fa6be00ac7285a1c5877474b0819ff95 *man/is_almost_constant.Rd
 cbe4adab0ddc55aec8c0c6fa92e9a30a *man/is_condition.Rd
 f6efbb1d4a3260645d2e5a1872c75b94 *man/is_degree.Rd
+791006f72a0e3e1471323eb29c1ef73d *man/is_logicalish.Rd
 33a0e32809d66267fee141ede2f59a7e *man/is_nugget.Rd
 b589cd2e91c65e3ac9e8ecfff886c234 *man/is_subset.Rd
 16cb1363cf4b3e2c5a8b9702791c300c *man/nugget.Rd
@@ -271,7 +273,7 @@ d415bb2b9a446946b1592ab7d96ec6eb *tests/testthat/test-bound_range.R
 3abd9c2a01d62d1c984017a47eec9a80 *tests/testthat/test-cluster_associations.R
 236e74127cd08b6694bc4fa8815073e1 *tests/testthat/test-convert_data_to_list.R
 da61b203c8d139edad19655542851015 *tests/testthat/test-cpp.R
-bc9e7db2fad5d0261e6495384230027f *tests/testthat/test-dig.R
+c5ea083ec98410c7ee0ea1bfb9e83dd2 *tests/testthat/test-dig.R
 8e4a2cbbee72a82b3a65cd8bd4f6d54f *tests/testthat/test-dig_associations.R
 a8185ef19c14a1ebab29e7fb5d9cf47c *tests/testthat/test-dig_baseline_contrasts.R
 f2c906b1c760aecb6b990e32f6827927 *tests/testthat/test-dig_complement_contrasts.R
@@ -286,6 +288,7 @@ d2f74920ab03ebf3e7b4a39519051f2f *tests/testthat/test-format_condition.R
 28380b47f70787f954368ab06c212f4a *tests/testthat/test-is_almost_constant.R
 d60edab1364b6821725aeaa8c3c1e274 *tests/testthat/test-is_condition.R
 30d4f895290a252dc39f432ef0e6798f *tests/testthat/test-is_degree.R
+efc01573d3bc892b68e1c4efbc53dc53 *tests/testthat/test-is_logicalish.R
 6fcf19dcaff824b021fb0f1077f01747 *tests/testthat/test-is_subset.R
 d0790c7ab7062e785be72fb1413bb159 *tests/testthat/test-parse_condition.R
 35b97b9a4fdda9fa611b3287c8736d95 *tests/testthat/test-partition.R
@@ -313,4 +316,4 @@ d1b0c8de3184a11df56da4f278b0ba46 *tests/testthat/test-var_grid.R
 b90ada968d8c7fb8a32a01fe24beed71 *tests/testthat/test-which_antichain.R
 c7edd39e366c5d99ef4ae918d2d5352d *tests/testthat/test-wilcox_test.R
 a5c0b7c555ef589c7d79e0eba96edc56 *vignettes/data-preparation.Rmd
-35d996cfa80bb87d7dddf650e4203127 *vignettes/nuggets.Rmd
+895bf990bba1e6fc42ca13d60839ca59 *vignettes/nuggets.Rmd

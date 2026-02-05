@@ -1,7 +1,7 @@
 Package: nuggets
 Title: Extensible Framework for Data Pattern Exploration
-Version: 2.1.1
-Date: 2026-02-03
+Version: 2.1.2
+Date: 2026-02-04
 Authors@R: 
     person(given = "Michal",
            family = "Burda",
@@ -29,7 +29,7 @@ License: GPL (>= 3)
 Encoding: UTF-8
 RoxygenNote: 7.3.3
 Language: en-US
-Depends: R (>= 4.1.0)
+Depends: R (>= 4.4.0)
 Imports: classInt, cli, dplyr, fastmatch, generics, ggplot2, grid,
         lifecycle, methods, purrr, Rcpp, rlang, stats, stringr, tibble,
         tidyr, tidyselect, utils
@@ -41,8 +41,8 @@ Suggests: arules, DT, htmltools, htmlwidgets, jsonlite, shiny, shinyjs,
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 NeedsCompilation: yes
-Packaged: 2026-02-03 08:56:21 UTC; michal
+Packaged: 2026-02-04 17:34:33 UTC; michal
 Author: Michal Burda [aut, cre] (ORCID:
     <https://orcid.org/0000-0002-4182-4407>)
 Repository: CRAN
-Date/Publication: 2026-02-03 10:00:02 UTC
+Date/Publication: 2026-02-05 08:30:07 UTC
