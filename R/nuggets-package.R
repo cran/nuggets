@@ -83,6 +83,7 @@
 #' @importFrom stats aggregate
 #' @importFrom stats cor.test
 #' @importFrom stats kmeans
+#' @importFrom stats median
 #' @importFrom stats na.omit
 #' @importFrom stats pbinom
 #' @importFrom stats quantile
@@ -103,6 +104,7 @@
 #' @importFrom tidyselect everything
 #' @importFrom tidyselect where
 #' @importFrom utils citation
+#' @importFrom utils combn
 #' @importFrom utils packageDescription
 #' @useDynLib nuggets, .registration = TRUE
 ## usethis namespace: end

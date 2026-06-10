@@ -1,7 +1,7 @@
 Package: nuggets
 Title: Extensible Framework for Data Pattern Exploration
-Version: 2.2.0
-Date: 2026-03-11
+Version: 2.2.1
+Date: 2026-06-10
 Authors@R: 
     person(given = "Michal",
            family = "Burda",
@@ -27,7 +27,6 @@ URL: https://beerda.github.io/nuggets/,
 BugReports: https://github.com/beerda/nuggets/issues/
 License: GPL (>= 3)
 Encoding: UTF-8
-RoxygenNote: 7.3.3
 Language: en-US
 Depends: R (>= 4.4.0)
 Imports: classInt, cli, dplyr, fastmatch, generics, ggplot2, grid,
@@ -40,9 +39,11 @@ Suggests: arules, DT, htmltools, htmlwidgets, jsonlite, shiny, shinyjs,
         rmarkdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
+Config/roxygen2/version: 8.0.0
+RoxygenNote: 8.0.0
 NeedsCompilation: yes
-Packaged: 2026-03-11 15:24:50 UTC; michal
+Packaged: 2026-06-10 13:40:42 UTC; michal
 Author: Michal Burda [aut, cre] (ORCID:
     <https://orcid.org/0000-0002-4182-4407>)
 Repository: CRAN
-Date/Publication: 2026-03-11 16:40:02 UTC
+Date/Publication: 2026-06-10 14:10:02 UTC
