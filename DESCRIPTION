@@ -1,7 +1,7 @@
 Package: nuggets
 Title: Extensible Framework for Data Pattern Exploration
-Version: 2.2.1
-Date: 2026-06-10
+Version: 2.2.2
+Date: 2026-07-22
 Authors@R: 
     person(given = "Michal",
            family = "Burda",
@@ -23,8 +23,8 @@ Description: A framework for systematic exploration of
     for visualization of logical structures and supports interactive exploration
     through integrated Shiny applications. 
 URL: https://beerda.github.io/nuggets/,
-        https://github.com/beerda/nuggets/
-BugReports: https://github.com/beerda/nuggets/issues/
+        https://github.com/beerda/nuggets
+BugReports: https://github.com/beerda/nuggets/issues
 License: GPL (>= 3)
 Encoding: UTF-8
 Language: en-US
@@ -42,8 +42,8 @@ VignetteBuilder: knitr
 Config/roxygen2/version: 8.0.0
 RoxygenNote: 8.0.0
 NeedsCompilation: yes
-Packaged: 2026-06-10 13:40:42 UTC; michal
+Packaged: 2026-07-22 14:26:07 UTC; michal
 Author: Michal Burda [aut, cre] (ORCID:
     <https://orcid.org/0000-0002-4182-4407>)
 Repository: CRAN
-Date/Publication: 2026-06-10 14:10:02 UTC
+Date/Publication: 2026-07-22 15:00:02 UTC

@@ -5,26 +5,54 @@ knitr::opts_chunk$set(
 )
 
 ## ----include=FALSE------------------------------------------------------------
-library(nuggets)
-library(dplyr)
-library(ggplot2)
-library(tidyr)
-
 options(tibble.width = Inf)
 
+## ----message=FALSE------------------------------------------------------------
+library(nuggets)
+library(dplyr)    # for data manipulation
+library(tidyr)    # for even more data manipulation
+library(ggplot2)  # for graphical visualization
+
 ## -----------------------------------------------------------------------------
-# Create a copy to avoid modifying the original dataset
 mtcars_example <- mtcars
 mtcars_example$cyl <- factor(mtcars_example$cyl,
                      levels= c(4, 6, 8),
                      labels = c("four", "six", "eight"))
+mtcars_example$vs <- as.logical(mtcars_example$vs)
 head(mtcars_example)
+
+## -----------------------------------------------------------------------------
+partition(mtcars_example, vs)
 
 ## -----------------------------------------------------------------------------
 partition(mtcars_example, cyl)
 
 ## -----------------------------------------------------------------------------
-partition(mtcars_example, vs:gear, .method = "dummy")
+# Default: one predicate per level
+partition(mtcars_example, cyl)
+
+# Merge pairs of levels - all pairs are created for unordered factors
+partition(mtcars_example, cyl, .subsets = 2)
+
+# Create both individual and merged predicates
+partition(mtcars_example, cyl, .subsets = c(1, 2))
+
+## -----------------------------------------------------------------------------
+mtcars_example$cyl_ord <- ordered(mtcars$cyl,
+                                  levels = c(4, 6, 8),
+                                  labels = c("four", "six", "eight"))
+
+# Default: one predicate per level
+partition(mtcars_example, cyl_ord)
+
+# Only consecutive pairs are created for ordered factors
+partition(mtcars_example, cyl_ord, .subsets = 2)
+
+# Both individual levels and consecutive pairs
+partition(mtcars_example, cyl_ord, .subsets = c(1, 2))
+
+## -----------------------------------------------------------------------------
+partition(mtcars_example, am:gear, .method = "dummy")
 
 ## -----------------------------------------------------------------------------
 partition(mtcars_example, mpg, .method = "crisp", .breaks = c(-Inf, 15, 20, 30, Inf))
@@ -34,7 +62,8 @@ partition(mtcars_example, disp, .method = "crisp", .breaks = 3)
 
 ## -----------------------------------------------------------------------------
 crisp_mtcars <- mtcars_example |>
-    partition(cyl, vs:gear, .method = "dummy") |>
+    partition(cyl, cyl_ord, am:gear, .method = "dummy") |>
+    partition(vs) |>
     partition(mpg, .method = "crisp", .breaks = c(-Inf, 15, 20, 30, Inf)) |>
     partition(disp:carb, .method = "crisp", .breaks = 3) 
 
@@ -250,8 +279,8 @@ tautologies <- dig_tautologies(
 print(tautologies)
 
 ## ----eval=FALSE---------------------------------------------------------------
-# # Convert tautologies to excluded format
-# excluded_conditions <- parse_condition(tautologies$antecedent)
+# # Convert tautologies to the excluded (axioms) format
+# excluded_conditions <- parse_condition(tautologies$antecedent, tautologies$consequent)
 # 
 # # Use in subsequent pattern search
 # results <- dig_associations(
@@ -259,7 +288,7 @@ print(tautologies)
 #     antecedent = !starts_with("am"),
 #     consequent = starts_with("am"),
 #     disjoint = disj,
-#     excluded = excluded_conditions,  # Exclude tautological patterns
+#     excluded = excluded_conditions,
 #     min_support = 0.1,
 #     min_confidence = 0.8
 # )

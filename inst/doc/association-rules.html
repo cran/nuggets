@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Association Rules</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Association Rules</h1>
+
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p><strong>Association rules</strong> are one of the most fundamental
+tools in data mining. An association rule has the form:</p>
+<blockquote>
+<p><em>antecedent</em> <span class="math inline">\(\Rightarrow\)</span>
+<em>consequent</em></p>
+</blockquote>
+<p>where the <em>antecedent</em> (left-hand side) is a conjunction of
+predicates and the <em>consequent</em> (right-hand side) is a single
+predicate. The rule expresses that whenever the antecedent conditions
+are satisfied, the consequent tends to be satisfied as well.</p>
+<p>For example:</p>
+<blockquote>
+<p><code>middle_age &amp; university_edu &amp; IT_industry</code> <span class="math inline">\(\Rightarrow\)</span> <code>high_income</code></p>
+</blockquote>
+<p>This rule states that middle-aged people with a university education
+working in the IT industry tend to have a high income.</p>
+<p>Association rules are evaluated using several quality measures:</p>
+<ul>
+<li><strong>Support</strong>: the relative frequency of rows satisfying
+both the antecedent and the consequent. Higher support means the rule
+applies to more data.</li>
+<li><strong>Confidence</strong>: the proportion of rows satisfying the
+antecedent that also satisfy the consequent. Higher confidence means the
+rule is more reliable.</li>
+<li><strong>Coverage</strong>: the relative frequency of rows satisfying
+the antecedent.</li>
+<li><strong>Lift</strong>: the ratio of the observed support to the
+expected support if the antecedent and consequent were independent. A
+lift greater than 1 indicates a positive association.</li>
+</ul>
+<p>The <code>nuggets</code> package supports searching for association
+rules in both <strong>crisp</strong> (Boolean) and
+<strong>fuzzy</strong> data through the <code>dig_associations()</code>
+function.</p>
+<p>Before using the package, the required libraries must be loaded:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(nuggets)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(dplyr)    <span class="co"># for data manipulation</span></span></code></pre></div>
+</div>
+<div id="data-preparation" class="section level1">
+<h1>Data Preparation</h1>
+<p>For this tutorial, we use the built-in <code>CO2</code> dataset,
+which contains data from an experiment on the cold tolerance of the
+grass species <em>Echinochloa crus-galli</em>. The dataset has 84
+observations and includes information about the plant’s origin
+(<code>Type</code>), treatment (<code>Treatment</code>), ambient CO2
+concentration (<code>conc</code>), and CO2 uptake rate
+(<code>uptake</code>).</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">head</span>(CO2)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="co">#&gt;   Plant   Type  Treatment conc uptake</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="co">#&gt; 1   Qn1 Quebec nonchilled   95   16.0</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt; 2   Qn1 Quebec nonchilled  175   30.4</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt; 3   Qn1 Quebec nonchilled  250   34.8</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt; 4   Qn1 Quebec nonchilled  350   37.2</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt; 5   Qn1 Quebec nonchilled  500   35.3</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt; 6   Qn1 Quebec nonchilled  675   39.2</span></span></code></pre></div>
+<p>Before searching for association rules, data must be transformed into
+predicates (logical or fuzzy columns). We use the
+<code>partition()</code> function for this purpose. For a detailed
+explanation of data preparation techniques, see the
+<code>vignette(&quot;data-preparation&quot;)</code>.</p>
+<div id="crisp-data-preparation" class="section level2">
+<h2>Crisp Data Preparation</h2>
+<p>We prepare a crisp version of the dataset by transforming factors
+into dummy variables and numeric columns into interval-based logical
+predicates:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>crisp_co2 <span class="ot">&lt;-</span> CO2 <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>    <span class="fu">select</span>(<span class="sc">-</span>Plant) <span class="sc">|&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>    <span class="fu">partition</span>(Type, Treatment) <span class="sc">|&gt;</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>    <span class="fu">partition</span>(conc, <span class="at">.method =</span> <span class="st">&quot;crisp&quot;</span>, <span class="at">.breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="dv">200</span>, <span class="dv">500</span>, <span class="cn">Inf</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>    <span class="fu">partition</span>(uptake, <span class="at">.method =</span> <span class="st">&quot;crisp&quot;</span>, <span class="at">.breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="dv">20</span>, <span class="dv">35</span>, <span class="cn">Inf</span>))</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="fu">head</span>(crisp_co2, <span class="at">n =</span> <span class="dv">3</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 10</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;   `Type=Quebec` `Type=Mississippi` `Treatment=nonchilled` `Treatment=chilled`</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt;   &lt;lgl&gt;         &lt;lgl&gt;              &lt;lgl&gt;                  &lt;lgl&gt;              </span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; 1 TRUE          FALSE              TRUE                   FALSE              </span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; 2 TRUE          FALSE              TRUE                   FALSE              </span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; 3 TRUE          FALSE              TRUE                   FALSE              </span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt;   `conc=(-Inf;200]` `conc=(200;500]` `conc=(500;Inf]` `uptake=(-Inf;20]`</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt;   &lt;lgl&gt;             &lt;lgl&gt;            &lt;lgl&gt;            &lt;lgl&gt;             </span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; 1 TRUE              FALSE            FALSE            TRUE              </span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; 2 TRUE              FALSE            FALSE            FALSE             </span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; 3 FALSE             TRUE             FALSE            FALSE             </span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt;   `uptake=(20;35]` `uptake=(35;Inf]`</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt;   &lt;lgl&gt;            &lt;lgl&gt;            </span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt; 1 FALSE            FALSE            </span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; 2 TRUE             FALSE            </span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; 3 TRUE             FALSE</span></span></code></pre></div>
+</div>
+<div id="fuzzy-data-preparation" class="section level2">
+<h2>Fuzzy Data Preparation</h2>
+<p>For a fuzzy version, we transform numeric columns into fuzzy
+predicates using triangular membership functions:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>fuzzy_co2 <span class="ot">&lt;-</span> CO2 <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>    <span class="fu">select</span>(<span class="sc">-</span>Plant) <span class="sc">|&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    <span class="fu">partition</span>(Type, Treatment) <span class="sc">|&gt;</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>    <span class="fu">partition</span>(conc, <span class="at">.method =</span> <span class="st">&quot;triangle&quot;</span>, <span class="at">.breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="dv">95</span>, <span class="dv">500</span>, <span class="dv">1000</span>, <span class="cn">Inf</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>    <span class="fu">partition</span>(uptake, <span class="at">.method =</span> <span class="st">&quot;triangle&quot;</span>, <span class="at">.breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="dv">10</span>, <span class="dv">25</span>, <span class="dv">40</span>, <span class="cn">Inf</span>))</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="fu">head</span>(fuzzy_co2, <span class="at">n =</span> <span class="dv">3</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 10</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt;   `Type=Quebec` `Type=Mississippi` `Treatment=nonchilled` `Treatment=chilled`</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt;   &lt;lgl&gt;         &lt;lgl&gt;              &lt;lgl&gt;                  &lt;lgl&gt;              </span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; 1 TRUE          FALSE              TRUE                   FALSE              </span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; 2 TRUE          FALSE              TRUE                   FALSE              </span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; 3 TRUE          FALSE              TRUE                   FALSE              </span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt;   `conc=(-Inf;95;500)` `conc=(95;500;1000)` `conc=(500;1000;Inf)`</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt;                  &lt;dbl&gt;                &lt;dbl&gt;                 &lt;dbl&gt;</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; 1                1                    0                         0</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; 2                0.802                0.198                     0</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt; 3                0.617                0.383                     0</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt;   `uptake=(-Inf;10;25)` `uptake=(10;25;40)` `uptake=(25;40;Inf)`</span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt;                   &lt;dbl&gt;               &lt;dbl&gt;                &lt;dbl&gt;</span></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="co">#&gt; 1                   0.6               0.4                  0    </span></span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a><span class="co">#&gt; 2                   0                 0.64                 0.36 </span></span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a><span class="co">#&gt; 3                   0                 0.347                0.653</span></span></code></pre></div>
+</div>
+</div>
+<div id="basic-association-rule-search" class="section level1">
+<h1>Basic Association Rule Search</h1>
+<p>The simplest use of <code>dig_associations()</code> searches for all
+rules that meet given minimum support and confidence thresholds.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>rules <span class="ot">&lt;-</span> <span class="fu">dig_associations</span>(crisp_co2,</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>                          <span class="at">min_support =</span> <span class="fl">0.1</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>                          <span class="at">min_confidence =</span> <span class="fl">0.8</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">head</span>(rules)</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 13</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt;   antecedent                                             consequent            </span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                                  &lt;chr&gt;                 </span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; 1 {Type=Quebec,conc=(500;Inf]}                           {uptake=(35;Inf]}     </span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; 2 {Treatment=nonchilled,Type=Mississippi,conc=(200;500]} {uptake=(20;35]}      </span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; 3 {Treatment=chilled,Type=Mississippi}                   {uptake=(-Inf;20]}    </span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; 4 {Treatment=chilled,Type=Mississippi,conc=(200;500]}    {uptake=(-Inf;20]}    </span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt; 5 {Type=Mississippi,conc=(200;500],uptake=(-Inf;20]}     {Treatment=chilled}   </span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt; 6 {Type=Mississippi,conc=(200;500],uptake=(20;35]}       {Treatment=nonchilled}</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt;   support confidence coverage conseq_support  lift count antecedent_length    pp</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt;     &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;          &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;             &lt;int&gt; &lt;dbl&gt;</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; 1   0.143      1        0.143          0.298  3.36    12                 2    12</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; 2   0.107      1        0.107          0.345  2.90     9                 3     9</span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; 3   0.226      0.905    0.25           0.357  2.53    19                 2    19</span></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt; 4   0.107      1        0.107          0.357  2.8      9                 3     9</span></span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt; 5   0.107      1        0.107          0.5    2        9                 3     9</span></span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt; 6   0.107      1        0.107          0.5    2        9                 3     9</span></span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt;      pn    np    nn</span></span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co">#&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a><span class="co">#&gt; 1     0    13    59</span></span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a><span class="co">#&gt; 2     0    20    55</span></span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a><span class="co">#&gt; 3     2    11    52</span></span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a><span class="co">#&gt; 4     0    21    54</span></span>
+<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a><span class="co">#&gt; 5     0    33    42</span></span>
+<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a><span class="co">#&gt; 6     0    33    42</span></span></code></pre></div>
+<p>The result is a tibble containing found rules with their quality
+measures: <code>antecedent</code>, <code>consequent</code>,
+<code>support</code>, <code>confidence</code>, <code>coverage</code>,
+<code>consequent_support</code>, <code>lift</code>, <code>length</code>,
+and the contingency table columns (<code>pp</code>, <code>pn</code>,
+<code>np</code>, <code>nn</code>).</p>
+<p>For instance, the first rule represents the following association
+rule:</p>
+<blockquote>
+<blockquote>
+<p>Type=Quebec &amp; conc=(500;Inf] <span class="math inline">\(\Rightarrow\)</span> uptake=(35;Inf]</p>
+</blockquote>
+</blockquote>
+</div>
+<div id="specifying-antecedent-and-consequent" class="section level1">
+<h1>Specifying Antecedent and Consequent</h1>
+<p>In many applications, you want to constrain which predicates can
+appear on each side of the rule. This is done with the
+<code>antecedent</code> and <code>consequent</code> arguments, which
+accept <a href="https://tidyselect.r-lib.org/articles/syntax.html">tidyselect</a>
+expressions.</p>
+<p>For example, to find rules that predict the <code>uptake</code> rate
+from all other variables:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>rules_uptake <span class="ot">&lt;-</span> <span class="fu">dig_associations</span>(crisp_co2,</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>                                 <span class="at">antecedent =</span> <span class="sc">!</span><span class="fu">starts_with</span>(<span class="st">&quot;uptake&quot;</span>),</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>                                 <span class="at">consequent =</span> <span class="fu">starts_with</span>(<span class="st">&quot;uptake&quot;</span>),</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>                                 <span class="at">min_support =</span> <span class="fl">0.1</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>                                 <span class="at">min_confidence =</span> <span class="fl">0.8</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="fu">head</span>(rules_uptake, <span class="at">n =</span> <span class="dv">3</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 13</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt;   antecedent                                             consequent        </span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                                  &lt;chr&gt;             </span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; 1 {Type=Quebec,conc=(500;Inf]}                           {uptake=(35;Inf]} </span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt; 2 {Treatment=nonchilled,Type=Mississippi,conc=(200;500]} {uptake=(20;35]}  </span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; 3 {Treatment=chilled,Type=Mississippi}                   {uptake=(-Inf;20]}</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt;   support confidence coverage conseq_support  lift count antecedent_length    pp</span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt;     &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;          &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;             &lt;int&gt; &lt;dbl&gt;</span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt; 1   0.143      1        0.143          0.298  3.36    12                 2    12</span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt; 2   0.107      1        0.107          0.345  2.90     9                 3     9</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="co">#&gt; 3   0.226      0.905    0.25           0.357  2.53    19                 2    19</span></span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt;      pn    np    nn</span></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt; 1     0    13    59</span></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt; 2     0    20    55</span></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt; 3     2    11    52</span></span></code></pre></div>
+</div>
+<div id="using-the-disjoint-argument" class="section level1">
+<h1>Using the Disjoint Argument</h1>
+<p>When data is prepared with <code>partition()</code>, a single
+original variable is often expanded into multiple predicates (e.g.,
+<code>conc=(-Inf,200]</code> and <code>conc=(200,500]</code>). These
+predicates from the same variable should not appear together in the same
+antecedent, as their conjunction would be contradictory or
+redundant.</p>
+<p>The <code>disjoint</code> argument prevents this. It accepts a
+character vector of size equal to the number of columns in the input
+data such that each unique value in the vector corresponds to a group of
+mutually exclusive predicates.</p>
+<p>By default, <code>dig_associations()</code> uses
+<code>var_names()</code> on the column names to create the disjoint
+vector automatically. This works well for data prepared with
+<code>partition()</code>.</p>
+<p>You can also provide a custom disjoint vector:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>disj <span class="ot">&lt;-</span> <span class="fu">var_names</span>(<span class="fu">colnames</span>(crisp_co2))</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>disj</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt;  [1] &quot;Type&quot;      &quot;Type&quot;      &quot;Treatment&quot; &quot;Treatment&quot; &quot;conc&quot;      &quot;conc&quot;     </span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt;  [7] &quot;conc&quot;      &quot;uptake&quot;    &quot;uptake&quot;    &quot;uptake&quot;</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>rules <span class="ot">&lt;-</span> <span class="fu">dig_associations</span>(crisp_co2,</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>                          <span class="at">disjoint =</span> disj,</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>                          <span class="at">min_support =</span> <span class="fl">0.1</span>,</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>                          <span class="at">min_confidence =</span> <span class="fl">0.8</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="fu">head</span>(rules, <span class="at">n =</span> <span class="dv">3</span>)</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 13</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt;   antecedent                                             consequent        </span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                                  &lt;chr&gt;             </span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt; 1 {Type=Quebec,conc=(500;Inf]}                           {uptake=(35;Inf]} </span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; 2 {Treatment=nonchilled,Type=Mississippi,conc=(200;500]} {uptake=(20;35]}  </span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt; 3 {Treatment=chilled,Type=Mississippi}                   {uptake=(-Inf;20]}</span></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt;   support confidence coverage conseq_support  lift count antecedent_length    pp</span></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt;     &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;          &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;             &lt;int&gt; &lt;dbl&gt;</span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt; 1   0.143      1        0.143          0.298  3.36    12                 2    12</span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt; 2   0.107      1        0.107          0.345  2.90     9                 3     9</span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt; 3   0.226      0.905    0.25           0.357  2.53    19                 2    19</span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt;      pn    np    nn</span></span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt; 1     0    13    59</span></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt; 2     0    20    55</span></span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; 3     2    11    52</span></span></code></pre></div>
+</div>
+<div id="controlling-rule-length" class="section level1">
+<h1>Controlling Rule Length</h1>
+<p>The <code>min_length</code> and <code>max_length</code> arguments
+control the number of predicates in the antecedent:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># Find only rules with exactly 2 predicates in the antecedent</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>rules <span class="ot">&lt;-</span> <span class="fu">dig_associations</span>(crisp_co2,</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>                          <span class="at">min_length =</span> <span class="dv">2</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>                          <span class="at">max_length =</span> <span class="dv">2</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>                          <span class="at">min_support =</span> <span class="fl">0.1</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>                          <span class="at">min_confidence =</span> <span class="fl">0.8</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="fu">head</span>(rules, <span class="at">n =</span> <span class="dv">3</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 13</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt;   antecedent                           consequent             support confidence</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                &lt;chr&gt;                    &lt;dbl&gt;      &lt;dbl&gt;</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt; 1 {Type=Quebec,conc=(500;Inf]}         {uptake=(35;Inf]}        0.143      1    </span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co">#&gt; 2 {Treatment=chilled,Type=Mississippi} {uptake=(-Inf;20]}       0.226      0.905</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="co">#&gt; 3 {Type=Mississippi,uptake=(20;35]}    {Treatment=nonchilled}   0.179      0.882</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="co">#&gt;   coverage conseq_support  lift count antecedent_length    pp    pn    np    nn</span></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="co">#&gt;      &lt;dbl&gt;          &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;             &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="co">#&gt; 1    0.143          0.298  3.36    12                 2    12     0    13    59</span></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="co">#&gt; 2    0.25           0.357  2.53    19                 2    19     2    11    52</span></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="co">#&gt; 3    0.202          0.5    1.76    15                 2    15     2    27    40</span></span></code></pre></div>
+<p>Setting <code>min_length = 0</code> generates rules with an empty
+antecedent, which effectively computes the support of each consequent
+alone.</p>
+</div>
+<div id="limiting-the-number-of-results" class="section level1">
+<h1>Limiting the Number of Results</h1>
+<p>For large datasets, the number of possible rules can be enormous. The
+<code>max_results</code> argument limits the total number of rules
+generated:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>rules <span class="ot">&lt;-</span> <span class="fu">dig_associations</span>(crisp_co2,</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>                          <span class="at">min_support =</span> <span class="fl">0.05</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>                          <span class="at">min_confidence =</span> <span class="fl">0.6</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>                          <span class="at">max_results =</span> <span class="dv">5</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="fu">nrow</span>(rules)</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt; [1] 5</span></span></code></pre></div>
+</div>
+<div id="fuzzy-association-rules" class="section level1">
+<h1>Fuzzy Association Rules</h1>
+<p>When the data contains fuzzy predicates (numeric columns with values
+in [0, 1]), <code>dig_associations()</code> computes fuzzy support using
+a <strong>t-norm</strong> for conjunction. The <code>t_norm</code>
+argument specifies which t-norm to use:</p>
+<ul>
+<li><code>&quot;goguen&quot;</code> (default): the product t-norm - multiplies
+membership degrees</li>
+<li><code>&quot;goedel&quot;</code>: the minimum t-norm - takes the minimum of
+membership degrees</li>
+<li><code>&quot;lukas&quot;</code>: the Łukasiewicz t-norm = max(0, a + b -
+1)</li>
+</ul>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># Fuzzy rules using the product t-norm (default)</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>fuzzy_rules <span class="ot">&lt;-</span> <span class="fu">dig_associations</span>(fuzzy_co2,</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>                                <span class="at">antecedent =</span> <span class="sc">!</span><span class="fu">starts_with</span>(<span class="st">&quot;uptake&quot;</span>),</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>                                <span class="at">consequent =</span> <span class="fu">starts_with</span>(<span class="st">&quot;uptake&quot;</span>),</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>                                <span class="at">min_support =</span> <span class="fl">0.05</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>                                <span class="at">min_confidence =</span> <span class="fl">0.6</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>                                <span class="at">t_norm =</span> <span class="st">&quot;goguen&quot;</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="fu">head</span>(fuzzy_rules, <span class="at">n =</span> <span class="dv">3</span>)</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 13</span></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="co">#&gt;   antecedent                                            consequent          </span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                                 &lt;chr&gt;               </span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a><span class="co">#&gt; 1 {Type=Quebec}                                         {uptake=(25;40;Inf)}</span></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a><span class="co">#&gt; 2 {Treatment=nonchilled,Type=Quebec}                    {uptake=(25;40;Inf)}</span></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a><span class="co">#&gt; 3 {Treatment=nonchilled,Type=Quebec,conc=(95;500;1000)} {uptake=(25;40;Inf)}</span></span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a><span class="co">#&gt;   support confidence coverage conseq_support  lift count antecedent_length    pp</span></span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a><span class="co">#&gt;     &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;          &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;             &lt;int&gt; &lt;dbl&gt;</span></span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a><span class="co">#&gt; 1  0.320       0.639    0.5            0.380  1.68 26.8                  1 26.8 </span></span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a><span class="co">#&gt; 2  0.177       0.709    0.25           0.380  1.87 14.9                  2 14.9 </span></span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a><span class="co">#&gt; 3  0.0894      0.876    0.102          0.380  2.31  7.51                 3  7.51</span></span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a><span class="co">#&gt;      pn    np    nn</span></span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a><span class="co">#&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a><span class="co">#&gt; 1 15.2   5.03  37.0</span></span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a><span class="co">#&gt; 2  6.11 17.0   46.0</span></span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a><span class="co">#&gt; 3  1.07 24.4   51.1</span></span></code></pre></div>
+<p>The choice of t-norm affects how strictly the conjunction is
+evaluated. The Gödel t-norm is the least strict (produces higher support
+values), while the Łukasiewicz t-norm is the most strict. Note also that
+handling fuzzy data is generally much more slower and memory demanding
+than crisp data, especially for large datasets.</p>
+</div>
+<div id="computing-additional-interest-measures" class="section level1">
+<h1>Computing Additional Interest Measures</h1>
+<p>The <code>add_interest()</code> function computes additional
+interestingness measures for association rules beyond the basic support,
+confidence, and lift. It uses the contingency table columns
+(<code>pp</code>, <code>pn</code>, <code>np</code>, <code>nn</code>)
+that are automatically included in the output of
+<code>dig_associations()</code>.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="co"># Add selected interest measures</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>rules_enriched <span class="ot">&lt;-</span> rules_uptake <span class="sc">|&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>    <span class="fu">add_interest</span>(<span class="at">measures =</span> <span class="fu">c</span>(<span class="st">&quot;conviction&quot;</span>, <span class="st">&quot;leverage&quot;</span>, <span class="st">&quot;jaccard&quot;</span>))</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>rules_enriched <span class="sc">|&gt;</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>    <span class="fu">select</span>(antecedent, consequent, confidence, conviction, leverage, jaccard) <span class="sc">|&gt;</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>    <span class="fu">head</span>(<span class="at">n =</span> <span class="dv">3</span>)</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 6</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a><span class="co">#&gt;   antecedent                                             consequent        </span></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                                  &lt;chr&gt;             </span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="co">#&gt; 1 {Type=Quebec,conc=(500;Inf]}                           {uptake=(35;Inf]} </span></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="co">#&gt; 2 {Treatment=nonchilled,Type=Mississippi,conc=(200;500]} {uptake=(20;35]}  </span></span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a><span class="co">#&gt; 3 {Treatment=chilled,Type=Mississippi}                   {uptake=(-Inf;20]}</span></span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a><span class="co">#&gt;   confidence conviction leverage jaccard</span></span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a><span class="co">#&gt;        &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;</span></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a><span class="co">#&gt; 1      1         Inf      0.100    0.48 </span></span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a><span class="co">#&gt; 2      1         Inf      0.0702   0.310</span></span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a><span class="co">#&gt; 3      0.905       6.75   0.137    0.594</span></span></code></pre></div>
+<p>You can compute all available measures at once by omitting the
+<code>measures</code> argument:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>rules_all_measures <span class="ot">&lt;-</span> rules_uptake <span class="sc">|&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>    <span class="fu">add_interest</span>()</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="fu">colnames</span>(rules_all_measures)</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="co">#&gt;  [1] &quot;antecedent&quot;           &quot;consequent&quot;           &quot;support&quot;             </span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="co">#&gt;  [4] &quot;confidence&quot;           &quot;coverage&quot;             &quot;conseq_support&quot;      </span></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co">#&gt;  [7] &quot;lift&quot;                 &quot;count&quot;                &quot;antecedent_length&quot;   </span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="co">#&gt; [10] &quot;pp&quot;                   &quot;pn&quot;                   &quot;np&quot;                  </span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="co">#&gt; [13] &quot;nn&quot;                   &quot;cosine&quot;               &quot;conviction&quot;          </span></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt; [16] &quot;gini&quot;                 &quot;rule_power_factor&quot;    &quot;odds_ratio&quot;          </span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt; [19] &quot;relative_risk&quot;        &quot;phi&quot;                  &quot;leverage&quot;            </span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co">#&gt; [22] &quot;collective_strength&quot;  &quot;importance&quot;           &quot;imbalance&quot;           </span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="co">#&gt; [25] &quot;jaccard&quot;              &quot;kappa&quot;                &quot;lambda&quot;              </span></span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="co">#&gt; [28] &quot;mutual_information&quot;   &quot;maxconfidence&quot;        &quot;j_measure&quot;           </span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co">#&gt; [31] &quot;kulczynski&quot;           &quot;certainty&quot;            &quot;added_value&quot;         </span></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="co">#&gt; [34] &quot;ralambondrainy&quot;       &quot;sebag&quot;                &quot;counterexample&quot;      </span></span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a><span class="co">#&gt; [37] &quot;confirmed_confidence&quot; &quot;casual_support&quot;       &quot;casual_confidence&quot;   </span></span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a><span class="co">#&gt; [40] &quot;least_contradiction&quot;  &quot;centered_confidence&quot;  &quot;varying_liaison&quot;     </span></span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a><span class="co">#&gt; [43] &quot;yule_q&quot;               &quot;yule_y&quot;               &quot;lerman&quot;              </span></span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a><span class="co">#&gt; [46] &quot;implication_index&quot;    &quot;doc&quot;                  &quot;fi&quot;                  </span></span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a><span class="co">#&gt; [49] &quot;dfi&quot;                  &quot;fe&quot;                   &quot;lci&quot;                 </span></span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a><span class="co">#&gt; [52] &quot;dlci&quot;                 &quot;lce&quot;                  &quot;uci&quot;                 </span></span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a><span class="co">#&gt; [55] &quot;duci&quot;                 &quot;uce&quot;</span></span></code></pre></div>
+<p>See the documentation of <code>add_interest()</code> for a complete
+list of supported quality measures:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>?add_interest</span></code></pre></div>
+<div id="smoothing" class="section level2">
+<h2>Smoothing</h2>
+<p>Some interest measures may be undefined when contingency table counts
+are zero (e.g., division by zero). The <code>smooth_counts</code>
+argument applies Laplace smoothing to the counts before computing the
+measures:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>rules_smoothed <span class="ot">&lt;-</span> rules_uptake <span class="sc">|&gt;</span></span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>    <span class="fu">add_interest</span>(<span class="at">measures =</span> <span class="fu">c</span>(<span class="st">&quot;odds_ratio&quot;</span>, <span class="st">&quot;conviction&quot;</span>),</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>                 <span class="at">smooth_counts =</span> <span class="fl">0.5</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>rules_smoothed <span class="sc">|&gt;</span></span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>    <span class="fu">select</span>(antecedent, consequent, confidence, odds_ratio, conviction) <span class="sc">|&gt;</span></span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>    <span class="fu">head</span>(<span class="at">n =</span> <span class="dv">3</span>)</span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 5</span></span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a><span class="co">#&gt;   antecedent                                             consequent        </span></span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                                  &lt;chr&gt;             </span></span>
+<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a><span class="co">#&gt; 1 {Type=Quebec,conc=(500;Inf]}                           {uptake=(35;Inf]} </span></span>
+<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a><span class="co">#&gt; 2 {Treatment=nonchilled,Type=Mississippi,conc=(200;500]} {uptake=(20;35]}  </span></span>
+<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a><span class="co">#&gt; 3 {Treatment=chilled,Type=Mississippi}                   {uptake=(-Inf;20]}</span></span>
+<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a><span class="co">#&gt;   confidence odds_ratio conviction</span></span>
+<span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a><span class="co">#&gt;        &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;</span></span>
+<span id="cb14-15"><a href="#cb14-15" tabindex="-1"></a><span class="co">#&gt; 1      1          110.       18.1 </span></span>
+<span id="cb14-16"><a href="#cb14-16" tabindex="-1"></a><span class="co">#&gt; 2      1           51.4      13.0 </span></span>
+<span id="cb14-17"><a href="#cb14-17" tabindex="-1"></a><span class="co">#&gt; 3      0.905       35.6       5.63</span></span></code></pre></div>
+</div>
+<div id="guha-quantifiers" class="section level2">
+<h2>GUHA Quantifiers</h2>
+<p><code>add_interest()</code> also supports GUHA (General Unary
+Hypothesis Automaton) quantifiers, including statistical tests based on
+the binomial distribution:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>rules_guha <span class="ot">&lt;-</span> rules_uptake <span class="sc">|&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>    <span class="fu">add_interest</span>(<span class="at">measures =</span> <span class="fu">c</span>(<span class="st">&quot;dfi&quot;</span>, <span class="st">&quot;fe&quot;</span>, <span class="st">&quot;lci&quot;</span>),</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>                 <span class="at">p =</span> <span class="fl">0.5</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>rules_guha <span class="sc">|&gt;</span></span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>    <span class="fu">select</span>(antecedent, consequent, confidence, dfi, fe, lci) <span class="sc">|&gt;</span></span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a>    <span class="fu">head</span>(<span class="at">n =</span> <span class="dv">3</span>)</span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 6</span></span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a><span class="co">#&gt;   antecedent                                             consequent        </span></span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                                  &lt;chr&gt;             </span></span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a><span class="co">#&gt; 1 {Type=Quebec,conc=(500;Inf]}                           {uptake=(35;Inf]} </span></span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a><span class="co">#&gt; 2 {Treatment=nonchilled,Type=Mississippi,conc=(200;500]} {uptake=(20;35]}  </span></span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a><span class="co">#&gt; 3 {Treatment=chilled,Type=Mississippi}                   {uptake=(-Inf;20]}</span></span>
+<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a><span class="co">#&gt;   confidence   dfi    fe      lci</span></span>
+<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a><span class="co">#&gt;        &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a><span class="co">#&gt; 1      1     0.48  0.845 0.000244</span></span>
+<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a><span class="co">#&gt; 2      1     0.310 0.762 0.00195 </span></span>
+<span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a><span class="co">#&gt; 3      0.905 0.594 0.845 0.000111</span></span></code></pre></div>
+<p>The <code>p</code> parameter represents the null-hypothesis
+probability used in the binomial-test-based quantifiers
+(<code>lci</code>, <code>uci</code>, <code>dlci</code>,
+<code>duci</code>, <code>lce</code>, <code>uce</code>).</p>
+</div>
+</div>
+<div id="excluding-redundant-and-entailed-rules" class="section level1">
+<h1>Excluding Redundant and Entailed Rules</h1>
+<p>In real-world datasets, some rules are trivially true or nearly so —
+for example, rules that follow directly from the structure of the data
+(e.g., <code>engine_type=electric =&gt; fuel_type=electricity</code>).
+Such near-certain rules are called <strong>tautologies</strong>, and are
+also referred to as <strong>implications</strong> (because they describe
+an <code>A =&gt; C</code> relationship that almost always holds) or
+<strong>axioms</strong> (because they can be assumed and used as
+starting assumptions for pruning). In classical logic, a
+<em>tautology</em> is strictly always true; here the term is used
+loosely for rules whose confidence is very high in the data. This
+distinction is a matter of logical philosophy and does not affect how
+the functions work.</p>
+<p>The <code>excluded</code> argument of <code>dig_associations()</code>
+accepts a list of known <strong>implications (axioms)</strong>. Each
+axiom is a character vector where all elements except the last form the
+antecedent and the last element is the consequent:
+<code>c(ant1, ant2, ..., antn, cons)</code>. The axioms are used to
+prune generated rules via the <strong>modus ponens</strong> inference
+rule:</p>
+<ul>
+<li>A rule’s consequent is excluded if it can be deduced from the rule’s
+antecedent using the axioms (possibly via a chain of axiom
+applications).</li>
+<li>A rule is pruned entirely if any predicate in the antecedent can be
+deduced from the remaining antecedent predicates via the axioms (it
+would be redundant).</li>
+</ul>
+<div id="finding-near-tautologies-with-dig_tautologies" class="section level2">
+<h2>Finding Near-Tautologies with <code>dig_tautologies()</code></h2>
+<p>The <code>dig_tautologies()</code> function is specifically designed
+to find rules with very high confidence (near-tautologies / axioms). It
+searches iteratively, using rules found in earlier iterations to prune
+the search space in later iterations, so that only the most concise
+axioms are returned.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>tautologies <span class="ot">&lt;-</span> <span class="fu">dig_tautologies</span>(crisp_co2,</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>                               <span class="at">antecedent =</span> <span class="fu">everything</span>(),</span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a>                               <span class="at">consequent =</span> <span class="fu">everything</span>(),</span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>                               <span class="at">min_confidence =</span> <span class="fl">0.95</span>,</span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a>                               <span class="at">min_support =</span> <span class="fl">0.05</span>,</span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a>                               <span class="at">max_length =</span> <span class="dv">2</span>)</span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a>tautologies</span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a><span class="co">#&gt; # A tibble: 7 × 13</span></span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a><span class="co">#&gt;   antecedent                              consequent          support confidence</span></span>
+<span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                   &lt;chr&gt;                 &lt;dbl&gt;      &lt;dbl&gt;</span></span>
+<span id="cb16-11"><a href="#cb16-11" tabindex="-1"></a><span class="co">#&gt; 1 {uptake=(35;Inf]}                       {Type=Quebec}        0.286        0.96</span></span>
+<span id="cb16-12"><a href="#cb16-12" tabindex="-1"></a><span class="co">#&gt; 2 {Type=Quebec,uptake=(-Inf;20]}          {conc=(-Inf;200]}    0.0714       1   </span></span>
+<span id="cb16-13"><a href="#cb16-13" tabindex="-1"></a><span class="co">#&gt; 3 {Type=Quebec,conc=(500;Inf]}            {uptake=(35;Inf]}    0.143        1   </span></span>
+<span id="cb16-14"><a href="#cb16-14" tabindex="-1"></a><span class="co">#&gt; 4 {Treatment=nonchilled,uptake=(-Inf;20]} {conc=(-Inf;200]}    0.0952       1   </span></span>
+<span id="cb16-15"><a href="#cb16-15" tabindex="-1"></a><span class="co">#&gt; 5 {conc=(200;500],uptake=(-Inf;20]}       {Type=Mississippi}   0.107        1   </span></span>
+<span id="cb16-16"><a href="#cb16-16" tabindex="-1"></a><span class="co">#&gt; 6 {conc=(200;500],uptake=(-Inf;20]}       {Treatment=chilled}  0.107        1   </span></span>
+<span id="cb16-17"><a href="#cb16-17" tabindex="-1"></a><span class="co">#&gt; 7 {conc=(500;Inf],uptake=(20;35]}         {Type=Mississippi}   0.0833       1   </span></span>
+<span id="cb16-18"><a href="#cb16-18" tabindex="-1"></a><span class="co">#&gt;   coverage conseq_support  lift count antecedent_length    pp    pn    np    nn</span></span>
+<span id="cb16-19"><a href="#cb16-19" tabindex="-1"></a><span class="co">#&gt;      &lt;dbl&gt;          &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;             &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb16-20"><a href="#cb16-20" tabindex="-1"></a><span class="co">#&gt; 1   0.298           0.5    1.92    24                 1    24     1    18    41</span></span>
+<span id="cb16-21"><a href="#cb16-21" tabindex="-1"></a><span class="co">#&gt; 2   0.0714          0.286  3.5      6                 2     6     0    18    60</span></span>
+<span id="cb16-22"><a href="#cb16-22" tabindex="-1"></a><span class="co">#&gt; 3   0.143           0.298  3.36    12                 2    12     0    13    59</span></span>
+<span id="cb16-23"><a href="#cb16-23" tabindex="-1"></a><span class="co">#&gt; 4   0.0952          0.286  3.5      8                 2     8     0    16    60</span></span>
+<span id="cb16-24"><a href="#cb16-24" tabindex="-1"></a><span class="co">#&gt; 5   0.107           0.5    2        9                 2     9     0    33    42</span></span>
+<span id="cb16-25"><a href="#cb16-25" tabindex="-1"></a><span class="co">#&gt; 6   0.107           0.5    2        9                 2     9     0    33    42</span></span>
+<span id="cb16-26"><a href="#cb16-26" tabindex="-1"></a><span class="co">#&gt; 7   0.0833          0.5    2        7                 2     7     0    35    42</span></span></code></pre></div>
+</div>
+<div id="using-axioms-to-filter-association-rules" class="section level2">
+<h2>Using Axioms to Filter Association Rules</h2>
+<p>Once axioms (near-tautologies) are identified, convert them to the
+format expected by the <code>excluded</code> argument using
+<code>parse_condition()</code>, passing both the antecedent and the
+consequent columns, and pass them to
+<code>dig_associations()</code>:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co"># Convert tautologies to the excluded (axioms) format</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>excluded_conds <span class="ot">&lt;-</span> <span class="fu">parse_condition</span>(tautologies<span class="sc">$</span>antecedent,</span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>                                  tautologies<span class="sc">$</span>consequent)</span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="co"># Search for rules while excluding entailed patterns</span></span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a>rules_filtered <span class="ot">&lt;-</span> <span class="fu">dig_associations</span>(crisp_co2,</span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a>                                   <span class="at">antecedent =</span> <span class="sc">!</span><span class="fu">starts_with</span>(<span class="st">&quot;uptake&quot;</span>),</span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a>                                   <span class="at">consequent =</span> <span class="fu">starts_with</span>(<span class="st">&quot;uptake&quot;</span>),</span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a>                                   <span class="at">excluded =</span> excluded_conds,</span>
+<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a>                                   <span class="at">min_support =</span> <span class="fl">0.1</span>,</span>
+<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a>                                   <span class="at">min_confidence =</span> <span class="fl">0.8</span>)</span>
+<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a>rules_filtered</span>
+<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 13</span></span>
+<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="co">#&gt;   antecedent                                             consequent        </span></span>
+<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                                  &lt;chr&gt;             </span></span>
+<span id="cb17-16"><a href="#cb17-16" tabindex="-1"></a><span class="co">#&gt; 1 {Treatment=nonchilled,Type=Mississippi,conc=(200;500]} {uptake=(20;35]}  </span></span>
+<span id="cb17-17"><a href="#cb17-17" tabindex="-1"></a><span class="co">#&gt; 2 {Treatment=chilled,Type=Mississippi}                   {uptake=(-Inf;20]}</span></span>
+<span id="cb17-18"><a href="#cb17-18" tabindex="-1"></a><span class="co">#&gt; 3 {Treatment=chilled,Type=Mississippi,conc=(200;500]}    {uptake=(-Inf;20]}</span></span>
+<span id="cb17-19"><a href="#cb17-19" tabindex="-1"></a><span class="co">#&gt; 4 {Type=Mississippi,conc=(-Inf;200]}                     {uptake=(-Inf;20]}</span></span>
+<span id="cb17-20"><a href="#cb17-20" tabindex="-1"></a><span class="co">#&gt;   support confidence coverage conseq_support  lift count antecedent_length    pp</span></span>
+<span id="cb17-21"><a href="#cb17-21" tabindex="-1"></a><span class="co">#&gt;     &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;          &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;             &lt;int&gt; &lt;dbl&gt;</span></span>
+<span id="cb17-22"><a href="#cb17-22" tabindex="-1"></a><span class="co">#&gt; 1   0.107      1        0.107          0.345  2.90     9                 3     9</span></span>
+<span id="cb17-23"><a href="#cb17-23" tabindex="-1"></a><span class="co">#&gt; 2   0.226      0.905    0.25           0.357  2.53    19                 2    19</span></span>
+<span id="cb17-24"><a href="#cb17-24" tabindex="-1"></a><span class="co">#&gt; 3   0.107      1        0.107          0.357  2.8      9                 3     9</span></span>
+<span id="cb17-25"><a href="#cb17-25" tabindex="-1"></a><span class="co">#&gt; 4   0.131      0.917    0.143          0.357  2.57    11                 2    11</span></span>
+<span id="cb17-26"><a href="#cb17-26" tabindex="-1"></a><span class="co">#&gt;      pn    np    nn</span></span>
+<span id="cb17-27"><a href="#cb17-27" tabindex="-1"></a><span class="co">#&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb17-28"><a href="#cb17-28" tabindex="-1"></a><span class="co">#&gt; 1     0    20    55</span></span>
+<span id="cb17-29"><a href="#cb17-29" tabindex="-1"></a><span class="co">#&gt; 2     2    11    52</span></span>
+<span id="cb17-30"><a href="#cb17-30" tabindex="-1"></a><span class="co">#&gt; 3     0    21    54</span></span>
+<span id="cb17-31"><a href="#cb17-31" tabindex="-1"></a><span class="co">#&gt; 4     1    19    53</span></span></code></pre></div>
+<p>By providing known axioms, the search skips rules whose consequent
+can be deduced from their antecedent, and also prunes rules that contain
+redundant antecedent predicates (deducible from the remaining antecedent
+predicates). This focuses the results on genuinely interesting patterns
+and can run significantly faster on large datasets.</p>
+</div>
+<div id="manually-specifying-axioms" class="section level2">
+<h2>Manually Specifying Axioms</h2>
+<p>You can also construct the <code>excluded</code> list manually. Each
+element is a character vector representing an implication (axiom): all
+elements except the last form the antecedent and the last element is the
+consequent:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="co"># Axiom: &quot;Treatment=chilled =&gt; Type=Mississippi&quot;</span></span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a><span class="co"># Any rule whose consequent is &quot;Type=Mississippi&quot; and whose antecedent contains</span></span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a><span class="co"># &quot;Treatment=chilled&quot; will be excluded, because the consequent is deducible</span></span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a><span class="co"># from the antecedent via this axiom.</span></span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a>manual_excluded <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="st">&quot;Treatment=chilled&quot;</span>, <span class="st">&quot;Type=Mississippi&quot;</span>))</span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a>rules_manual <span class="ot">&lt;-</span> <span class="fu">dig_associations</span>(crisp_co2,</span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a>                                 <span class="at">antecedent =</span> <span class="sc">!</span><span class="fu">starts_with</span>(<span class="st">&quot;uptake&quot;</span>),</span>
+<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a>                                 <span class="at">consequent =</span> <span class="fu">starts_with</span>(<span class="st">&quot;uptake&quot;</span>),</span>
+<span id="cb18-10"><a href="#cb18-10" tabindex="-1"></a>                                 <span class="at">excluded =</span> manual_excluded,</span>
+<span id="cb18-11"><a href="#cb18-11" tabindex="-1"></a>                                 <span class="at">min_support =</span> <span class="fl">0.1</span>,</span>
+<span id="cb18-12"><a href="#cb18-12" tabindex="-1"></a>                                 <span class="at">min_confidence =</span> <span class="fl">0.8</span>)</span>
+<span id="cb18-13"><a href="#cb18-13" tabindex="-1"></a>rules_manual</span>
+<span id="cb18-14"><a href="#cb18-14" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 13</span></span>
+<span id="cb18-15"><a href="#cb18-15" tabindex="-1"></a><span class="co">#&gt;   antecedent                                             consequent        </span></span>
+<span id="cb18-16"><a href="#cb18-16" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                                  &lt;chr&gt;             </span></span>
+<span id="cb18-17"><a href="#cb18-17" tabindex="-1"></a><span class="co">#&gt; 1 {Type=Quebec,conc=(500;Inf]}                           {uptake=(35;Inf]} </span></span>
+<span id="cb18-18"><a href="#cb18-18" tabindex="-1"></a><span class="co">#&gt; 2 {Treatment=nonchilled,Type=Mississippi,conc=(200;500]} {uptake=(20;35]}  </span></span>
+<span id="cb18-19"><a href="#cb18-19" tabindex="-1"></a><span class="co">#&gt; 3 {Type=Mississippi,conc=(-Inf;200]}                     {uptake=(-Inf;20]}</span></span>
+<span id="cb18-20"><a href="#cb18-20" tabindex="-1"></a><span class="co">#&gt;   support confidence coverage conseq_support  lift count antecedent_length    pp</span></span>
+<span id="cb18-21"><a href="#cb18-21" tabindex="-1"></a><span class="co">#&gt;     &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;          &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;             &lt;int&gt; &lt;dbl&gt;</span></span>
+<span id="cb18-22"><a href="#cb18-22" tabindex="-1"></a><span class="co">#&gt; 1   0.143      1        0.143          0.298  3.36    12                 2    12</span></span>
+<span id="cb18-23"><a href="#cb18-23" tabindex="-1"></a><span class="co">#&gt; 2   0.107      1        0.107          0.345  2.90     9                 3     9</span></span>
+<span id="cb18-24"><a href="#cb18-24" tabindex="-1"></a><span class="co">#&gt; 3   0.131      0.917    0.143          0.357  2.57    11                 2    11</span></span>
+<span id="cb18-25"><a href="#cb18-25" tabindex="-1"></a><span class="co">#&gt;      pn    np    nn</span></span>
+<span id="cb18-26"><a href="#cb18-26" tabindex="-1"></a><span class="co">#&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb18-27"><a href="#cb18-27" tabindex="-1"></a><span class="co">#&gt; 1     0    13    59</span></span>
+<span id="cb18-28"><a href="#cb18-28" tabindex="-1"></a><span class="co">#&gt; 2     0    20    55</span></span>
+<span id="cb18-29"><a href="#cb18-29" tabindex="-1"></a><span class="co">#&gt; 3     1    19    53</span></span></code></pre></div>
+<p>This is useful when you have domain knowledge about which
+implications are trivially true or undesirable, without needing to run
+<code>dig_tautologies()</code> first.</p>
+</div>
+</div>
+<div id="summary" class="section level1">
+<h1>Summary</h1>
+<p>This vignette demonstrated how to search for association rules using
+the <code>nuggets</code> package:</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>Data preparation</strong> with <code>partition()</code>
+transforms raw data into crisp or fuzzy predicates suitable for rule
+mining (see <code>vignette(&quot;data-preparation&quot;)</code> for
+details).</p></li>
+<li><p><strong>Basic search</strong> with
+<code>dig_associations()</code> finds rules meeting minimum support and
+confidence thresholds.</p></li>
+<li><p><strong>Controlling the search space</strong>: use
+<code>antecedent</code>/<code>consequent</code> to constrain which
+predicates appear on each side, <code>disjoint</code> to prevent
+contradictory combinations via <code>var_names()</code>, and
+<code>min_length</code>/<code>max_length</code> to control rule
+complexity.</p></li>
+<li><p><strong>Fuzzy rules</strong> extend the approach to graded
+membership using t-norms (<code>&quot;goguen&quot;</code>, <code>&quot;goedel&quot;</code>,
+<code>&quot;lukas&quot;</code>).</p></li>
+<li><p><strong>Interest measures</strong> can be added with
+<code>add_interest()</code> to evaluate rules from multiple perspectives
+(conviction, leverage, Jaccard, GUHA quantifiers, and many
+more).</p></li>
+<li><p><strong>Excluding entailed rules</strong> with the
+<code>excluded</code> argument and <code>dig_tautologies()</code>
+removes rules whose consequent is deducible from the antecedent via
+known axioms (near-tautologies / implications), and also prunes rules
+with redundant antecedent predicates (deducible from the remaining
+predicates). This speeds up the search and focuses results on genuinely
+interesting patterns.</p></li>
+</ol>
+<p>For further details, consult the function documentation:
+<code>dig_associations()</code>, <code>add_interest()</code>,
+<code>dig_tautologies()</code>, <code>parse_condition()</code>,
+<code>partition()</code>, <code>var_names()</code>.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
