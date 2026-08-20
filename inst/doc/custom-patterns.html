@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Custom Pattern Search with dig()</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Custom Pattern Search with dig()</h1>
+
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p><code>dig()</code> is the general function behind custom pattern
+search in the <code>nuggets</code> package. It searches for patterns of
+a custom type by generating conditions as elementary conjunctions of
+predicates and by executing a user-defined callback function on each
+generated condition.</p>
+<p>This makes <code>dig()</code> the low-level building block behind
+more specialized functions such as <code>dig_associations()</code> and
+<code>dig_correlations()</code>. Use it when you want to keep the search
+over conditions, but define your own evaluation logic.</p>
+<p>This vignette focuses on how to use the <code>dig()</code> function:
+how to write the callback function and how to control the search. For
+preparation of crisp and fuzzy predicates, see
+<code>vignette(&quot;data-preparation&quot;)</code>.</p>
+<p>Examples in this vignette require loading the following packages:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(nuggets)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(dplyr)     <span class="co"># for data manipulation</span></span></code></pre></div>
+</div>
+<div id="a-small-working-dataset" class="section level1">
+<h1>A Small Working Dataset</h1>
+<p><code>dig()</code> expects a matrix or data frame whose columns are
+logical predicates or numeric fuzzy predicates. We will use
+<code>iris</code> and prepare a small crisp predicate dataset that is
+rich enough for the first examples below:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>crisp_iris <span class="ot">&lt;-</span> iris <span class="sc">|&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>    <span class="fu">partition</span>(Species) <span class="sc">|&gt;</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>    <span class="fu">partition</span>(Sepal.Length<span class="sc">:</span>Petal.Width, <span class="at">.method =</span> <span class="st">&quot;crisp&quot;</span>, <span class="at">.breaks =</span> <span class="dv">3</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="fu">head</span>(crisp_iris, <span class="at">n =</span> <span class="dv">3</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 15</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt;   `Species=setosa` `Species=versicolor` `Species=virginica`</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt;   &lt;lgl&gt;            &lt;lgl&gt;                &lt;lgl&gt;              </span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt; 1 TRUE             FALSE                FALSE              </span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt; 2 TRUE             FALSE                FALSE              </span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt; 3 TRUE             FALSE                FALSE              </span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt;   `Sepal.Length=(-Inf;5.5]` `Sepal.Length=(5.5;6.7]` `Sepal.Length=(6.7;Inf]`</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt;   &lt;lgl&gt;                     &lt;lgl&gt;                    &lt;lgl&gt;                   </span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt; 1 TRUE                      FALSE                    FALSE                   </span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#&gt; 2 TRUE                      FALSE                    FALSE                   </span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt; 3 TRUE                      FALSE                    FALSE                   </span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt;   `Sepal.Width=(-Inf;2.8]` `Sepal.Width=(2.8;3.6]` `Sepal.Width=(3.6;Inf]`</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co">#&gt;   &lt;lgl&gt;                    &lt;lgl&gt;                   &lt;lgl&gt;                  </span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="co">#&gt; 1 FALSE                    TRUE                    FALSE                  </span></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="co">#&gt; 2 FALSE                    TRUE                    FALSE                  </span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="co">#&gt; 3 FALSE                    TRUE                    FALSE                  </span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="co">#&gt;   `Petal.Length=(-Inf;2.97]` `Petal.Length=(2.97;4.93]`</span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="co">#&gt;   &lt;lgl&gt;                      &lt;lgl&gt;                     </span></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a><span class="co">#&gt; 1 TRUE                       FALSE                     </span></span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a><span class="co">#&gt; 2 TRUE                       FALSE                     </span></span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a><span class="co">#&gt; 3 TRUE                       FALSE                     </span></span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a><span class="co">#&gt;   `Petal.Length=(4.93;Inf]` `Petal.Width=(-Inf;0.9]` `Petal.Width=(0.9;1.7]`</span></span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a><span class="co">#&gt;   &lt;lgl&gt;                     &lt;lgl&gt;                    &lt;lgl&gt;                  </span></span>
+<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a><span class="co">#&gt; 1 FALSE                     TRUE                     FALSE                  </span></span>
+<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a><span class="co">#&gt; 2 FALSE                     TRUE                     FALSE                  </span></span>
+<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a><span class="co">#&gt; 3 FALSE                     TRUE                     FALSE                  </span></span>
+<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a><span class="co">#&gt;   `Petal.Width=(1.7;Inf]`</span></span>
+<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a><span class="co">#&gt;   &lt;lgl&gt;                  </span></span>
+<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a><span class="co">#&gt; 1 FALSE                  </span></span>
+<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a><span class="co">#&gt; 2 FALSE                  </span></span>
+<span id="cb2-36"><a href="#cb2-36" tabindex="-1"></a><span class="co">#&gt; 3 FALSE</span></span></code></pre></div>
+<p>The commands above create crisp predicates for the four numeric
+columns of <code>iris</code>, plus the three species predicates. The
+preparation step is intentionally brief here; the dedicated
+<code>vignette(&quot;data-preparation&quot;)</code> explains
+<code>partition()</code>, fuzzy predicates, and breakpoints in
+detail.</p>
+</div>
+<div id="a-simple-dig-call" class="section level1">
+<h1>A Simple <code>dig()</code> Call</h1>
+<p>The <code>dig()</code> function generates conditions from the
+selected predicates in a recursive manner. It starts with the empty
+condition and adds one predicate at a time, up to the specified
+<code>max_length</code>. Meanwhile, it evaluates the generated condition
+and tests whether it meets the minimum support requirement. By support
+we mean the relative frequency of rows satisfying the condition. If the
+condition is frequent enough, <code>dig()</code> calls the user-defined
+callback function with the generated condition and other information.
+The callback can then compute any output you want. The
+<code>dig()</code> function collects those outputs and returns them as a
+list.</p>
+<p>The simplest callback function can handle just the generated
+condition. In the following example, the callback generates some debug
+output and returns the formatted condition:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>simple_callback <span class="ot">&lt;-</span> <span class="cf">function</span>(condition) {</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>    <span class="fu">str</span>(condition)</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">&quot;------</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>    </span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>    <span class="fu">list</span>(<span class="at">condition =</span> <span class="fu">format_condition</span>(<span class="fu">names</span>(condition)))</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>}</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>simple_result <span class="ot">&lt;-</span> <span class="fu">dig</span>(<span class="at">x =</span> crisp_iris,</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>                     <span class="at">f =</span> simple_callback,</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>                     <span class="at">condition =</span> <span class="fu">starts_with</span>(<span class="st">&quot;Sepal&quot;</span>),</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>                     <span class="at">min_length =</span> <span class="dv">0</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>                     <span class="at">max_length =</span> <span class="dv">2</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>                     <span class="at">min_support =</span> <span class="fl">0.2</span>)</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt;  int(0) </span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; ------</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt;  Named int 8</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;names&quot;)= chr &quot;Sepal.Width=(2.8;3.6]&quot;</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; ------</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt;  Named int [1:2] 8 5</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;names&quot;)= chr [1:2] &quot;Sepal.Width=(2.8;3.6]&quot; &quot;Sepal.Length=(5.5;6.7]&quot;</span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt; ------</span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt;  Named int [1:2] 8 4</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;names&quot;)= chr [1:2] &quot;Sepal.Width=(2.8;3.6]&quot; &quot;Sepal.Length=(-Inf;5.5]&quot;</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt; ------</span></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt;  Named int 5</span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;names&quot;)= chr &quot;Sepal.Length=(5.5;6.7]&quot;</span></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt; ------</span></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt;  Named int [1:2] 5 7</span></span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;names&quot;)= chr [1:2] &quot;Sepal.Length=(5.5;6.7]&quot; &quot;Sepal.Width=(-Inf;2.8]&quot;</span></span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt; ------</span></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt;  Named int 4</span></span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;names&quot;)= chr &quot;Sepal.Length=(-Inf;5.5]&quot;</span></span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt; ------</span></span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt;  Named int 7</span></span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;names&quot;)= chr &quot;Sepal.Width=(-Inf;2.8]&quot;</span></span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt; ------</span></span></code></pre></div>
+<p>As you can see from the debug output issued by the <code>str()</code>
+call within the callback, <code>dig()</code> enumerates all conditions
+that can be formed from the selected predicates (in this case, all
+predicates starting with “Sepal”) and that meet the minimum support
+requirement. The callback receives each condition in the form of a named
+integer vector, where the names are the predicate names and the values
+are the column indices in the original data frame. The callback then
+returns a named list with the formatted condition. All callback results
+are collected into a list and returned by <code>dig()</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">str</span>(simple_result)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co">#&gt; List of 8</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt;  $ :List of 1</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt;   ..$ condition: chr &quot;{}&quot;</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt;  $ :List of 1</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt;   ..$ condition: chr &quot;{Sepal.Width=(2.8;3.6]}&quot;</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt;  $ :List of 1</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt;   ..$ condition: chr &quot;{Sepal.Length=(5.5;6.7],Sepal.Width=(2.8;3.6]}&quot;</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt;  $ :List of 1</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt;   ..$ condition: chr &quot;{Sepal.Length=(-Inf;5.5],Sepal.Width=(2.8;3.6]}&quot;</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt;  $ :List of 1</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt;   ..$ condition: chr &quot;{Sepal.Length=(5.5;6.7]}&quot;</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt;  $ :List of 1</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt;   ..$ condition: chr &quot;{Sepal.Length=(5.5;6.7],Sepal.Width=(-Inf;2.8]}&quot;</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt;  $ :List of 1</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt;   ..$ condition: chr &quot;{Sepal.Length=(-Inf;5.5]}&quot;</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt;  $ :List of 1</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt;   ..$ condition: chr &quot;{Sepal.Width=(-Inf;2.8]}&quot;</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;search_stats&quot;)=List of 4</span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt;   ..$ runtime_millis       : num 5.76</span></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="co">#&gt;   ..$ computed_conjunctions: num 4</span></span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a><span class="co">#&gt;   ..$ cached_conjunctions  : num 0</span></span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a><span class="co">#&gt;   ..$ total_conjunctions   : num 4</span></span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;class&quot;)= chr [1:2] &quot;nugget&quot; &quot;list&quot;</span></span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;call_function&quot;)= chr &quot;dig&quot;</span></span>
+<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;call_data&quot;)=List of 3</span></span>
+<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a><span class="co">#&gt;   ..$ nrow    : int 150</span></span>
+<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a><span class="co">#&gt;   ..$ ncol    : int 15</span></span>
+<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a><span class="co">#&gt;   ..$ colnames: chr [1:15] &quot;Species=setosa&quot; &quot;Species=versicolor&quot; &quot;Species=virginica&quot; &quot;Sepal.Length=(-Inf;5.5]&quot; ...</span></span>
+<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a><span class="co">#&gt;  - attr(*, &quot;call_args&quot;)=List of 16</span></span>
+<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a><span class="co">#&gt;   ..$ x                            : chr &quot;crisp_iris&quot;</span></span>
+<span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a><span class="co">#&gt;   ..$ condition                    : chr [1:6] &quot;Sepal.Length=(-Inf;5.5]&quot; &quot;Sepal.Length=(5.5;6.7]&quot; &quot;Sepal.Length=(6.7;Inf]&quot; &quot;Sepal.Width=(-Inf;2.8]&quot; ...</span></span>
+<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a><span class="co">#&gt;   ..$ focus                        : chr(0) </span></span>
+<span id="cb4-34"><a href="#cb4-34" tabindex="-1"></a><span class="co">#&gt;   ..$ disjoint                     : chr [1:15] &quot;Species&quot; &quot;Species&quot; &quot;Species&quot; &quot;Sepal.Length&quot; ...</span></span>
+<span id="cb4-35"><a href="#cb4-35" tabindex="-1"></a><span class="co">#&gt;   ..$ excluded                     : NULL</span></span>
+<span id="cb4-36"><a href="#cb4-36" tabindex="-1"></a><span class="co">#&gt;   ..$ min_length                   : int 0</span></span>
+<span id="cb4-37"><a href="#cb4-37" tabindex="-1"></a><span class="co">#&gt;   ..$ max_length                   : int 2</span></span>
+<span id="cb4-38"><a href="#cb4-38" tabindex="-1"></a><span class="co">#&gt;   ..$ min_support                  : num 0.2</span></span>
+<span id="cb4-39"><a href="#cb4-39" tabindex="-1"></a><span class="co">#&gt;   ..$ min_focus_support            : num 0</span></span>
+<span id="cb4-40"><a href="#cb4-40" tabindex="-1"></a><span class="co">#&gt;   ..$ min_conditional_focus_support: num 0</span></span>
+<span id="cb4-41"><a href="#cb4-41" tabindex="-1"></a><span class="co">#&gt;   ..$ max_support                  : num 1</span></span>
+<span id="cb4-42"><a href="#cb4-42" tabindex="-1"></a><span class="co">#&gt;   ..$ filter_empty_foci            : logi FALSE</span></span>
+<span id="cb4-43"><a href="#cb4-43" tabindex="-1"></a><span class="co">#&gt;   ..$ t_norm                       : chr &quot;goguen&quot;</span></span>
+<span id="cb4-44"><a href="#cb4-44" tabindex="-1"></a><span class="co">#&gt;   ..$ max_results                  : int -1</span></span>
+<span id="cb4-45"><a href="#cb4-45" tabindex="-1"></a><span class="co">#&gt;   ..$ verbose                      : logi FALSE</span></span>
+<span id="cb4-46"><a href="#cb4-46" tabindex="-1"></a><span class="co">#&gt;   ..$ threads                      : int 1</span></span></code></pre></div>
+<p>As you can see, the result is a list of named lists, one for each
+condition that was generated and passed to the callback. You can flatten
+the result into a tibble with <code>dplyr</code>’s
+<code>bind_rows()</code>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">bind_rows</span>(simple_result)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt; # A tibble: 8 × 1</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt;   condition                                      </span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                          </span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; 1 {}                                             </span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; 2 {Sepal.Width=(2.8;3.6]}                        </span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; 3 {Sepal.Length=(5.5;6.7],Sepal.Width=(2.8;3.6]} </span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; 4 {Sepal.Length=(-Inf;5.5],Sepal.Width=(2.8;3.6]}</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; 5 {Sepal.Length=(5.5;6.7]}                       </span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; 6 {Sepal.Length=(5.5;6.7],Sepal.Width=(-Inf;2.8]}</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; 7 {Sepal.Length=(-Inf;5.5]}                      </span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt; 8 {Sepal.Width=(-Inf;2.8]}</span></span></code></pre></div>
+<p>Note also the attributes of the result list. They contain information
+about the search, such as the search statistics and the arguments that
+were passed to <code>dig()</code>. You can use this information for
+debugging or for reproducing the search later. For example, you can
+obtain the vector of predicate names that were used to generate
+conditions with:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">attributes</span>(simple_result)<span class="sc">$</span>call_args<span class="sc">$</span>condition</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt; [1] &quot;Sepal.Length=(-Inf;5.5]&quot; &quot;Sepal.Length=(5.5;6.7]&quot; </span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt; [3] &quot;Sepal.Length=(6.7;Inf]&quot;  &quot;Sepal.Width=(-Inf;2.8]&quot; </span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt; [5] &quot;Sepal.Width=(2.8;3.6]&quot;   &quot;Sepal.Width=(3.6;Inf]&quot;</span></span></code></pre></div>
+<p>This simple example illustrates the basic workflow:</p>
+<ol style="list-style-type: decimal">
+<li>choose which predicates may form conditions;</li>
+<li>set the search parameters (length, support, etc.);</li>
+<li>define a callback function that computes the desired output for each
+condition;</li>
+<li>let <code>dig()</code> enumerate conditions and collect callback
+results.</li>
+</ol>
+</div>
+<div id="condition-and-focus" class="section level1">
+<h1>Condition and Focus</h1>
+<p>The simple example above only used the predicates for generating
+conditions. In many cases, you will also want to evaluate other
+predicates within each generated condition. For example, you may want to
+know how often each species occurs within a condition. That’s where the
+<em>foci</em> (plural of <em>focus</em>) come into play.</p>
+<p>Condition and focus predicates are selected separately with the
+<code>condition</code> and <code>focus</code> arguments of
+<code>dig()</code>. These arguments accept <a href="https://tidyselect.r-lib.org/reference/language.html">tidyselect
+expressions</a> for selecting columns of the input data frame
+<code>x</code>.</p>
+<div id="using-foci" class="section level2">
+<h2>Using Foci</h2>
+<p>Foci are predicates that are not used to generate conditions, but are
+evaluated within each generated condition. You can select foci with the
+<code>focus</code> argument of <code>dig()</code>. The callback function
+can then receive information about how often each focus occurs within
+the generated condition. This is useful, e.g., for finding conditions
+that are strongly associated with certain foci.</p>
+<p>For instance, let us define a callback that provides the number of
+occurences of each species within each generated condition:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>focus_callback <span class="ot">&lt;-</span> <span class="cf">function</span>(condition, sum, pp) { </span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>    <span class="fu">str</span>(<span class="fu">list</span>(<span class="at">condition =</span> condition,</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>             <span class="at">sum =</span> sum,</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>             <span class="at">species =</span> pp))</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">&quot;------</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>    <span class="cn">NULL</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>}</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>focus_result <span class="ot">&lt;-</span> <span class="fu">dig</span>(<span class="at">x =</span> crisp_iris,</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>                    <span class="at">f =</span> focus_callback,</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>                    <span class="at">condition =</span> <span class="fu">starts_with</span>(<span class="st">&quot;Sepal&quot;</span>),</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>                    <span class="at">focus =</span> <span class="fu">starts_with</span>(<span class="st">&quot;Species&quot;</span>),</span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>                    <span class="at">min_length =</span> <span class="dv">2</span>,</span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>                    <span class="at">max_length =</span> <span class="dv">2</span>,</span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>                    <span class="at">max_results =</span> <span class="dv">1</span>)</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt; List of 3</span></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt;  $ condition: Named int [1:2] 8 5</span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt;   ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;Sepal.Width=(2.8;3.6]&quot; &quot;Sepal.Length=(5.5;6.7]&quot;</span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt;  $ sum      : num 37</span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt;  $ species  : Named num [1:3] 0 20 17</span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt;   ..- attr(*, &quot;names&quot;)= chr [1:3] &quot;Species=setosa&quot; &quot;Species=versicolor&quot; &quot;Species=virginica&quot;</span></span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt; ------</span></span></code></pre></div>
+<p>We have defined a callback that, besides <code>condition</code>, also
+receives <code>sum</code> and <code>pp</code>. The <code>sum</code>
+argument provides the number of rows satisfying the generated condition,
+and the <code>pp</code> argument contains the number of rows that
+satisfy both the generated condition and each focus predicate. In this
+case, the focus predicates are the species predicates, so
+<code>pp</code> tells us how many rows of each species satisfy the
+generated condition.</p>
+<p>Also note that we are using a neat trick that is useful during
+development of the callback: we set <code>max_results = 1</code> to stop
+the search after the first condition that meets the criteria. This
+allows us to see the output of the callback without waiting for the
+entire search to complete, which can be time-consuming for large
+datasets or complex conditions.</p>
+<p>So far, our callback only prints the information to the console and
+returns <code>NULL</code>. Once we understand the structure of the data
+we receive, we can modify the callback to return a list of patterns,
+where each pattern contains the formatted condition, a single species,
+the count of data rows satisfying the condition, and the count of the
+species within that condition:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>focus_callback <span class="ot">&lt;-</span> <span class="cf">function</span>(condition, sum, pp) { </span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>    species_names <span class="ot">&lt;-</span> <span class="fu">names</span>(pp)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>    species_counts <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(pp)</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>    <span class="fu">lapply</span>(<span class="fu">seq_along</span>(species_names), <span class="cf">function</span>(i) {</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>        <span class="fu">list</span>(<span class="at">condition =</span> <span class="fu">format_condition</span>(<span class="fu">names</span>(condition)),</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>             <span class="at">species =</span> species_names[i],</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>             <span class="at">condition_count =</span> sum,</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>             <span class="at">species_count =</span> species_counts[i])</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>    })</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>}</span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>    </span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>focus_result <span class="ot">&lt;-</span> <span class="fu">dig</span>(<span class="at">x =</span> crisp_iris,</span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>                    <span class="at">f =</span> focus_callback,</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>                    <span class="at">condition =</span> <span class="fu">starts_with</span>(<span class="st">&quot;Sepal&quot;</span>),</span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>                    <span class="at">focus =</span> <span class="fu">starts_with</span>(<span class="st">&quot;Species&quot;</span>),</span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>                    <span class="at">min_length =</span> <span class="dv">0</span>,</span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>                    <span class="at">max_length =</span> <span class="dv">2</span>) </span></code></pre></div>
+<p>The result of <code>dig()</code> is a list of lists, where each inner
+list corresponds to a species within a generated condition. We use
+<code>unlist(recursive = FALSE)</code> to flatten the list of lists into
+a single list of patterns, and then <code>bind_rows()</code> to convert
+it into a tibble for easier viewing:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>focus_result <span class="sc">|&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>    <span class="fu">unlist</span>(<span class="at">recursive =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>    <span class="fu">bind_rows</span>() <span class="sc">|&gt;</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>    <span class="fu">head</span>(<span class="at">n =</span> <span class="dv">6</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 4</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt;   condition               species            condition_count species_count</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                   &lt;chr&gt;                        &lt;dbl&gt;         &lt;int&gt;</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co">#&gt; 1 {}                      Species=setosa                 150            50</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co">#&gt; 2 {}                      Species=versicolor             150            50</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co">#&gt; 3 {}                      Species=virginica              150            50</span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co">#&gt; 4 {Sepal.Width=(2.8;3.6]} Species=setosa                  88            36</span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co">#&gt; 5 {Sepal.Width=(2.8;3.6]} Species=versicolor              88            23</span></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="co">#&gt; 6 {Sepal.Width=(2.8;3.6]} Species=virginica               88            29</span></span></code></pre></div>
+</div>
+<div id="filtering-foci" class="section level2">
+<h2>Filtering Foci</h2>
+<p>As discussed in the previous section, <code>dig()</code> evaluates
+the focus predicates within each generated condition. You may or may not
+want to keep all foci for each condition. Some patterns may require all
+foci to be evaluated every time, while others may only require a subset
+of foci to be considered that are sufficiently frequent within the
+condition. Therefore, <code>dig()</code> provides several arguments to
+filter foci based on their support:</p>
+<ul>
+<li><code>min_focus_support</code>: minimum support of a focus within a
+condition. I.e., the relative frequency of rows satisfying both the
+condition and the focus must be at least this value for the focus to be
+kept. Foci with support below this threshold are filtered out.</li>
+<li><code>min_conditional_focus_support</code>: minimum conditional
+support of a focus within a condition. I.e., the relative frequency of
+rows satisfying both the condition and the focus, divided by the number
+of rows satisfying the condition, must be at least this value for the
+focus to be kept. Foci with conditional support below this threshold are
+filtered out.</li>
+</ul>
+<p>The focus filtering may result in some conditions having no remaining
+foci. If you want to skip the callback for such conditions, set
+<code>filter_empty_foci = TRUE</code>. Otherwise, the callback will be
+called with empty focus information. Filtering empty foci also improves
+performance, because it also stops early the evaluation of longer
+conditions that would not have any remaining foci anyway.</p>
+<p>The following example shows how this can be used to emulate
+association-rule search with a custom callback. Association rules are
+implications of the form “if condition then focus”. Condition is named
+the <em>antecedent</em> and focus is named the <em>consequent</em>. The
+callback computes the confidence of each antecedent-consequent pair,
+filters the pairs based on minimum support and confidence, and returns a
+list of rules:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>min_support <span class="ot">&lt;-</span> <span class="fl">0.1</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>min_confidence <span class="ot">&lt;-</span> <span class="fl">0.8</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>rule_callback <span class="ot">&lt;-</span> <span class="cf">function</span>(condition, pp, support) {</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>    conf <span class="ot">&lt;-</span> pp <span class="sc">/</span> support <span class="sc">/</span> <span class="fu">nrow</span>(crisp_iris)</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>    sel <span class="ot">&lt;-</span> <span class="sc">!</span><span class="fu">is.na</span>(conf) <span class="sc">&amp;</span> conf <span class="sc">&gt;=</span> min_confidence <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(pp) <span class="sc">&amp;</span> pp <span class="sc">&gt;=</span> min_support</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>    conf <span class="ot">&lt;-</span> conf[sel]</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>    supp <span class="ot">&lt;-</span> pp[sel] <span class="sc">/</span> <span class="fu">nrow</span>(crisp_iris)</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>    <span class="fu">lapply</span>(<span class="fu">seq_along</span>(conf), <span class="cf">function</span>(i) {</span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>        <span class="fu">list</span>(<span class="at">antecedent =</span> <span class="fu">format_condition</span>(<span class="fu">names</span>(condition)),</span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>             <span class="at">consequent =</span> <span class="fu">names</span>(conf)[[i]],</span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>             <span class="at">antecedent_support =</span> support,</span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>             <span class="at">rule_support =</span> supp[[i]],</span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>             <span class="at">confidence =</span> conf[[i]]</span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a>        )</span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a>    })</span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a>}</span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a></span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>rule_result <span class="ot">&lt;-</span> <span class="fu">dig</span>(<span class="at">x =</span> crisp_iris,</span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a>                   <span class="at">f =</span> rule_callback,</span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a>                   <span class="at">condition =</span> <span class="sc">!</span><span class="fu">starts_with</span>(<span class="st">&quot;Species&quot;</span>),</span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a>                   <span class="at">focus =</span> <span class="fu">starts_with</span>(<span class="st">&quot;Species&quot;</span>),</span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a>                   <span class="at">min_length =</span> <span class="dv">1</span>,</span>
+<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a>                   <span class="at">min_support =</span> min_support,</span>
+<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a>                   <span class="at">min_focus_support =</span> min_support,</span>
+<span id="cb10-27"><a href="#cb10-27" tabindex="-1"></a>                   <span class="at">min_conditional_focus_support =</span> min_confidence,</span>
+<span id="cb10-28"><a href="#cb10-28" tabindex="-1"></a>                   <span class="at">filter_empty_foci =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb10-29"><a href="#cb10-29" tabindex="-1"></a>    <span class="fu">unlist</span>(<span class="at">recursive =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb10-30"><a href="#cb10-30" tabindex="-1"></a>    <span class="fu">bind_rows</span>() <span class="sc">|&gt;</span></span>
+<span id="cb10-31"><a href="#cb10-31" tabindex="-1"></a>    <span class="fu">arrange</span>(<span class="fu">desc</span>(confidence))</span>
+<span id="cb10-32"><a href="#cb10-32" tabindex="-1"></a></span>
+<span id="cb10-33"><a href="#cb10-33" tabindex="-1"></a><span class="fu">head</span>(rule_result, <span class="at">n =</span> <span class="dv">6</span>)</span>
+<span id="cb10-34"><a href="#cb10-34" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 5</span></span>
+<span id="cb10-35"><a href="#cb10-35" tabindex="-1"></a><span class="co">#&gt;   antecedent                                                                    </span></span>
+<span id="cb10-36"><a href="#cb10-36" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                                                         </span></span>
+<span id="cb10-37"><a href="#cb10-37" tabindex="-1"></a><span class="co">#&gt; 1 {Petal.Length=(2.97;4.93],Petal.Width=(0.9;1.7],Sepal.Length=(5.5;6.7],Sepal.…</span></span>
+<span id="cb10-38"><a href="#cb10-38" tabindex="-1"></a><span class="co">#&gt; 2 {Petal.Width=(0.9;1.7],Sepal.Length=(5.5;6.7],Sepal.Width=(2.8;3.6]}          </span></span>
+<span id="cb10-39"><a href="#cb10-39" tabindex="-1"></a><span class="co">#&gt; 3 {Petal.Length=(4.93;Inf],Petal.Width=(1.7;Inf],Sepal.Length=(5.5;6.7],Sepal.W…</span></span>
+<span id="cb10-40"><a href="#cb10-40" tabindex="-1"></a><span class="co">#&gt; 4 {Petal.Length=(-Inf;2.97],Sepal.Length=(-Inf;5.5],Sepal.Width=(2.8;3.6]}      </span></span>
+<span id="cb10-41"><a href="#cb10-41" tabindex="-1"></a><span class="co">#&gt; 5 {Petal.Length=(-Inf;2.97],Petal.Width=(-Inf;0.9],Sepal.Length=(-Inf;5.5],Sepa…</span></span>
+<span id="cb10-42"><a href="#cb10-42" tabindex="-1"></a><span class="co">#&gt; 6 {Petal.Width=(-Inf;0.9],Sepal.Length=(-Inf;5.5],Sepal.Width=(2.8;3.6]}        </span></span>
+<span id="cb10-43"><a href="#cb10-43" tabindex="-1"></a><span class="co">#&gt;   consequent         antecedent_support rule_support confidence</span></span>
+<span id="cb10-44"><a href="#cb10-44" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                           &lt;dbl&gt;        &lt;dbl&gt;      &lt;dbl&gt;</span></span>
+<span id="cb10-45"><a href="#cb10-45" tabindex="-1"></a><span class="co">#&gt; 1 Species=versicolor              0.12         0.12           1</span></span>
+<span id="cb10-46"><a href="#cb10-46" tabindex="-1"></a><span class="co">#&gt; 2 Species=versicolor              0.127        0.127          1</span></span>
+<span id="cb10-47"><a href="#cb10-47" tabindex="-1"></a><span class="co">#&gt; 3 Species=virginica               0.1          0.1            1</span></span>
+<span id="cb10-48"><a href="#cb10-48" tabindex="-1"></a><span class="co">#&gt; 4 Species=setosa                  0.24         0.24           1</span></span>
+<span id="cb10-49"><a href="#cb10-49" tabindex="-1"></a><span class="co">#&gt; 5 Species=setosa                  0.24         0.24           1</span></span>
+<span id="cb10-50"><a href="#cb10-50" tabindex="-1"></a><span class="co">#&gt; 6 Species=setosa                  0.24         0.24           1</span></span></code></pre></div>
+<p>This is a useful illustration of focus filtering, but association
+rules already have a dedicated implementation:
+<code>dig_associations()</code> searches for them more efficiently. For
+that purpose, prefer <code>dig_associations()</code> and see
+<code>vignette(&quot;association-rules&quot;)</code>.</p>
+</div>
+</div>
+<div id="what-the-callback-function-can-receive" class="section level1">
+<h1>What the Callback Function Can Receive</h1>
+<p>As seen in the previous section, the callback function <code>f</code>
+may obtain not only the generated condition, but also other information.
+The amount of received information is controlled by declaring the
+arguments of the callback function. <code>dig()</code> inspects the
+callback function argument names and computes only the requested values.
+This is important for performance, because some values are expensive to
+compute and may not be needed for every search.</p>
+<p>The callback function may declare any subset of the following
+arguments:</p>
+<ul>
+<li><code>condition</code>: named integer vector of column indices
+representing the generated condition.</li>
+<li><code>sum</code>: number of rows satisfying the condition for
+logical data, or the sum of truth degrees for fuzzy data.</li>
+<li><code>support</code>: relative frequency of the condition, i.e.,
+<code>sum / nrow(x)</code>.</li>
+<li><code>indices</code>: row indices of the original dataset
+<code>x</code> satisfying the condition in crisp searches or the indices
+of rows with non-zero truth degrees in fuzzy searches.</li>
+<li><code>weights</code>: per-row truth degrees of the condition in
+dataset <code>x</code>; logical (crisp) data is treated as 0/1
+weights.</li>
+<li><code>pp</code>, <code>pn</code>, <code>np</code>, <code>nn</code>:
+contingency-table entries for foci. The <em>i</em>-th* entry of each
+vector corresponds to the <em>i</em>-th focus predicate. The entries are
+defined as follows:
+<ul>
+<li><code>pp</code>: sum of truth degrees of rows satisfying both the
+condition and the focus (<strong>p</strong>ositive condition,
+<strong>p</strong>ositive focus),</li>
+<li><code>pn</code>: sum of truth degrees of rows satisfying the
+condition but not the focus, (<strong>p</strong>ositive condition,
+<strong>n</strong>egative focus),</li>
+<li><code>np</code>: sum of truth degrees of rows satisfying the focus
+but not the condition, (<strong>n</strong>egative condition,
+<strong>p</strong>ositive focus),</li>
+<li><code>nn</code>: sum of truth degrees of rows satisfying neither
+(<strong>n</strong>egative condition, <strong>n</strong>egative
+focus).</li>
+</ul></li>
+</ul>
+<p>In practice:</p>
+<ul>
+<li>use <code>condition</code> when you need condition predicate
+names,</li>
+<li>use <code>support</code> or <code>sum</code> for condition-level
+filtering or ranking,</li>
+<li>use <code>indices</code> when you want to compute something on the
+original rows,</li>
+<li>use <code>weights</code> for custom fuzzy summaries,</li>
+<li>use <code>pp</code>, <code>pn</code>, <code>np</code>, and
+<code>nn</code> when your pattern depends on foci and their frequency
+within the condition.</li>
+</ul>
+<p>Note: only declare the arguments you need. For example, if you don’t
+need foci, don’t declare <code>pp</code>, <code>pn</code>,
+<code>np</code>, or <code>nn</code>. This will save computation time,
+especially for large datasets or complex conditions. The most expensive
+values to compute are <code>indices</code> and <code>weights</code>.
+They require scanning the entire dataset for each generated condition.
+So avoid them if not needed.</p>
+</div>
+<div id="advanced-examples" class="section level1">
+<h1>Advanced Examples</h1>
+<div id="example-fixed-variable-correlations" class="section level2">
+<h2>Example: Fixed-Variable Correlations</h2>
+<p><code>dig_correlations()</code> searches over both generated
+conditions and combinations of numeric variables. A simpler custom
+variant can be built directly with <code>dig()</code> when the two
+variables are fixed in advance and only the condition should vary.</p>
+<p>Here we search for conditions under which <code>Sepal.Length</code>
+and <code>Petal.Length</code> correlate strongly. The callback receives
+<code>indices</code>, uses them to select the corresponding rows from
+the original <code>iris</code> data, and runs <code>cor.test()</code> on
+that sub-data:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>correlation_callback <span class="ot">&lt;-</span> <span class="cf">function</span>(condition, support, indices) {</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">length</span>(indices) <span class="sc">&lt;</span> <span class="dv">10</span>) {</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>        <span class="fu">return</span>(<span class="cn">NULL</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>    }</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>    fit <span class="ot">&lt;-</span> <span class="fu">cor.test</span>(iris<span class="sc">$</span>Sepal.Length[indices],</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>                    iris<span class="sc">$</span>Petal.Length[indices],</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>                    <span class="at">method =</span> <span class="st">&quot;pearson&quot;</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>    <span class="fu">list</span>(<span class="at">condition =</span> <span class="fu">format_condition</span>(<span class="fu">names</span>(condition)),</span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>         <span class="at">support =</span> support,</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a>         <span class="at">correlation =</span> <span class="fu">unname</span>(fit<span class="sc">$</span>estimate),</span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>         <span class="at">p_value =</span> fit<span class="sc">$</span>p.value,</span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>         <span class="at">n =</span> <span class="fu">length</span>(indices))</span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a>}</span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a></span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a>correlation_result <span class="ot">&lt;-</span> <span class="fu">dig</span>(<span class="at">x =</span> crisp_iris,</span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a>                          <span class="at">f =</span> correlation_callback,</span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a>                          <span class="at">condition =</span> <span class="fu">everything</span>(),</span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a>                          <span class="at">min_length =</span> <span class="dv">1</span>,</span>
+<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a>                          <span class="at">max_length =</span> <span class="dv">2</span>,</span>
+<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a>                          <span class="at">min_support =</span> <span class="fl">0.1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb11-22"><a href="#cb11-22" tabindex="-1"></a>    <span class="fu">bind_rows</span>() <span class="sc">|&gt;</span></span>
+<span id="cb11-23"><a href="#cb11-23" tabindex="-1"></a>    <span class="fu">arrange</span>(<span class="fu">desc</span>(<span class="fu">abs</span>(correlation)))</span>
+<span id="cb11-24"><a href="#cb11-24" tabindex="-1"></a></span>
+<span id="cb11-25"><a href="#cb11-25" tabindex="-1"></a><span class="fu">head</span>(correlation_result, <span class="at">n =</span> <span class="dv">6</span>)</span>
+<span id="cb11-26"><a href="#cb11-26" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 5</span></span>
+<span id="cb11-27"><a href="#cb11-27" tabindex="-1"></a><span class="co">#&gt;   condition                                        support correlation  p_value</span></span>
+<span id="cb11-28"><a href="#cb11-28" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                              &lt;dbl&gt;       &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span id="cb11-29"><a href="#cb11-29" tabindex="-1"></a><span class="co">#&gt; 1 {Sepal.Width=(3.6;Inf]}                            0.1         0.949 6.98e- 8</span></span>
+<span id="cb11-30"><a href="#cb11-30" tabindex="-1"></a><span class="co">#&gt; 2 {Petal.Length=(4.93;Inf],Sepal.Width=(-Inf;2.8]}   0.107       0.935 1.15e- 7</span></span>
+<span id="cb11-31"><a href="#cb11-31" tabindex="-1"></a><span class="co">#&gt; 3 {Sepal.Width=(2.8;3.6]}                            0.587       0.930 3.63e-39</span></span>
+<span id="cb11-32"><a href="#cb11-32" tabindex="-1"></a><span class="co">#&gt; 4 {Petal.Width=(1.7;Inf],Sepal.Width=(-Inf;2.8]}     0.1         0.919 1.33e- 6</span></span>
+<span id="cb11-33"><a href="#cb11-33" tabindex="-1"></a><span class="co">#&gt; 5 {Sepal.Width=(-Inf;2.8],Species=virginica}         0.127       0.907 8.78e- 8</span></span>
+<span id="cb11-34"><a href="#cb11-34" tabindex="-1"></a><span class="co">#&gt; 6 {Petal.Width=(1.7;Inf]}                            0.307       0.865 8.94e-15</span></span>
+<span id="cb11-35"><a href="#cb11-35" tabindex="-1"></a><span class="co">#&gt;       n</span></span>
+<span id="cb11-36"><a href="#cb11-36" tabindex="-1"></a><span class="co">#&gt;   &lt;int&gt;</span></span>
+<span id="cb11-37"><a href="#cb11-37" tabindex="-1"></a><span class="co">#&gt; 1   150</span></span>
+<span id="cb11-38"><a href="#cb11-38" tabindex="-1"></a><span class="co">#&gt; 2   150</span></span>
+<span id="cb11-39"><a href="#cb11-39" tabindex="-1"></a><span class="co">#&gt; 3   150</span></span>
+<span id="cb11-40"><a href="#cb11-40" tabindex="-1"></a><span class="co">#&gt; 4   150</span></span>
+<span id="cb11-41"><a href="#cb11-41" tabindex="-1"></a><span class="co">#&gt; 5   150</span></span>
+<span id="cb11-42"><a href="#cb11-42" tabindex="-1"></a><span class="co">#&gt; 6   150</span></span></code></pre></div>
+<p>This example follows the same idea as
+<code>dig_correlations()</code>:</p>
+<ul>
+<li>generate conditions,</li>
+<li>evaluate a statistic on the sub-data induced by each condition,</li>
+<li>return one row per successful evaluation.</li>
+</ul>
+<p>The difference is that <code>dig()</code> leaves the statistic
+entirely in your hands. That is useful when you want to fix the
+variables, apply a custom test, return additional diagnostics, or
+combine several criteria in one callback.</p>
+</div>
+<div id="example-handling-fuzzy-data" class="section level2">
+<h2>Example: Handling Fuzzy Data</h2>
+<p>For fuzzy searches, conditions are no longer simply satisfied or not
+satisfied. Instead, each row has a truth degree in the interval <span class="math inline">\([0,1]\)</span>. In that setting,
+<code>indices</code> and <code>weights</code> play different roles:</p>
+<ul>
+<li><code>indices</code> tell you which rows have a non-zero truth
+degree for the condition,</li>
+<li><code>weights</code> tell you on scale <span class="math inline">\([0, 1]\)</span> how strongly each row satisfies
+the condition.</li>
+</ul>
+<p>The following example prepares fuzzy predicates from
+<code>iris</code> and then compares an unweighted summary based on
+<code>indices</code> with a weighted summary based on
+<code>weights</code>:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>fuzzy_iris <span class="ot">&lt;-</span> iris <span class="sc">|&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>    <span class="fu">partition</span>(Species) <span class="sc">|&gt;</span></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>    <span class="fu">partition</span>(Sepal.Length<span class="sc">:</span>Petal.Width, <span class="at">.method =</span> <span class="st">&quot;triangle&quot;</span>, <span class="at">.breaks =</span> <span class="dv">3</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="fu">head</span>(fuzzy_iris, <span class="at">n =</span> <span class="dv">3</span>)</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 15</span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="co">#&gt;   `Species=setosa` `Species=versicolor` `Species=virginica`</span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="co">#&gt;   &lt;lgl&gt;            &lt;lgl&gt;                &lt;lgl&gt;              </span></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt; 1 TRUE             FALSE                FALSE              </span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt; 2 TRUE             FALSE                FALSE              </span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co">#&gt; 3 TRUE             FALSE                FALSE              </span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="co">#&gt;   `Sepal.Length=(-Inf;4.3;6.1)` `Sepal.Length=(4.3;6.1;7.9)`</span></span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="co">#&gt;                           &lt;dbl&gt;                        &lt;dbl&gt;</span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co">#&gt; 1                         0.556                        0.444</span></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="co">#&gt; 2                         0.667                        0.333</span></span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a><span class="co">#&gt; 3                         0.778                        0.222</span></span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a><span class="co">#&gt;   `Sepal.Length=(6.1;7.9;Inf)` `Sepal.Width=(-Inf;2;3.2)`</span></span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a><span class="co">#&gt;                          &lt;dbl&gt;                      &lt;dbl&gt;</span></span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a><span class="co">#&gt; 1                            0                      0    </span></span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a><span class="co">#&gt; 2                            0                      0.167</span></span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a><span class="co">#&gt; 3                            0                      0    </span></span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a><span class="co">#&gt;   `Sepal.Width=(2;3.2;4.4)` `Sepal.Width=(3.2;4.4;Inf)`</span></span>
+<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a><span class="co">#&gt;                       &lt;dbl&gt;                       &lt;dbl&gt;</span></span>
+<span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a><span class="co">#&gt; 1                     0.75                        0.250</span></span>
+<span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a><span class="co">#&gt; 2                     0.833                       0    </span></span>
+<span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a><span class="co">#&gt; 3                     1                           0    </span></span>
+<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a><span class="co">#&gt;   `Petal.Length=(-Inf;1;3.95)` `Petal.Length=(1;3.95;6.9)`</span></span>
+<span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a><span class="co">#&gt;                          &lt;dbl&gt;                       &lt;dbl&gt;</span></span>
+<span id="cb12-29"><a href="#cb12-29" tabindex="-1"></a><span class="co">#&gt; 1                        0.864                       0.136</span></span>
+<span id="cb12-30"><a href="#cb12-30" tabindex="-1"></a><span class="co">#&gt; 2                        0.864                       0.136</span></span>
+<span id="cb12-31"><a href="#cb12-31" tabindex="-1"></a><span class="co">#&gt; 3                        0.898                       0.102</span></span>
+<span id="cb12-32"><a href="#cb12-32" tabindex="-1"></a><span class="co">#&gt;   `Petal.Length=(3.95;6.9;Inf)` `Petal.Width=(-Inf;0.1;1.3)`</span></span>
+<span id="cb12-33"><a href="#cb12-33" tabindex="-1"></a><span class="co">#&gt;                           &lt;dbl&gt;                        &lt;dbl&gt;</span></span>
+<span id="cb12-34"><a href="#cb12-34" tabindex="-1"></a><span class="co">#&gt; 1                             0                        0.917</span></span>
+<span id="cb12-35"><a href="#cb12-35" tabindex="-1"></a><span class="co">#&gt; 2                             0                        0.917</span></span>
+<span id="cb12-36"><a href="#cb12-36" tabindex="-1"></a><span class="co">#&gt; 3                             0                        0.917</span></span>
+<span id="cb12-37"><a href="#cb12-37" tabindex="-1"></a><span class="co">#&gt;   `Petal.Width=(0.1;1.3;2.5)` `Petal.Width=(1.3;2.5;Inf)`</span></span>
+<span id="cb12-38"><a href="#cb12-38" tabindex="-1"></a><span class="co">#&gt;                         &lt;dbl&gt;                       &lt;dbl&gt;</span></span>
+<span id="cb12-39"><a href="#cb12-39" tabindex="-1"></a><span class="co">#&gt; 1                      0.0833                           0</span></span>
+<span id="cb12-40"><a href="#cb12-40" tabindex="-1"></a><span class="co">#&gt; 2                      0.0833                           0</span></span>
+<span id="cb12-41"><a href="#cb12-41" tabindex="-1"></a><span class="co">#&gt; 3                      0.0833                           0</span></span>
+<span id="cb12-42"><a href="#cb12-42" tabindex="-1"></a></span>
+<span id="cb12-43"><a href="#cb12-43" tabindex="-1"></a>fuzzy_callback <span class="ot">&lt;-</span> <span class="cf">function</span>(condition, indices, weights) {</span>
+<span id="cb12-44"><a href="#cb12-44" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">length</span>(indices) <span class="sc">&lt;</span> <span class="dv">20</span>) {</span>
+<span id="cb12-45"><a href="#cb12-45" tabindex="-1"></a>        <span class="fu">return</span>(<span class="cn">NULL</span>)</span>
+<span id="cb12-46"><a href="#cb12-46" tabindex="-1"></a>    }</span>
+<span id="cb12-47"><a href="#cb12-47" tabindex="-1"></a></span>
+<span id="cb12-48"><a href="#cb12-48" tabindex="-1"></a>    <span class="fu">list</span>(<span class="at">condition =</span> <span class="fu">format_condition</span>(<span class="fu">names</span>(condition)),</span>
+<span id="cb12-49"><a href="#cb12-49" tabindex="-1"></a>         <span class="at">nonzero_rows =</span> <span class="fu">sum</span>(indices),</span>
+<span id="cb12-50"><a href="#cb12-50" tabindex="-1"></a>         <span class="at">weighted_support =</span> <span class="fu">sum</span>(weights) <span class="sc">/</span> <span class="fu">nrow</span>(fuzzy_iris),</span>
+<span id="cb12-51"><a href="#cb12-51" tabindex="-1"></a>         <span class="at">mean_petal_length_by_indices =</span> <span class="fu">mean</span>(iris<span class="sc">$</span>Petal.Length[indices]),</span>
+<span id="cb12-52"><a href="#cb12-52" tabindex="-1"></a>         <span class="at">mean_petal_length_by_weights =</span> <span class="fu">weighted.mean</span>(iris<span class="sc">$</span>Petal.Length, weights))</span>
+<span id="cb12-53"><a href="#cb12-53" tabindex="-1"></a>}</span>
+<span id="cb12-54"><a href="#cb12-54" tabindex="-1"></a></span>
+<span id="cb12-55"><a href="#cb12-55" tabindex="-1"></a>fuzzy_result <span class="ot">&lt;-</span> <span class="fu">dig</span>(<span class="at">x =</span> fuzzy_iris,</span>
+<span id="cb12-56"><a href="#cb12-56" tabindex="-1"></a>                    <span class="at">f =</span> fuzzy_callback,</span>
+<span id="cb12-57"><a href="#cb12-57" tabindex="-1"></a>                    <span class="at">condition =</span> <span class="fu">starts_with</span>(<span class="st">&quot;Sepal&quot;</span>),</span>
+<span id="cb12-58"><a href="#cb12-58" tabindex="-1"></a>                    <span class="at">min_length =</span> <span class="dv">1</span>,</span>
+<span id="cb12-59"><a href="#cb12-59" tabindex="-1"></a>                    <span class="at">max_length =</span> <span class="dv">1</span>,</span>
+<span id="cb12-60"><a href="#cb12-60" tabindex="-1"></a>                    <span class="at">min_support =</span> <span class="fl">0.2</span>) <span class="sc">|&gt;</span></span>
+<span id="cb12-61"><a href="#cb12-61" tabindex="-1"></a>    <span class="fu">bind_rows</span>()</span>
+<span id="cb12-62"><a href="#cb12-62" tabindex="-1"></a></span>
+<span id="cb12-63"><a href="#cb12-63" tabindex="-1"></a>fuzzy_result</span>
+<span id="cb12-64"><a href="#cb12-64" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 5</span></span>
+<span id="cb12-65"><a href="#cb12-65" tabindex="-1"></a><span class="co">#&gt;   condition                     nonzero_rows weighted_support</span></span>
+<span id="cb12-66"><a href="#cb12-66" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                &lt;int&gt;            &lt;dbl&gt;</span></span>
+<span id="cb12-67"><a href="#cb12-67" tabindex="-1"></a><span class="co">#&gt; 1 {Sepal.Width=(2;3.2;4.4)}              148            0.694</span></span>
+<span id="cb12-68"><a href="#cb12-68" tabindex="-1"></a><span class="co">#&gt; 2 {Sepal.Length=(4.3;6.1;7.9)}           148            0.600</span></span>
+<span id="cb12-69"><a href="#cb12-69" tabindex="-1"></a><span class="co">#&gt; 3 {Sepal.Length=(-Inf;4.3;6.1)}           89            0.271</span></span>
+<span id="cb12-70"><a href="#cb12-70" tabindex="-1"></a><span class="co">#&gt; 4 {Sepal.Width=(-Inf;2;3.2)}              94            0.212</span></span>
+<span id="cb12-71"><a href="#cb12-71" tabindex="-1"></a><span class="co">#&gt;   mean_petal_length_by_indices mean_petal_length_by_weights</span></span>
+<span id="cb12-72"><a href="#cb12-72" tabindex="-1"></a><span class="co">#&gt;                          &lt;dbl&gt;                        &lt;dbl&gt;</span></span>
+<span id="cb12-73"><a href="#cb12-73" tabindex="-1"></a><span class="co">#&gt; 1                         3.78                         3.79</span></span>
+<span id="cb12-74"><a href="#cb12-74" tabindex="-1"></a><span class="co">#&gt; 2                         3.76                         4.08</span></span>
+<span id="cb12-75"><a href="#cb12-75" tabindex="-1"></a><span class="co">#&gt; 3                         2.69                         2.10</span></span>
+<span id="cb12-76"><a href="#cb12-76" tabindex="-1"></a><span class="co">#&gt; 4                         4.35                         4.35</span></span></code></pre></div>
+<p>The unweighted mean based on <code>indices</code> treats all rows
+with non-zero membership equally. The weighted mean based on
+<code>weights</code> respects the fuzzy truth degrees, so rows that
+satisfy the condition more strongly contribute more. This is the main
+practical difference: <code>indices</code> identify the relevant rows,
+while <code>weights</code> quantify the strength of their
+membership.</p>
+</div>
+</div>
+<div id="practical-notes" class="section level1">
+<h1>Practical Notes</h1>
+<ul>
+<li>Condition predicates are used to generate conditions, while focus
+predicates are evaluated within each generated condition. Use
+<code>condition</code> and <code>focus</code> arguments to select them
+separately.</li>
+<li>The result of <code>dig()</code> is a list. When each callback
+returns one named list, <code>bind_rows()</code> is a convenient way to
+flatten it into a tibble.</li>
+<li>If the callback returns multiple patterns per condition, return a
+list of named lists and flatten the result afterwards.</li>
+<li>Use only the arguments you need in the callback function. This saves
+computation time, especially for large datasets or complex
+conditions.</li>
+<li>For fuzzy searches, use <code>weights</code> when truth degrees
+matter, and <code>indices</code> when you only need the rows with
+non-zero membership.</li>
+</ul>
+</div>
+<div id="summary" class="section level1">
+<h1>Summary</h1>
+<p><code>dig()</code> is the most flexible search interface in
+<code>nuggets</code>. It lets you:</p>
+<ol style="list-style-type: decimal">
+<li>generate conditions from selected predicates,</li>
+<li>optionally evaluate focus predicates within each condition,</li>
+<li>receive only the callback inputs you need,</li>
+<li>define your own pattern logic, statistics, and output format.</li>
+</ol>
+<p>Use <code>dig()</code> when the built-in search functions are close
+to what you need, but not exact. For related material, see:</p>
+<ul>
+<li><code>vignette(&quot;data-preparation&quot;)</code> for creating crisp and
+fuzzy predicates from raw data,</li>
+<li><code>vignette(&quot;association-rules&quot;)</code> for searching for
+association rules with <code>dig_associations()</code>,<br />
+</li>
+<li><code>vignette(&quot;nuggets&quot;)</code> for an overview of the package and
+its main workflows.</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

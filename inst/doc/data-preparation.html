@@ -407,10 +407,10 @@ expanded into two predicates: <code>x=T</code> for rows where
 <code>x</code> is <code>FALSE</code>. Missing values are excluded from
 both predicates.</p>
 <p>The <code>partition()</code> function requires the dataset as its
-first argument and a <em>tidyselect</em> selection expression to select
-the columns to be transformed. For example, the <code>vs</code> column
-in <code>mtcars_example</code> is a logical column indicating the engine
-type (V-shaped or straight):</p>
+first argument and a <a href="https://tidyselect.r-lib.org/reference/language.html">tidyselect
+expression</a> to select the columns to be transformed. For example, the
+<code>vs</code> column in <code>mtcars_example</code> is a logical
+column indicating the engine type (V-shaped or straight):</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">partition</span>(mtcars_example, vs)</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; # A tibble: 32 × 12</span></span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt;      mpg cyl    disp    hp  drat    wt  qsec    am  gear  carb `vs=T` `vs=F`</span></span>
@@ -948,17 +948,17 @@ observations, which can be valuable for imbalanced datasets.</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="co"># K-means clustering to find natural breakpoints</span></span>
 <span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="fu">partition</span>(CO2, conc, <span class="at">.method =</span> <span class="st">&quot;crisp&quot;</span>, <span class="at">.breaks =</span> <span class="dv">4</span>, <span class="at">.style =</span> <span class="st">&quot;kmeans&quot;</span>)</span>
 <span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="co">#&gt; # A tibble: 84 × 8</span></span>
-<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="co">#&gt;    Plant Type   Treatment  uptake `conc=(-Inf;135]` `conc=(135;300]`</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="co">#&gt;    Plant Type   Treatment  uptake `conc=(-Inf;212]` `conc=(212;300]`</span></span>
 <span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="co">#&gt;    &lt;ord&gt; &lt;fct&gt;  &lt;fct&gt;       &lt;dbl&gt; &lt;lgl&gt;             &lt;lgl&gt;           </span></span>
 <span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="co">#&gt;  1 Qn1   Quebec nonchilled   16   TRUE              FALSE           </span></span>
-<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="co">#&gt;  2 Qn1   Quebec nonchilled   30.4 FALSE             TRUE            </span></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="co">#&gt;  2 Qn1   Quebec nonchilled   30.4 TRUE              FALSE           </span></span>
 <span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="co">#&gt;  3 Qn1   Quebec nonchilled   34.8 FALSE             TRUE            </span></span>
 <span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="co">#&gt;  4 Qn1   Quebec nonchilled   37.2 FALSE             FALSE           </span></span>
 <span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="co">#&gt;  5 Qn1   Quebec nonchilled   35.3 FALSE             FALSE           </span></span>
 <span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a><span class="co">#&gt;  6 Qn1   Quebec nonchilled   39.2 FALSE             FALSE           </span></span>
 <span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a><span class="co">#&gt;  7 Qn1   Quebec nonchilled   39.7 FALSE             FALSE           </span></span>
 <span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a><span class="co">#&gt;  8 Qn2   Quebec nonchilled   13.6 TRUE              FALSE           </span></span>
-<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a><span class="co">#&gt;  9 Qn2   Quebec nonchilled   27.3 FALSE             TRUE            </span></span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a><span class="co">#&gt;  9 Qn2   Quebec nonchilled   27.3 TRUE              FALSE           </span></span>
 <span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a><span class="co">#&gt; 10 Qn2   Quebec nonchilled   37.1 FALSE             TRUE            </span></span>
 <span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a><span class="co">#&gt;    `conc=(300;588]` `conc=(588;Inf]`</span></span>
 <span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a><span class="co">#&gt;    &lt;lgl&gt;            &lt;lgl&gt;           </span></span>
@@ -1012,25 +1012,25 @@ algorithm:</p>
 <span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>          <span class="at">.style =</span> <span class="st">&quot;kmeans&quot;</span>, </span>
 <span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>          <span class="at">.style_params =</span> <span class="fu">list</span>(<span class="at">algorithm =</span> <span class="st">&quot;Lloyd&quot;</span>))</span>
 <span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a><span class="co">#&gt; # A tibble: 84 × 8</span></span>
-<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a><span class="co">#&gt;    Plant Type   Treatment  uptake `conc=(-Inf;300]` `conc=(300;425]`</span></span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a><span class="co">#&gt;    Plant Type   Treatment  uptake `conc=(-Inf;300]` `conc=(300;588]`</span></span>
 <span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a><span class="co">#&gt;    &lt;ord&gt; &lt;fct&gt;  &lt;fct&gt;       &lt;dbl&gt; &lt;lgl&gt;             &lt;lgl&gt;           </span></span>
 <span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a><span class="co">#&gt;  1 Qn1   Quebec nonchilled   16   TRUE              FALSE           </span></span>
 <span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a><span class="co">#&gt;  2 Qn1   Quebec nonchilled   30.4 TRUE              FALSE           </span></span>
 <span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a><span class="co">#&gt;  3 Qn1   Quebec nonchilled   34.8 TRUE              FALSE           </span></span>
 <span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a><span class="co">#&gt;  4 Qn1   Quebec nonchilled   37.2 FALSE             TRUE            </span></span>
-<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a><span class="co">#&gt;  5 Qn1   Quebec nonchilled   35.3 FALSE             FALSE           </span></span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a><span class="co">#&gt;  5 Qn1   Quebec nonchilled   35.3 FALSE             TRUE            </span></span>
 <span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a><span class="co">#&gt;  6 Qn1   Quebec nonchilled   39.2 FALSE             FALSE           </span></span>
 <span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a><span class="co">#&gt;  7 Qn1   Quebec nonchilled   39.7 FALSE             FALSE           </span></span>
 <span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a><span class="co">#&gt;  8 Qn2   Quebec nonchilled   13.6 TRUE              FALSE           </span></span>
 <span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a><span class="co">#&gt;  9 Qn2   Quebec nonchilled   27.3 TRUE              FALSE           </span></span>
 <span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a><span class="co">#&gt; 10 Qn2   Quebec nonchilled   37.1 TRUE              FALSE           </span></span>
-<span id="cb15-18"><a href="#cb15-18" tabindex="-1"></a><span class="co">#&gt;    `conc=(425;838]` `conc=(838;Inf]`</span></span>
+<span id="cb15-18"><a href="#cb15-18" tabindex="-1"></a><span class="co">#&gt;    `conc=(588;838]` `conc=(838;Inf]`</span></span>
 <span id="cb15-19"><a href="#cb15-19" tabindex="-1"></a><span class="co">#&gt;    &lt;lgl&gt;            &lt;lgl&gt;           </span></span>
 <span id="cb15-20"><a href="#cb15-20" tabindex="-1"></a><span class="co">#&gt;  1 FALSE            FALSE           </span></span>
 <span id="cb15-21"><a href="#cb15-21" tabindex="-1"></a><span class="co">#&gt;  2 FALSE            FALSE           </span></span>
 <span id="cb15-22"><a href="#cb15-22" tabindex="-1"></a><span class="co">#&gt;  3 FALSE            FALSE           </span></span>
 <span id="cb15-23"><a href="#cb15-23" tabindex="-1"></a><span class="co">#&gt;  4 FALSE            FALSE           </span></span>
-<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a><span class="co">#&gt;  5 TRUE             FALSE           </span></span>
+<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a><span class="co">#&gt;  5 FALSE            FALSE           </span></span>
 <span id="cb15-25"><a href="#cb15-25" tabindex="-1"></a><span class="co">#&gt;  6 TRUE             FALSE           </span></span>
 <span id="cb15-26"><a href="#cb15-26" tabindex="-1"></a><span class="co">#&gt;  7 FALSE            TRUE            </span></span>
 <span id="cb15-27"><a href="#cb15-27" tabindex="-1"></a><span class="co">#&gt;  8 FALSE            FALSE           </span></span>
@@ -1415,8 +1415,8 @@ according to the specified threshold.</p>
 <span id="cb20-56"><a href="#cb20-56" tabindex="-1"></a><span class="co">#&gt;  8     8     8</span></span>
 <span id="cb20-57"><a href="#cb20-57" tabindex="-1"></a><span class="co">#&gt;  9     9     9</span></span>
 <span id="cb20-58"><a href="#cb20-58" tabindex="-1"></a><span class="co">#&gt; 10    10    NA</span></span></code></pre></div>
-<p>You can also restrict the check to a subset of columns using
-tidyselect syntax:</p>
+<p>You can also restrict the check to a subset of columns using <a href="https://tidyselect.r-lib.org/reference/language.html">tidyselect
+expression</a> syntax:</p>
 <div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="co"># Only check columns a1 through b2</span></span>
 <span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a><span class="fu">remove_almost_constant</span>(d, a1<span class="sc">:</span>b2, <span class="at">.threshold =</span> <span class="fl">0.5</span>, <span class="at">.na_rm =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a><span class="co">#&gt; # A tibble: 10 × 5</span></span>
@@ -1637,8 +1637,19 @@ interesting patterns.</p></li>
 <p>With these tools, you can effectively prepare your data for pattern
 discovery using the various <code>dig_*()</code> functions provided by
 the <code>nuggets</code> package. For information on pattern discovery
-itself, see the main “Getting Started” vignette and the function
-documentation.</p>
+itself, see:</p>
+<ul>
+<li><code>vignette(&quot;nuggets&quot;)</code> for an overview of the package and
+its main workflows,</li>
+<li><code>vignette(&quot;association-rules&quot;)</code> for a specialized pattern
+family based on the <code>dig_associations()</code> function,</li>
+<li><code>vignette(&quot;conditional-correlations&quot;)</code> for subgroup-based
+correlation analysis on numeric variables,</li>
+<li><code>vignette(&quot;contrast-patterns&quot;)</code> for subgroup-based
+statistical comparisons of numeric variables,</li>
+<li><code>vignette(&quot;custom-patterns&quot;)</code> for defining custom pattern
+types with <code>dig()</code>.</li>
+</ul>
 </div>
 
 

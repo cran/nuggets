@@ -684,8 +684,8 @@ rules. Its main arguments are:</p>
 <ul>
 <li><code>x</code>: the data matrix or data frame (logical or
 numeric);</li>
-<li><code>antecedent</code>, <code>consequent</code>: tidyselect
-expressions selecting columns for each side of the rule;</li>
+<li><code>antecedent</code>, <code>consequent</code>: <a href="https://tidyselect.r-lib.org/reference/language.html">tidyselect
+expressions</a> selecting columns for each side of the rule;</li>
 <li><code>disjoint</code>: a vector defining mutually exclusive
 predicates;</li>
 <li>rule filtering thresholds such as <code>min_support</code>,
@@ -827,6 +827,8 @@ columns, preventing conflicts in the search algorithm.</p>
 <p>The result shows conditions under which specific pairs of variables
 exhibit strong correlations, along with correlation coefficients and
 p-values.</p>
+<p>For a more detailed walkthrough, see the <a href="conditional-correlations.html">Conditional Correlations
+vignette</a>.</p>
 </div>
 <div id="contrast-patterns" class="section level2">
 <h2>Contrast Patterns</h2>
@@ -973,6 +975,8 @@ the same rows under specific conditions. Here, it tests whether
 <code>mpg</code> differs from <code>wt</code> (and <code>hp</code> from
 <code>wt</code>) in various subgroups. This is useful for detecting
 context-dependent relationships between paired measurements.</p>
+<p>For a more detailed walkthrough of all three contrast families, see
+the <a href="contrast-patterns.html">Contrast Patterns vignette</a>.</p>
 </div>
 </div>
 </div>
@@ -1286,6 +1290,15 @@ pairs</li>
 <ul>
 <li>Explore the <a href="data-preparation.html">Data Preparation
 vignette</a> for advanced preprocessing techniques</li>
+<li>Explore the <a href="association-rules.html">Association Rules
+vignette</a> for a specialized pattern family</li>
+<li>Explore the <a href="conditional-correlations.html">Conditional
+Correlations vignette</a> for subgroup-based correlation analysis</li>
+<li>Explore the <a href="contrast-patterns.html">Contrast Patterns
+vignette</a> for baseline, complement, and paired contrasts</li>
+<li>Explore the <a href="custom-patterns.html">Custom Patterns
+vignette</a> for defining your own pattern types with
+<code>dig()</code></li>
 <li>Review function documentation (e.g., <code>?dig_associations</code>)
 for detailed parameter descriptions</li>
 <li>Experiment with your own datasets to discover meaningful

@@ -1,3 +1,12 @@
+# nuggets 2.2.3
+- released: 2026-08-19
+- added `permute()`
+- improved filtering by axioms specified in `excluded` argument of `dig*()`
+- improved the core search algorithm by better handling of condition prefixes
+  and caching of conjunction supports
+- added `"search_stats"` attribute to each result of `dig*()` functions
+- improved documentation, added vignettes
+
 # nuggets 2.2.2
 - released: 2026-07-22
 - optimized `dig()` on sparse crisp data (by implementing sparse bit chain)

@@ -513,8 +513,8 @@ rule:</p>
 <p>In many applications, you want to constrain which predicates can
 appear on each side of the rule. This is done with the
 <code>antecedent</code> and <code>consequent</code> arguments, which
-accept <a href="https://tidyselect.r-lib.org/articles/syntax.html">tidyselect</a>
-expressions.</p>
+accept <a href="https://tidyselect.r-lib.org/reference/language.html">tidyselect
+expression</a> expressions.</p>
 <p>For example, to find rules that predict the <code>uptake</code> rate
 from all other variables:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>rules_uptake <span class="ot">&lt;-</span> <span class="fu">dig_associations</span>(crisp_co2,</span>
@@ -954,6 +954,8 @@ interesting patterns.</p></li>
 <code>dig_associations()</code>, <code>add_interest()</code>,
 <code>dig_tautologies()</code>, <code>parse_condition()</code>,
 <code>partition()</code>, <code>var_names()</code>.</p>
+<p>For more advanced usage with custom pattern types, see
+<code>vignette(&quot;custom-patterns&quot;)</code>.</p>
 </div>
 
 

@@ -30,167 +30,116 @@
  */
 class Cache {
 public:
+    /**
+     * Constant representing a value that indicates that a Clause is not in the cache.
+     * This value is used to differentiate between Clauses that have been added to
+     * the cache and those that have not. When a Clause is not found in the cache,
+     * the get() method will return this constant value.
+     */
     static constexpr double NOT_IN_CACHE = -1.0;
 
-    /**
-     * Representation of a node in the cache tree
-     */
-    struct Node {
-        Node(size_t pid, double sum, Node* sibling)
-            : predicateId(pid),
-              sum(sum),
-              child(nullptr),
-              sibling(sibling)
-        { }
-
-        ~Node()
-        {
-            delete child;
-            delete sibling;
-        }
-
-        size_t size() const
-        {
-            size_t total = 1; // count this node
-            if (child != nullptr) {
-                total += child->size();
-            }
-            if (sibling != nullptr) {
-                total += sibling->size();
-            }
-            return total;
-        }
-
-        size_t predicateId;
-        double sum;
-        Node* child;
-        Node* sibling;
-    };
-
-    /**
-     * Construct new cache of itemsets. It is assumed that predicates have
-     * IDs starting from 1 (as in R), so the last predicate's ID is equal to
-     * the number of predicates.
-     */
-    Cache(size_t rootSize)
-        : rootSize(rootSize)
+    Cache(size_t nPredicates, size_t maxDepth)
     {
-        children = new Node*[rootSize];
-        for (size_t i = 0; i < rootSize; ++i) {
-            children[i] = nullptr;
-        }
-    }
-
-    // Disable copy
-    Cache(const Cache& other) = delete;
-    Cache& operator=(const Cache& other) = delete;
-
-    // Allow move
-    Cache(Cache&& other) = default;
-    Cache& operator=(Cache&& other) = default;
-
-    ~Cache()
-    {
-        for (size_t i = 0; i < rootSize; ++i) {
-            delete children[i];
-        }
-        delete[] children;
+        nodes.reserve(nPredicates * maxDepth);
+        nodes.emplace_back(); // root node
     }
 
     void add(const Clause& clause, double sum)
     {
-        if (clause.empty())
-            throw runtime_error("Cache::add: cannot add empty clause");
-
-        if (clause[0] > rootSize)
-            throw runtime_error("Cache::add: predicate ID exceeds number of predicates");
-
-        if (clause.size() == 1) {
-            size_t pid = clause[0];
-            Node* node = children[pid];
-            if (node == nullptr) {
-                children[pid] = new Node(pid, sum, nullptr);
+        IF_DEBUG(
+            if (clause.empty()) {
+                throw runtime_error("Cache::add: cannot add empty clause");
             }
-            else if (node->sum == NOT_IN_CACHE) {
-                node->sum = sum;
+            if (sum < 0.0) {
+                throw runtime_error("Cache::addSibling: sum cannot be negative");
             }
-            else {
-                throw runtime_error(string("Cache::add: trying to add existing clause: ") + clause.toString());
+        )
+
+        // Create new node
+        size_t newIndex = nodes.size();
+        nodes.emplace_back(clause.back(), sum);
+
+        // Find the parent node
+        size_t parent = 0;
+        for (size_t i = 0; i < clause.size() - 1; ++i) {
+            parent = findChildIndex(nodes[parent], clause[i]);
+            if (parent == NOT_FOUND) {
+                throw runtime_error("Cache::add: parent node not found for clause");
             }
         }
-        else {
-            Node* node = find(clause.begin(),
-                              clause.end(),
-                              children[clause[0]]);
-            if (node->sum == NOT_IN_CACHE) {
-                node->sum = sum;
-            }
-            else {
-                throw runtime_error(string("Cache::add: trying to add existing clause: ") + clause.toString());
-            }
+
+        // Update parent node to adopt the new node as a child
+        Node& parentNode = nodes[parent];
+        if (parentNode.nChildren == 0) {
+            parentNode.firstChild = newIndex;
         }
+        parentNode.nChildren++;
     }
 
     double get(const Clause& clause) const
     {
-        if (clause.empty()) {
-            throw runtime_error("Cache::get: cannot get empty clause");
+        IF_DEBUG(
+            if (clause.empty()) {
+                throw runtime_error("Cache::get: cannot get empty clause");
+            }
+        )
+
+        size_t current = 0; // root node
+        for (size_t pid : clause) {
+            current = findChildIndex(nodes[current], pid);
+            if (current == NOT_FOUND) {
+                return NOT_IN_CACHE;
+            }
         }
 
-        Node* node = children[clause[0]];
-        node = find(clause.begin(), clause.end(), node);
-
-        // possibly return NOT_IN_CACHE
-        return node->sum;
+        return nodes[current].sum;
     }
 
     size_t size() const
     {
-        size_t total = 0;
-        for (size_t i = 0; i < rootSize; ++i) {
-            if (children[i] != nullptr) {
-                total += children[i]->size();
-            }
-        }
-        return total;
+        return nodes.size() - 1; // exclude root node
     }
 
 private:
-    size_t rootSize;
-    Node** children; // array of root nodes for each predicate ID
+    static constexpr size_t NOT_FOUND = static_cast<size_t>(-1);
 
-    inline Node* find(Clause::const_iterator begin,
-                      Clause::const_iterator end,
-                      Node* node) const
+    struct Node {
+        size_t predicate;
+        size_t firstChild;
+        size_t nChildren;
+        double sum;
+
+        /**
+         * Constructor for the root node.
+         */
+        Node()
+            : predicate(0),
+              firstChild(0),
+              nChildren(0),
+              sum(NOT_IN_CACHE)
+        { }
+
+        /**
+         * Constructor for a non-root node with the given predicate ID and sum.
+         */
+        Node(const size_t predicate, const double sum)
+            : predicate(predicate),
+              firstChild(0),
+              nChildren(0),
+              sum(sum)
+        { }
+    };
+
+    vector<Node> nodes;
+
+    inline size_t findChildIndex(const Node& node, size_t pid) const
     {
-        if (node == nullptr) {
-            throw runtime_error("Cache::find: node is null");
-        }
-
-        size_t pid = *begin;
-        if (node->predicateId != pid) {
-            Node* sibling = node->sibling;
-            while (sibling != nullptr && sibling->predicateId <= pid) {
-                node = sibling;
-                sibling = node->sibling;
-            }
-
-            if (node->predicateId != pid) {
-                node->sibling = new Node(pid, NOT_IN_CACHE, sibling);
-                node = node->sibling;
+        for (size_t i = node.firstChild; i < node.firstChild + node.nChildren; ++i) {
+            if (nodes[i].predicate == pid) {
+                return i;
             }
         }
 
-        begin++;
-        if (begin == end) {
-            return node;
-        }
-        else {
-            if (node->child == nullptr) {
-                size_t pid = *begin;
-                node->child = new Node(pid, NOT_IN_CACHE, nullptr);
-            }
-            return find(begin, end, node->child);
-        }
+        return NOT_FOUND;
     }
 };

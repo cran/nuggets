@@ -163,7 +163,11 @@ than those of \code{dig()}. The list must contain:
 }}
 }
 \value{
-A list of results returned by the callback function \code{f}.
+An S3 object of class \code{nugget}, which is a list of objects returned
+by the callback \code{f}. The list may be empty if no conditions satisfied the
+filtering criteria. The \code{nugget} object also contains metadata about the
+search process that are stored in attributes of the list, which can be
+accessed using \code{\link[=attributes]{attributes()}}.
 }
 \description{
 A general function for searching for patterns of a custom type. The function
@@ -215,6 +219,13 @@ logical data, or the sum of truth degrees for fuzzy data,
 \eqn{sum = \sum_{r \in R} \mu_C(r)}.
 \item \code{support}: a numeric scalar value of relative frequency of rows satisfying \eqn{C},
 \eqn{supp = sum / |R|}.
+\item \code{indices}: an integer vector of row indices of rows satisfying \eqn{C} for
+logical data, or the indices of rows with non-zero truth degrees for fuzzy
+data, \eqn{indices = \{r \in R : \mu_C(r) > 0\}}.
+\item \code{weights}: a numeric vector of truth degrees of \eqn{C} for each row in
+\eqn{R}, \eqn{weights[r] = \mu C(r)}. Logical data is treated as a special
+case of fuzzy data, where \eqn{\mu_C(r)} is 1 for rows satisfying \eqn{C}
+and 0 otherwise.
 \item \code{pp}, \code{pn}, \code{np}, \code{nn}: a numeric vector of entries of a contingency table
 for \eqn{C} and \eqn{F}, satisfying the Ruspini condition
 \eqn{pp + pn + np + nn = |R|}.

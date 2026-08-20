@@ -1,0 +1,251 @@
+---
+title: "Comparison of nuggets and arules performance"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Comparison of nuggets and arules performance}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE,
+    echo = FALSE,
+    comment = "#>",
+    fig.width = 7,
+    fig.height = 4
+)
+options(tibble.width = Inf)
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(patchwork)
+library(kableExtra)
+
+preprocess <- function(d) {
+    d |>
+        pivot_longer(cols = c("nuggets", "arules_apriori", "arules_eclat"),
+                     names_to = "method",
+                     values_to = "time")  |>
+        mutate(time = time / 1e6,  # convert nanoseconds to milli-seconds
+               method = dplyr::recode(method,
+                                "nuggets" = "nuggets",
+                                "arules_apriori" = "apriori (arules)",
+                                "arules_eclat" = "eclat (arules)"),
+               method = factor(method)) 
+}
+
+
+two_fig <- function(d, x, xname, title) {
+    nice_colnames <- c(cols = "# of data columns",
+                        rows = "# of data rows",
+                        min_support = "min supp",
+                        min_confidence = "min conf",
+                        max_length = "max ante length")
+    fixed <- list()
+    for (col in c("rows", "cols", "min_support", "min_confidence", "max_length")) {
+        if (length(unique(d[[col]])) == 1) {
+            fixed[[col]] <- unique(d[[col]])
+        }
+    }
+    subtitle <- paste0("(",
+                       paste(nice_colnames[names(fixed)], fixed, sep = " = ", collapse = ", "),
+                       ")")
+    
+    p1 <- ggplot(d) +
+        aes(x = !!x, y = time, color = method) +
+        geom_point() +
+        geom_line() +
+        labs(title = "linear scales",
+             x = xname,
+             y = "Time [ms]",
+             color = "Method")
+    
+    p2 <- ggplot(d) +
+        aes(x = !!x, y = time, color = method) +
+        geom_point() +
+        geom_line() +
+        scale_x_log10() +
+        scale_y_log10() +
+        labs(title = "log scales",
+             x = xname,
+             y = "Time [ms]",
+             color = "Method")
+    
+    p1 + p2 +
+        plot_annotation(title = title, subtitle = subtitle) +
+        plot_layout(ncol = 2, guides = "collect") & theme(legend.position = "bottom") 
+    
+}
+
+
+tab <- function(d, title) {
+    d |>
+        select(rows, cols, method, time) |>
+        mutate(time = round(time, 0)) |>
+        pivot_wider(names_from = method, values_from = time) |>
+        relocate(`eclat (arules)`, .after = `nuggets`) |>
+        arrange(rows, cols) |> 
+        #kable(caption = title) |> 
+        kable() |> 
+        kable_styling(full_width = TRUE) |> 
+        add_header_above(c(" " = 1, " " = 1, "Time [ms]" = 3))
+}
+
+data <- readRDS("comparison-with-arules.rds")
+
+dense_rows <- data$dense_rows |> preprocess()
+dense_cols <- data$dense_cols |> preprocess()
+sparse_rows <- data$sparse_rows |> preprocess()
+sparse_cols <- data$sparse_cols |> preprocess()
+```
+
+
+# Introduction
+
+This vignette compares the performance of the following R packages:
+
+- `nuggets` `r data$nuggets_version`
+- `arules` `r data$arules_version`
+
+The task of interest is the discovery of **association rules in Boolean
+(TRUE/FALSE) datasets**. The goal is to provide a comparison of brute
+computational power rather than a full comparison of package functionality,
+so advanced features, filtering options, and other factors that may affect
+practical performance are not considered here.
+
+For reproducibility, the
+[benchmark script used in this vignette](https://github.com/beerda/nuggets/tree/main/misc/performance/nuggets_vs_arules)
+is available in the package repository on GitHub.
+
+# Materials and Methods
+
+A series of experiments were conducted to evaluate the performance of the
+`nuggets` and `arules` packages. For `arules`, two different algorithms were
+evaluated: the Apriori algorithm (`apriori()`) and and the Eclat algorithm 
+(`eclat()`). For `nuggets`, the `dig_associations()` function was used to 
+discover association rules. The experiments were designed to measure the 
+execution time of each method under different conditions, including varying the
+number of rows and columns in the datasets, as well as the sparsity of the data.
+
+The test datasets were randomly generated with binary values (TRUE/FALSE)
+and varying numbers of rows and columns. The sparsity of the data was controlled
+by adjusting the probability of TRUE values in the dataset.
+
+Specifically, the following parameters were varied in the experiments:
+
+- number of rows: 10^3^, 10^4^, 10^5^, 10^6^
+- number of columns: 10, 20, 30, 50, 80
+- the probability of TRUE values: 0.5 (dense datasets) and 0.1 (sparse datasets)
+
+The other parameters were kept constant across all experiments:
+
+- the minimum support threshold: 0.001
+- the minimum confidence threshold: 0.5 (dense datasets) and 0.1 (sparse datasets)
+- the maximum length of antecedents: 3
+
+Each experiment was repeated 5 times to ensure the reliability of the 
+results, and the average execution time was recorded.
+All experiments were conducted on  `r data$cpu` (`r data$cache` cache) with 
+`r round(data$ram, 1)` GB of RAM available under the GNU/Linux operating system.
+The CPU frequency governor was set to "performance" mode and the running process
+was pinned to a single CPU core.
+
+The results are visualized using both linear and logarithmic scales to provide
+insights into the performance characteristics of each method.
+
+
+# Results
+
+## Dense data: varying number of rows
+
+```{r}
+tab(dense_rows, "Execution time on dense data with varying number of rows")
+```
+
+```{r}
+two_fig(dense_rows, 
+        sym("rows"),
+        "Number of data rows",
+        "Execution time on dense data with varying number of rows")
+```
+
+## Dense data: varying number of columns
+
+```{r}
+tab(dense_cols, "Execution time on dense data with varying number of columns")
+```
+
+```{r}
+two_fig(dense_cols, 
+        sym("cols"),
+        "Number of data columns",
+        "Execution time on dense data with varying number of columns")
+```
+
+## Sparse data: varying number of rows
+
+```{r}
+tab(sparse_rows, "Execution time on sparse data with varying number of rows")
+```
+
+```{r}
+two_fig(sparse_rows, 
+        sym("rows"),
+        "Number of data rows",
+        "Execution time on sparse data with varying number of rows")
+```
+
+## Sparse data: varying number of columns
+
+```{r}
+tab(sparse_cols, "Execution time on sparse data with varying number of columns")
+```
+
+```{r}
+two_fig(sparse_cols, 
+        sym("cols"),
+        "Number of data columns",
+        "Execution time on sparse data with varying number of columns")
+```
+
+
+# Discussion
+
+Similarly as `arules:eclat()`, `nuggets` is based on the ECLAT algorithm.
+Therefore, both variants are expected to perform similarly well.
+A likely explanation for the strong performance of `nuggets` on dense data
+is its highly optimized implementation of conjunction computation and support
+counting. These operations are central to rule discovery, and in `nuggets` they
+are accelerated using:
+
+- SIMD instructions via the [XSIMD library](https://github.com/xtensor-stack/xsimd)
+- highly optimized bit population count via the [libpopcnt library](https://github.com/kimwalisch/libpopcnt)
+
+This makes the evaluation of candidate conjunctions fast particularly for dense
+datasets.
+
+Note that all `nuggets` optimizations are available with the default compiler
+directives  recommended by CRAN, without requiring any non-standard package
+installation  settings.
+
+
+# Summary
+
+The results show that `nuggets` is particularly effective for dense data, where
+its optimized implementation provides  consistently strong performance. For
+sparse data with many predicates, however, `arules`, especially `apriori()`,
+becomes more advantageous.
+
+For additional information on the `nuggets` package, see:
+
+- `vignette("nuggets")` for an overview of the package and its main workflows,
+- `vignette("association-rules")` for a specialized pattern family based on the
+  `dig_associations()` function,
+- `vignette("conditional-correlations")` for subgroup-based correlation
+  analysis on numeric variables,
+- `vignette("contrast-patterns")` for subgroup-based statistical comparisons
+  of numeric variables,
+- `vignette("custom-patterns")` for defining custom pattern types.
+
