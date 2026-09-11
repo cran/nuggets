@@ -718,19 +718,19 @@ quality metrics may be computed:</p>
 support:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">arrange</span>(result, <span class="fu">desc</span>(support))</span>
 <span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">print</span>(result)</span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; # A tibble: 526 × 15</span></span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt;    antecedent                     consequent support confidence coverage</span></span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt;    &lt;chr&gt;                          &lt;chr&gt;        &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;</span></span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt;  1 {gear=3}                       {am=0}       0.469      1        0.469</span></span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt;  2 {gear=3,vs=0}                  {am=0}       0.375      1        0.375</span></span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt;  3 {cyl=eight,gear=3,vs=0}        {am=0}       0.375      1        0.375</span></span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt;  4 {cyl=eight,vs=0}               {am=0}       0.375      0.857    0.438</span></span>
-<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt;  5 {cyl=eight,gear=3}             {am=0}       0.375      1        0.375</span></span>
-<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt;  6 {cyl=eight}                    {am=0}       0.375      0.857    0.438</span></span>
-<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt;  7 {mpg=(-Inf;15;20)}             {am=0}       0.327      0.847    0.387</span></span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt;  8 {drat=(-Inf;2.76;3.84)}        {am=0}       0.311      0.948    0.328</span></span>
-<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt;  9 {gear=3,mpg=(-Inf;15;20)}      {am=0}       0.309      1        0.309</span></span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; 10 {drat=(-Inf;2.76;3.84),gear=3} {am=0}       0.307      1        0.307</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; # A tibble: 9,245 × 15</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt;    antecedent                   consequent support confidence coverage</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt;    &lt;chr&gt;                        &lt;chr&gt;        &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt;  1 {gear=3}                     {am=0}       0.469      1        0.469</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt;  2 {gear=3,vs=0}                {am=0}       0.375      1        0.375</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt;  3 {cyl=eight,gear=3,vs=0}      {am=0}       0.375      1        0.375</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt;  4 {cyl=eight,vs=0}             {am=0}       0.375      0.857    0.438</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt;  5 {cyl=eight,gear=3}           {am=0}       0.375      1        0.375</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt;  6 {cyl=eight}                  {am=0}       0.375      0.857    0.438</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt;  7 {gear=3,hp=(52;194;335)}     {am=0}       0.335      1        0.335</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt;  8 {mpg=(-Inf;15;20)}           {am=0}       0.327      0.847    0.387</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt;  9 {gear=3,wt=(1.51;3.47;5.42)} {am=0}       0.325      1        0.325</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; 10 {drat=(-Inf;2.76;3.84)}      {am=0}       0.311      0.948    0.328</span></span>
 <span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt;    conseq_support  lift count antecedent_length    pp    pn    np    nn</span></span>
 <span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt;             &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;             &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
 <span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt;  1          0.594  1.68 15                    1 15    0      4     13  </span></span>
@@ -739,10 +739,10 @@ support:</p>
 <span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt;  4          0.594  1.44 12                    2 12    2      7     11  </span></span>
 <span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt;  5          0.594  1.68 12                    2 12    0      7     13  </span></span>
 <span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt;  6          0.594  1.44 12                    1 12    2      7     11  </span></span>
-<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt;  7          0.594  1.43 10.5                  1 10.5  1.90   8.52  11.1</span></span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt;  8          0.594  1.60  9.96                 1  9.96 0.546  9.04  12.5</span></span>
-<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt;  9          0.594  1.68  9.88                 2  9.88 0      9.12  13  </span></span>
-<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt; 10          0.594  1.68  9.82                 2  9.82 0      9.18  13  </span></span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt;  7          0.594  1.68 10.7                  2 10.7  0      8.29  13  </span></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt;  8          0.594  1.43 10.5                  1 10.5  1.90   8.52  11.1</span></span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt;  9          0.594  1.68 10.4                  2 10.4  0      8.61  13  </span></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt; 10          0.594  1.60  9.96                 1  9.96 0.546  9.04  12.5</span></span>
 <span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt;    conviction leverage</span></span>
 <span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt;         &lt;dbl&gt;    &lt;dbl&gt;</span></span>
 <span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt;  1     Inf      0.190 </span></span>
@@ -751,11 +751,11 @@ support:</p>
 <span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt;  4       2.84   0.115 </span></span>
 <span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt;  5     Inf      0.152 </span></span>
 <span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt;  6       2.84   0.115 </span></span>
-<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt;  7       2.65   0.0978</span></span>
-<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt;  8       7.82   0.116 </span></span>
-<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt;  9     Inf      0.125 </span></span>
-<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt; 10     Inf      0.125 </span></span>
-<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt; # ℹ 516 more rows</span></span></code></pre></div>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt;  7     Inf      0.136 </span></span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt;  8       2.65   0.0978</span></span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt;  9     Inf      0.132 </span></span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt; 10       7.82   0.116 </span></span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt; # ℹ 9,235 more rows</span></span></code></pre></div>
 <p>This example illustrates the typical workflow for mining association
 rules with <code>nuggets</code>. The same structure and arguments apply
 when analyzing either fuzzy or Boolean datasets.</p>
@@ -1145,7 +1145,7 @@ using a custom callback function with the datasets prepared earlier:</p>
 <span id="cb14-38"><a href="#cb14-38" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(support))</span>
 <span id="cb14-39"><a href="#cb14-39" tabindex="-1"></a></span>
 <span id="cb14-40"><a href="#cb14-40" tabindex="-1"></a><span class="fu">print</span>(custom_result)</span>
-<span id="cb14-41"><a href="#cb14-41" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5,408 × 4</span></span>
+<span id="cb14-41"><a href="#cb14-41" tabindex="-1"></a><span class="co">#&gt; # A tibble: 18,589 × 4</span></span>
 <span id="cb14-42"><a href="#cb14-42" tabindex="-1"></a><span class="co">#&gt;    antecedent              consequent support confidence</span></span>
 <span id="cb14-43"><a href="#cb14-43" tabindex="-1"></a><span class="co">#&gt;    &lt;chr&gt;                   &lt;chr&gt;        &lt;dbl&gt;      &lt;dbl&gt;</span></span>
 <span id="cb14-44"><a href="#cb14-44" tabindex="-1"></a><span class="co">#&gt;  1 {gear=3}                am=0          15         32  </span></span>
@@ -1158,7 +1158,7 @@ using a custom callback function with the datasets prepared earlier:</p>
 <span id="cb14-51"><a href="#cb14-51" tabindex="-1"></a><span class="co">#&gt;  8 {cyl=eight,vs=0}        am=0          12         27.4</span></span>
 <span id="cb14-52"><a href="#cb14-52" tabindex="-1"></a><span class="co">#&gt;  9 {cyl=eight,gear=3}      am=0          12         32  </span></span>
 <span id="cb14-53"><a href="#cb14-53" tabindex="-1"></a><span class="co">#&gt; 10 {cyl=eight}             am=0          12         27.4</span></span>
-<span id="cb14-54"><a href="#cb14-54" tabindex="-1"></a><span class="co">#&gt; # ℹ 5,398 more rows</span></span></code></pre></div>
+<span id="cb14-54"><a href="#cb14-54" tabindex="-1"></a><span class="co">#&gt; # ℹ 18,579 more rows</span></span></code></pre></div>
 <p>The callback function <code>f()</code> receives information based on
 its argument names:</p>
 <ul>

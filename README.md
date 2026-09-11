@@ -29,6 +29,10 @@ large and dense data sets. Package includes methods for
 **visualization** and supports **interactive exploration** through
 integrated Shiny applications.
 
+## Live Demo!
+
+[Association Rules Explorer](https://irafm.shinyapps.io/nuggets_demo/)
+
 ## What Patterns Can You Discover?
 
 - **Association Rules**: *“University educated people in middle age
@@ -110,6 +114,9 @@ For comparison, two Python libraries performed as follows:
 - `mlxtend` (Python, boolean logic, frequent itemsets only): **4h 11m
   22.5s**
 
+See also a detailed [Performance
+Comparison](https://beerda.github.io/nuggets/articles/comparison-with-arules.html)!
+
 ## Installation
 
 To install the stable version of `nuggets` from CRAN, type the following
@@ -182,6 +189,8 @@ The package currently includes the following vignettes:
   Patterns](https://beerda.github.io/nuggets/articles/contrast-patterns.html)
 - [Custom Pattern Search with
   dig()](https://beerda.github.io/nuggets/articles/custom-patterns.html)
+- [Comparison of nuggets performance with arules nad
+  fim4r](https://beerda.github.io/nuggets/articles/comparison-with-arules.html)
 
 ## Contributing
 
